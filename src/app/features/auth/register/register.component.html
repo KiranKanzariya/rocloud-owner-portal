@@ -1,0 +1,168 @@
+<div class="min-h-screen flex items-center justify-center p-6 bg-shell">
+  <div class="w-full max-w-lg">
+    <div class="flex justify-center mb-6"><roc-logo size="lg" variant="default"></roc-logo></div>
+
+    <!-- Success: portal is ready -->
+    @if (success(); as s) {
+      <div class="card text-center">
+        <div class="w-14 h-14 mx-auto rounded-full bg-foam flex items-center justify-center mb-4">
+          <i class="ti ti-circle-check text-3xl text-teal"></i>
+        </div>
+        <h2 class="text-h2 mb-1">{{ 'Your portal is ready 🎉' | translate }}</h2>
+        <p class="text-body text-ink-mid mb-5">{{ "This is your private sign-in address — bookmark it. We've also emailed it to {{email}}." | translate: { email: s.email } }}</p>
+
+        <div class="flex items-center gap-2 rounded-md border border-ink-light bg-shell px-3 py-2 mb-5">
+          <i class="ti ti-link text-ink-mid"></i>
+          <span class="font-mono text-body text-navy truncate flex-1 text-left">{{ s.url }}</span>
+          <button type="button" class="btn-secondary py-1 px-2" (click)="copyUrl()" aria-label="Copy link">
+            <i class="ti ti-copy"></i>
+          </button>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <a [href]="s.url" class="btn-primary w-full">{{ 'Open my portal' | translate }}</a>
+          <button type="button" class="text-caption text-navy-light hover:underline" (click)="goToDashboard()">
+            {{ 'Continue here for now' | translate }}
+          </button>
+        </div>
+      </div>
+    } @else {
+    <div class="card">
+      <!-- Step indicator -->
+      <div class="flex items-center gap-2 mb-6">
+        @for (n of [1, 2, 3]; track n) {
+          <span class="flex-1 h-1.5 rounded-full" [class.bg-navy]="step() >= n" [class.bg-ink-light]="step() < n"></span>
+        }
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <!-- Step 1: business -->
+        @if (step() === 1) {
+          <h2 class="text-h2 mb-1">{{ 'Tell us about your business' | translate }}</h2>
+          <p class="text-body text-ink-mid mb-5">{{ 'Start your 14-day free trial.' | translate }}</p>
+
+          <!-- Optional: sign up with Google (skips the password step) -->
+          @if (googleProfile(); as g) {
+            <div class="flex items-center justify-between rounded-md border border-teal bg-foam px-3 py-2 mb-4">
+              <span class="text-body flex items-center gap-2"><i class="ti ti-brand-google text-teal"></i> {{ g.email }} <i class="ti ti-circle-check text-teal"></i></span>
+              <button type="button" class="text-caption text-ink-mid hover:text-danger" (click)="clearGoogle()">{{ 'Change' | translate }}</button>
+            </div>
+          } @else {
+            <div class="flex justify-center mb-4">
+              <asl-google-signin-button type="standard" size="large" text="continue_with" shape="rectangular" [width]="320"></asl-google-signin-button>
+            </div>
+            <div class="flex items-center gap-3 mb-4 text-caption text-ink-mid">
+              <span class="flex-1 h-px bg-ink-light"></span>{{ 'or' | translate }}<span class="flex-1 h-px bg-ink-light"></span>
+            </div>
+          }
+
+          <div class="flex flex-col gap-4">
+            <label class="flex flex-col gap-1">
+              <span class="text-caption font-medium">{{ 'Business name' | translate }}</span>
+              <input formControlName="businessName" class="rounded-md border-ink-light" placeholder="Sharma RO Water" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-caption font-medium">{{ 'Subdomain' | translate }}</span>
+              <div class="flex items-center gap-1">
+                <input formControlName="subdomain" class="rounded-md border-ink-light flex-1" placeholder="sharma-ro" />
+                <span class="text-caption text-ink-mid">.rocloud.app</span>
+              </div>
+              @if (form.controls.subdomain.touched && form.controls.subdomain.invalid) {
+                <span class="text-micro text-danger">{{ '3–30 chars: lowercase letters, numbers, hyphens.' | translate }}</span>
+              } @else {
+                @switch (subdomainStatus()) {
+                  @case ('checking') { <span class="text-micro text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Checking…' | translate }}</span> }
+                  @case ('available') { <span class="text-micro text-teal"><i class="ti ti-check"></i> {{ 'Available' | translate }}</span> }
+                  @case ('taken') { <span class="text-micro text-danger"><i class="ti ti-x"></i> {{ 'Already taken' | translate }}</span> }
+                }
+              }
+            </label>
+          </div>
+        }
+
+        <!-- Step 2: plan -->
+        @if (step() === 2) {
+          <h2 class="text-h2 mb-1">{{ 'Choose a plan' | translate }}</h2>
+          <p class="text-body text-ink-mid mb-5">{{ "You won't be charged during the trial." | translate }}</p>
+          <div class="flex flex-col gap-3">
+            @for (p of plans; track p.type) {
+              <button type="button" (click)="selectPlan(p.type)"
+                      class="text-left border rounded-lg p-3.5 transition-colors"
+                      [class.border-navy]="form.controls.planType.value === p.type"
+                      [class.bg-foam]="form.controls.planType.value === p.type"
+                      [class.border-ink-light]="form.controls.planType.value !== p.type">
+                <div class="flex items-center justify-between">
+                  <span class="text-h4">{{ p.type }}</span>
+                  <span class="text-h3 text-navy">{{ p.price }}<span class="text-caption text-ink-mid">{{ '/mo' | translate }}</span></span>
+                </div>
+                <p class="text-caption text-ink-mid">{{ p.blurb | translate }}</p>
+                <p class="text-caption text-ink-mid mt-1">
+                  @for (f of p.features; track f; let last = $last) {
+                    <span>{{ f | translate }}</span>@if (!last) {<span> · </span>}
+                  }
+                </p>
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Step 3: credentials -->
+        @if (step() === 3) {
+          @if (googleProfile(); as g) {
+            <h2 class="text-h2 mb-1">{{ 'Create your workspace' | translate }}</h2>
+            <p class="text-body text-ink-mid mb-5">{{ "You'll be the administrator of {{name}}." | translate: { name: form.controls.businessName.value } }}</p>
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center gap-2 rounded-md border border-ink-light bg-shell px-3 py-2">
+                <i class="ti ti-brand-google text-teal"></i>
+                <span class="text-body">{{ g.name }} <span class="text-caption text-ink-mid">{{ g.email }}</span></span>
+              </div>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Mobile' | translate }} <span class="text-ink-mid">{{ '(optional)' | translate }}</span></span>
+                <roc-mobile-input formControlName="mobile" />
+              </label>
+            </div>
+          } @else {
+            <h2 class="text-h2 mb-1">{{ 'Create your owner account' | translate }}</h2>
+            <p class="text-body text-ink-mid mb-5">{{ "You'll be the administrator of {{name}}." | translate: { name: form.controls.businessName.value } }}</p>
+            <div class="flex flex-col gap-4">
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Your name' | translate }}</span>
+                <input formControlName="ownerName" class="rounded-md border-ink-light" placeholder="Rajesh Sharma" />
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Email' | translate }}</span>
+                <input type="email" formControlName="email" class="rounded-md border-ink-light" placeholder="you@business.com" />
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Mobile' | translate }}</span>
+                <roc-mobile-input formControlName="mobile" />
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Password' | translate }}</span>
+                <input type="password" formControlName="password" class="rounded-md border-ink-light" placeholder="At least 8 characters" />
+              </label>
+            </div>
+          }
+        }
+
+        <!-- Nav -->
+        <div class="flex items-center justify-between mt-6">
+          @if (step() > 1) {
+            <button type="button" class="btn-secondary" (click)="back()">{{ 'Back' | translate }}</button>
+          } @else {
+            <a routerLink="/login" class="text-caption text-navy-light hover:underline">{{ 'Sign in' | translate }}</a>
+          }
+
+          @if (step() < 3) {
+            <button type="button" class="btn-primary" (click)="next()">{{ 'Continue' | translate }}</button>
+          } @else {
+            <button type="submit" class="btn-primary" [disabled]="loading()">
+              @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Creating…' | translate }} } @else { {{ 'Create account' | translate }} }
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+    }
+  </div>
+</div>

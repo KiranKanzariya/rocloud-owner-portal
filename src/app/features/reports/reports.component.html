@@ -1,0 +1,99 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Reports' | translate }}</h1>
+    @if (isPro) {
+      <div class="flex items-center gap-2">
+        <button class="btn-secondary" (click)="export('csv')"><i class="ti ti-file-spreadsheet"></i> CSV</button>
+        <button class="btn-secondary" (click)="export('xlsx')"><i class="ti ti-file-export"></i> {{ 'Excel' | translate }}</button>
+      </div>
+    }
+  </div>
+
+  @if (!isPro) {
+    <!-- Defense-in-depth upgrade banner (route also plan-gates this page) -->
+    <roc-upgrade-banner feature="Reports" plan="Pro" [description]="'Charts, exports, and business insights.' | translate" />
+  } @else {
+    <!-- Date range -->
+    <div class="card flex flex-wrap items-center gap-3">
+      <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
+        <input type="date" [value]="range().from" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('from', $any($event.target).value)" />
+      </label>
+      <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
+        <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
+      </label>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-1 border-b border-ink-light">
+      @for (t of tabs; track t.key) {
+        <button
+          class="px-3 py-2 text-body flex items-center gap-1.5 border-b-2 -mb-px transition-colors"
+          [class.border-navy]="activeTab() === t.key"
+          [class.text-navy]="activeTab() === t.key"
+          [class.font-medium]="activeTab() === t.key"
+          [class.border-transparent]="activeTab() !== t.key"
+          [class.text-ink-mid]="activeTab() !== t.key"
+          (click)="selectTab(t.key)">
+          <i class="ti ti-{{ t.icon }}"></i> {{ t.label | translate }}
+        </button>
+      }
+    </div>
+
+    <!-- Chart -->
+    <roc-chart-card [title]="''" [type]="chartType()" [data]="chartData()" />
+
+    <!-- Detail table per tab -->
+    <div class="card overflow-x-auto">
+      @switch (activeTab()) {
+        @case ('collection') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2 text-right">{{ 'Total' | translate }}</th><th class="py-2 text-right">{{ 'Cash' | translate }}</th><th class="py-2 text-right">{{ 'Digital' | translate }}</th><th class="py-2 text-right">{{ 'Txns' | translate }}</th></tr></thead>
+            <tbody>@for (r of collection(); track r.date) {
+              <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ r.date }}</td><td class="py-2 text-right font-mono">₹{{ r.totalCollected | number: '1.0-0' }}</td><td class="py-2 text-right font-mono">₹{{ r.cash | number: '1.0-0' }}</td><td class="py-2 text-right font-mono">₹{{ r.digital | number: '1.0-0' }}</td><td class="py-2 text-right">{{ r.transactionCount }}</td></tr>
+            } @empty { <tr><td colspan="5" class="py-4 text-center text-ink-mid">{{ 'No data for this period.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+        @case ('delivery-efficiency') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Delivery boy' | translate }}</th><th class="py-2 text-right">{{ 'Assigned' | translate }}</th><th class="py-2 text-right">{{ 'Delivered' | translate }}</th><th class="py-2 text-right">{{ 'Pending' | translate }}</th><th class="py-2 text-right">{{ 'Failed' | translate }}</th><th class="py-2 text-right">{{ 'Efficiency' | translate }}</th></tr></thead>
+            <tbody>@for (r of deliveryEff(); track r.deliveryBoyId) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ r.deliveryBoyName }}</td><td class="py-2 text-right">{{ r.assigned }}</td><td class="py-2 text-right">{{ r.delivered }}</td><td class="py-2 text-right">{{ r.pending }}</td><td class="py-2 text-right">{{ r.failed }}</td><td class="py-2 text-right font-mono">{{ r.efficiencyPct | number: '1.0-0' }}%</td></tr>
+            } @empty { <tr><td colspan="6" class="py-4 text-center text-ink-mid">{{ 'No deliveries on this date.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+        @case ('outstanding-dues') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Customer' | translate }}</th><th class="py-2 text-right">0–7</th><th class="py-2 text-right">7–30</th><th class="py-2 text-right">30–60</th><th class="py-2 text-right">60+</th><th class="py-2 text-right">{{ 'Total' | translate }}</th></tr></thead>
+            <tbody>@for (r of outstanding(); track r.customerId) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ r.customerName }}</td><td class="py-2 text-right font-mono">₹{{ r.bucket0To7 | number: '1.0-0' }}</td><td class="py-2 text-right font-mono">₹{{ r.bucket7To30 | number: '1.0-0' }}</td><td class="py-2 text-right font-mono">₹{{ r.bucket30To60 | number: '1.0-0' }}</td><td class="py-2 text-right font-mono text-danger">₹{{ r.bucket60Plus | number: '1.0-0' }}</td><td class="py-2 text-right font-mono font-medium">₹{{ r.totalOutstanding | number: '1.0-0' }}</td></tr>
+            } @empty { <tr><td colspan="6" class="py-4 text-center text-ink-mid">{{ 'No outstanding dues.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+        @case ('area-performance') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Area' | translate }}</th><th class="py-2 text-right">{{ 'Customers' | translate }}</th><th class="py-2 text-right">{{ 'Orders' | translate }}</th><th class="py-2 text-right">{{ 'Revenue' | translate }}</th><th class="py-2 text-right">{{ 'Avg order' | translate }}</th></tr></thead>
+            <tbody>@for (r of area(); track r.areaId) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ r.areaName }}</td><td class="py-2 text-right">{{ r.customerCount }}</td><td class="py-2 text-right">{{ r.orderCount }}</td><td class="py-2 text-right font-mono">₹{{ r.revenue | number: '1.0-0' }}</td><td class="py-2 text-right font-mono">₹{{ r.averageOrderValue | number: '1.0-0' }}</td></tr>
+            } @empty { <tr><td colspan="5" class="py-4 text-center text-ink-mid">{{ 'No data for this period.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+        @case ('top-customers') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Customer' | translate }}</th><th class="py-2 text-right">{{ 'Orders' | translate }}</th><th class="py-2 text-right">{{ 'Revenue' | translate }}</th><th class="py-2 text-right">{{ 'Outstanding' | translate }}</th></tr></thead>
+            <tbody>@for (r of topCustomers(); track r.customerId) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ r.customerName }}</td><td class="py-2 text-right">{{ r.orderCount }}</td><td class="py-2 text-right font-mono">₹{{ r.revenue | number: '1.0-0' }}</td><td class="py-2 text-right font-mono" [class.text-danger]="r.outstanding > 0">₹{{ r.outstanding | number: '1.0-0' }}</td></tr>
+            } @empty { <tr><td colspan="4" class="py-4 text-center text-ink-mid">{{ 'No data for this period.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+        @case ('bottle-tracking') {
+          <table class="w-full text-body grid-scroll">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Size' | translate }}</th><th class="py-2 text-right">{{ 'Total' | translate }}</th><th class="py-2 text-right">{{ 'Issued' | translate }}</th><th class="py-2 text-right">{{ 'Returned' | translate }}</th><th class="py-2 text-right">{{ 'Damaged' | translate }}</th><th class="py-2 text-right">{{ 'Missing' | translate }}</th><th class="py-2 text-right">{{ 'Damage %' | translate }}</th></tr></thead>
+            <tbody>@for (r of bottles(); track r.bottleSize) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ r.bottleSize }}</td><td class="py-2 text-right">{{ r.totalStock }}</td><td class="py-2 text-right">{{ r.issued }}</td><td class="py-2 text-right">{{ r.returned }}</td><td class="py-2 text-right">{{ r.damaged }}</td><td class="py-2 text-right">{{ r.missing }}</td><td class="py-2 text-right font-mono">{{ r.damageRatePct | number: '1.0-1' }}%</td></tr>
+            } @empty { <tr><td colspan="7" class="py-4 text-center text-ink-mid">{{ 'No bottle data.' | translate }}</td></tr> }</tbody>
+          </table>
+        }
+      }
+    </div>
+  }
+</div>

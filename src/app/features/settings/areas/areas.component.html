@@ -1,0 +1,65 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Delivery areas' | translate }}</h1>
+    @if (canManage) {
+      <button class="btn-primary" (click)="openCreate()"><i class="ti ti-plus"></i> {{ 'Add area' | translate }}</button>
+    }
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="page()" [pageSize]="pageSize" [sortBy]="sortBy()" [sortDir]="sortDir()"
+    (sortChange)="onSort($event)" (pageChange)="onPage($event)">
+
+    <ng-template appColumnCell="name" let-row><span class="font-medium text-ink">{{ row.name }}</span></ng-template>
+    <ng-template appColumnCell="city" let-row>{{ row.city || '—' }}</ng-template>
+    <ng-template appColumnCell="pincode" let-row><span class="font-mono text-caption">{{ row.pincode || '—' }}</span></ng-template>
+    <ng-template appColumnCell="isActive" let-row>
+      <span [class]="row.isActive ? 'status-delivered' : 'status-active-info'">{{ (row.isActive ? 'Active' : 'Inactive') | translate }}</span>
+    </ng-template>
+    <ng-template appColumnCell="actions" let-row>
+      @if (canManage) {
+        <div class="flex items-center justify-end gap-1">
+          <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+          <button class="p-1.5 rounded hover:bg-shell text-danger" (click)="remove(row)" [title]="'Delete' | translate"><i class="ti ti-trash"></i></button>
+        </div>
+      }
+    </ng-template>
+  </roc-data-table>
+</div>
+
+@if (modalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="modalOpen.set(false)">
+    <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ (editingId() ? 'Edit area' : 'Add area') | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-3">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Name' | translate }}</span>
+          <input formControlName="name" class="rounded-md border-ink-light py-1.5" [placeholder]="'e.g. Satellite' | translate" />
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'City' | translate }}</span>
+            <input formControlName="city" class="rounded-md border-ink-light py-1.5" />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Pincode' | translate }}</span>
+            <input formControlName="pincode" class="rounded-md border-ink-light py-1.5 font-mono" maxlength="6" />
+          </label>
+        </div>
+        <label class="flex items-center gap-2 text-body">
+          <input type="checkbox" formControlName="isActive" class="rounded border-ink-light" /> {{ 'Active' | translate }}
+        </label>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="btn-secondary" (click)="modalOpen.set(false)">{{ 'Cancel' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save' | translate }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

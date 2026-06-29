@@ -1,0 +1,35 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Team members' | translate }}</h1>
+    <button *appCan="'Users.Manage'" class="btn-primary" (click)="add()"><i class="ti ti-user-plus"></i> {{ 'Add user' | translate }}</button>
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="page()" [pageSize]="pageSize" [sortBy]="sortBy()" [sortDir]="sortDir()"
+    (sortChange)="onSort($event)" (pageChange)="onPage($event)">
+
+    <ng-template appColumnCell="name" let-row>
+      <div class="font-medium text-ink">{{ row.name }}</div>
+      <div class="text-caption text-ink-mid">{{ row.email }}</div>
+    </ng-template>
+    <ng-template appColumnCell="mobile" let-row><span class="font-mono text-caption">{{ (row.mobile | mobile) || '—' }}</span></ng-template>
+    <ng-template appColumnCell="roleName" let-row>{{ row.roleName || '—' }}</ng-template>
+    <ng-template appColumnCell="areas" let-row><span class="text-caption">{{ areaNames(row) }}</span></ng-template>
+    <ng-template appColumnCell="lastLoginAt" let-row><span class="font-mono text-caption">{{ row.lastLoginAt ? (row.lastLoginAt | date: 'dd MMM, HH:mm') : ('Never' | translate) }}</span></ng-template>
+    <ng-template appColumnCell="isActive" let-row><span [class]="row.isActive ? 'status-delivered' : 'status-active-info'">{{ (row.isActive ? 'Active' : 'Inactive') | translate }}</span></ng-template>
+    <ng-template appColumnCell="actions" let-row>
+      <div class="flex items-center justify-end gap-1" *appCan="'Users.Manage'">
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="edit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="resetPassword(row)" [title]="'Reset password' | translate"><i class="ti ti-key"></i></button>
+        @if (row.isActive) {
+          <button class="p-1.5 rounded hover:bg-shell text-danger" (click)="deactivate(row)" [title]="'Deactivate' | translate"><i class="ti ti-user-off"></i></button>
+        }
+      </div>
+    </ng-template>
+  </roc-data-table>
+</div>
+
+<app-user-form-modal
+  [open]="modalOpen()" [editUser]="editing()" [roles]="roles()"
+  (saved)="onSaved()" (closed)="modalOpen.set(false)" />

@@ -1,0 +1,125 @@
+<div class="flex flex-col gap-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <button class="text-caption text-ink-mid hover:text-navy mb-1" (click)="router.navigate(['/customers'])">
+        <i class="ti ti-arrow-left"></i> {{ 'Customers' | translate }}
+      </button>
+      <h1 class="text-h1">{{ 'Import customers' | translate }}</h1>
+    </div>
+    <button class="btn-secondary" (click)="downloadTemplate()"><i class="ti ti-download"></i> {{ 'Download template' | translate }}</button>
+  </div>
+
+  <!-- Step 1: pick file + cutover -->
+  <div class="card flex flex-col gap-3">
+    <p class="text-caption text-ink-mid">
+      {{ 'Fill the template with one row per customer, then upload it here. Only opening balances are imported — not past deliveries.' | translate }}
+    </p>
+    <div class="flex flex-wrap items-end gap-3">
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'CSV file' | translate }}</span>
+        <input type="file" accept=".csv,text/csv" (change)="onFile($event)" class="text-caption" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Cutover date' | translate }}</span>
+        <input type="date" [ngModel]="cutover()" (ngModelChange)="cutover.set($event)" [max]="cutover()"
+               class="rounded-md border-ink-light text-body py-1.5" />
+      </label>
+      <button class="btn-secondary" [disabled]="!file() || previewing()" (click)="runPreview()">
+        @if (previewing()) { <i class="ti ti-loader-2 animate-spin"></i> } {{ 'Preview' | translate }}
+      </button>
+    </div>
+    <p class="text-micro text-ink-mid">{{ 'Opening dues: positive = customer owes, negative = advance paid. Areas and products must already exist.' | translate }}</p>
+  </div>
+
+  <!-- Column guide -->
+  <div class="card flex flex-col gap-3">
+    <button class="flex items-center justify-between text-left" (click)="showGuide.set(!showGuide())">
+      <span class="text-h3">{{ 'What goes in each column' | translate }}</span>
+      <i class="ti text-ink-mid" [class.ti-chevron-down]="!showGuide()" [class.ti-chevron-up]="showGuide()"></i>
+    </button>
+    @if (showGuide()) {
+      <table class="w-full text-body grid-scroll" style="--grid-max: 26rem">
+        <thead>
+          <tr class="text-left text-caption text-ink-mid border-b border-ink-light bg-shell">
+            <th class="px-2 py-2 w-40">{{ 'Column' | translate }}</th>
+            <th class="px-2 py-2 w-20">{{ 'Required' | translate }}</th>
+            <th class="px-2 py-2 w-56">{{ 'Allowed values' | translate }}</th>
+            <th class="px-2 py-2">{{ 'Meaning' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of guide; track g.col) {
+            <tr class="border-b border-ink-light/60 align-top">
+              <td class="px-2 py-1.5 font-mono text-caption">{{ g.col }}</td>
+              <td class="px-2 py-1.5">
+                @if (g.req) { <span class="status-overdue">{{ 'Required' | translate }}</span> }
+                @else { <span class="text-caption text-ink-mid">{{ 'Optional' | translate }}</span> }
+              </td>
+              <td class="px-2 py-1.5 text-caption">{{ g.values }}</td>
+              <td class="px-2 py-1.5 text-caption text-ink-mid">{{ g.meaning | translate }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="text-micro text-ink-mid">{{ 'Numbers have no ₹ or commas; dates are written as YYYY-MM-DD.' | translate }}</p>
+    }
+  </div>
+
+  <!-- Result (preview or committed) -->
+  @if (result(); as r) {
+    <div class="card flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-h3">{{ (r.dryRun ? 'Preview' : 'Import complete') | translate }}</h3>
+        @if (problemRows().length) {
+          <button class="btn-secondary" (click)="downloadErrors()"><i class="ti ti-download"></i> {{ 'Download issues' | translate }}</button>
+        }
+      </div>
+
+      <!-- Tallies -->
+      <div class="flex flex-wrap gap-4 text-body">
+        <span><span class="font-semibold text-teal">{{ r.created | number }}</span> {{ (r.dryRun ? 'will be created' : 'created') | translate }}</span>
+        <span><span class="font-semibold text-amber">{{ r.skipped | number }}</span> {{ 'skipped' | translate }}</span>
+        <span><span class="font-semibold text-danger">{{ r.failed | number }}</span> {{ 'failed' | translate }}</span>
+        <span class="text-ink-mid">{{ r.total | number }} {{ 'rows' | translate }}</span>
+      </div>
+
+      <!-- Per-row outcomes (problems first when there are many) -->
+      <table class="w-full text-body grid-scroll" style="--grid-max: 22rem">
+        <thead>
+          <tr class="text-left text-caption text-ink-mid border-b border-ink-light bg-shell">
+            <th class="px-2 py-2 w-14">{{ 'Row' | translate }}</th>
+            <th class="px-2 py-2">{{ 'Name' | translate }}</th>
+            <th class="px-2 py-2">{{ 'Mobile' | translate }}</th>
+            <th class="px-2 py-2 w-24">{{ 'Status' | translate }}</th>
+            <th class="px-2 py-2">{{ 'Note' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of r.rows; track row.row) {
+            <tr class="border-b border-ink-light/60">
+              <td class="px-2 py-1.5 text-ink-mid font-mono">{{ row.row }}</td>
+              <td class="px-2 py-1.5 truncate">{{ row.name || '—' }}</td>
+              <td class="px-2 py-1.5 font-mono">{{ row.mobile || '—' }}</td>
+              <td class="px-2 py-1.5"><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></td>
+              <td class="px-2 py-1.5 text-caption text-ink-mid">{{ row.message }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Commit -->
+      @if (r.dryRun) {
+        <div class="flex items-center gap-3">
+          <button class="btn-primary" [disabled]="!r.created || importing()" (click)="runImport()">
+            @if (importing()) { <i class="ti ti-loader-2 animate-spin"></i> }
+            {{ '{{count}} customers' | translate: { count: r.created } }} — {{ 'Import' | translate }}
+          </button>
+          <span class="text-caption text-ink-mid">{{ 'Skipped & failed rows are not imported.' | translate }}</span>
+        </div>
+      } @else {
+        <button class="btn-secondary w-fit" (click)="router.navigate(['/customers'])">{{ 'Back to customers' | translate }}</button>
+      }
+    </div>
+  }
+</div>

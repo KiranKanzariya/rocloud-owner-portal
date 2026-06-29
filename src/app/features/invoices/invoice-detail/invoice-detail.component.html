@@ -1,0 +1,92 @@
+@if (invoice(); as inv) {
+  <div class="flex flex-col gap-5">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-2">
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-h1 font-mono">{{ inv.invoiceNumber }}</h1>
+            <span [class]="statusClass(inv.status)">{{ inv.status | translate }}</span>
+            @if (inv.discount > 0) {
+              <span class="status-delivered"><i class="ti ti-discount-2"></i>{{ 'Discount applied' | translate }}</span>
+            }
+          </div>
+          <p class="text-body text-ink-mid">{{ inv.customerName }} · {{ 'Due' | translate }} {{ inv.dueDate | date: 'mediumDate' }}</p>
+          <p class="text-caption text-ink-mid">{{ 'Generated' | translate }} {{ inv.createdAt | date: 'medium' }}</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button *appCan="'Invoices.Edit'" class="btn-secondary" [disabled]="sending()" (click)="send()">
+          @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-brand-whatsapp"></i> } {{ 'Send' | translate }}
+        </button>
+        @if (inv.balance > 0) {
+          <button *appCan="'Payments.Collect'" class="btn-primary" (click)="payOpen.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- Summary -->
+      <div class="flex flex-col gap-5">
+        <div class="card">
+          <h3 class="text-h3 mb-3">{{ 'Items' | translate }}</h3>
+          <table class="w-full text-body">
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
+            <tbody>@for (li of inv.lineItems; track li.productName) {
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ li.productName }} <span class="text-caption text-ink-mid">({{ li.bottleSize }})</span></td><td class="py-2">{{ li.quantity }}</td><td class="py-2 text-right font-mono">₹{{ li.rate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ li.amount | number: '1.0-0' }}</td></tr>
+            }</tbody>
+          </table>
+          <dl class="flex flex-col gap-1 mt-3 text-body">
+            <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Subtotal' | translate }}</dt><dd class="font-mono">₹{{ inv.subTotal | number: '1.0-2' }}</dd></div>
+            @if (inv.taxAmount > 0) { <div class="flex justify-between"><dt class="text-ink-mid">{{ 'GST' | translate }}</dt><dd class="font-mono">₹{{ inv.taxAmount | number: '1.0-2' }}</dd></div> }
+            @if (inv.discount > 0) { <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Discount' | translate }}</dt><dd class="font-mono">−₹{{ inv.discount | number: '1.0-2' }}</dd></div> }
+            <div class="flex justify-between text-h4 border-t border-ink-light pt-1"><dt>{{ 'Total' | translate }}</dt><dd class="font-mono text-navy">₹{{ inv.totalAmount | number: '1.0-0' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Paid' | translate }}</dt><dd class="font-mono text-teal">₹{{ inv.paidAmount | number: '1.0-0' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Balance' | translate }}</dt><dd class="font-mono" [class.text-danger]="inv.balance > 0">₹{{ inv.balance | number: '1.0-0' }}</dd></div>
+          </dl>
+        </div>
+
+        <div class="card">
+          <h3 class="text-h3 mb-3">{{ 'Payment history' | translate }}</h3>
+          @if (invoicePayments().length) {
+            <table class="w-full text-body"><tbody>@for (p of invoicePayments(); track p.id) {
+              <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ p.paidAt | date: 'medium' }}</td><td class="py-2">{{ p.paymentMethod | translate }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr>
+            }</tbody></table>
+          } @else { <p class="text-body text-ink-mid">{{ 'No payments recorded.' | translate }}</p> }
+        </div>
+      </div>
+
+      <!-- PDF preview -->
+      <roc-pdf-preview [url]="pdfUrl()" [fileName]="inv.invoiceNumber + '.pdf'" />
+    </div>
+  </div>
+
+  <!-- Record payment modal -->
+  @if (payOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="payOpen.set(false)">
+      <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-3"><h3 class="text-h3">{{ 'Record payment' | translate }}</h3>
+          <button class="text-ink-mid hover:text-danger" (click)="payOpen.set(false)"><i class="ti ti-x"></i></button></div>
+        <form [formGroup]="payForm" (ngSubmit)="recordPayment()" class="flex flex-col gap-3">
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Amount (₹)' | translate }}</span>
+              <input type="number" formControlName="amount" class="rounded-md border-ink-light py-1.5" /></label>
+            <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Method' | translate }}</span>
+              <select formControlName="paymentMethod" class="rounded-md border-ink-light py-1.5">
+                @for (m of paymentMethods; track m) { <option [value]="m">{{ m | translate }}</option> }
+              </select></label>
+          </div>
+          <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Reference' | translate }}</span>
+            <input formControlName="referenceNumber" class="rounded-md border-ink-light py-1.5" [placeholder]="'Optional' | translate" /></label>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" class="btn-secondary" (click)="payOpen.set(false)">{{ 'Cancel' | translate }}</button>
+            <button type="submit" class="btn-primary" [disabled]="saving()">@if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+} @else {
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+}

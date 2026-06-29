@@ -1,0 +1,77 @@
+<div class="min-h-screen flex">
+  <!-- Left: brand panel -->
+  <div class="hidden lg:flex flex-col justify-between w-2/5 bg-navy text-white p-12">
+    <roc-logo size="lg" variant="on-dark"></roc-logo>
+    <div>
+      <h1 class="text-hero text-white mb-3">{{ 'RO management, now in the cloud.' | translate }}</h1>
+      <p class="text-lead text-mist">{{ "Every drop. Every delivery. One platform — built for India's RO water businesses." | translate }}</p>
+    </div>
+    <p class="text-caption text-mist/70">© ROCloud</p>
+  </div>
+
+  <!-- Right: form -->
+  <div class="flex-1 flex items-center justify-center p-6 bg-shell">
+    <div class="w-full max-w-sm">
+      <div class="lg:hidden mb-8 flex justify-center">
+        <roc-logo size="lg" variant="default"></roc-logo>
+      </div>
+
+      <h2 class="text-h2 mb-1">{{ 'Welcome back' | translate }}</h2>
+      <p class="text-body text-ink-mid mb-6">{{ 'Sign in to your ROCloud account.' | translate }}</p>
+
+      <button type="button" class="btn-secondary w-full justify-center mb-4" (click)="goToGoogleSignIn()">
+        <i class="ti ti-brand-google"></i> {{ 'Sign in with Google' | translate }}
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <span class="flex-1 h-px bg-ink-light"></span>
+        <span class="text-caption text-ink-mid">{{ 'or' | translate }}</span>
+        <span class="flex-1 h-px bg-ink-light"></span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="login()" class="flex flex-col gap-4">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Email' | translate }}</span>
+          <input type="email" formControlName="email" autocomplete="email"
+                 class="rounded-md border-ink-light focus:border-navy-light focus:ring-navy-light"
+                 placeholder="you@business.com" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <span class="text-micro text-danger">{{ 'Enter a valid email.' | translate }}</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Password' | translate }}</span>
+          <input type="password" formControlName="password" autocomplete="current-password"
+                 class="rounded-md border-ink-light focus:border-navy-light focus:ring-navy-light"
+                 placeholder="••••••••" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <span class="text-micro text-danger">{{ 'Password must be at least 8 characters.' | translate }}</span>
+          }
+        </label>
+
+        <div class="flex items-center justify-between">
+          <a routerLink="/find-workspace" class="text-caption text-navy-light hover:underline">
+            {{ 'Forgot your workspace?' | translate }}
+          </a>
+          <a routerLink="/forgot-password" class="text-caption text-navy-light hover:underline">
+            {{ 'Forgot password?' | translate }}
+          </a>
+        </div>
+
+        <button type="submit" class="btn-primary w-full justify-center" [disabled]="loading()">
+          @if (loading()) {
+            <i class="ti ti-loader-2 animate-spin"></i> {{ 'Signing in…' | translate }}
+          } @else {
+            {{ 'Sign in' | translate }}
+          }
+        </button>
+      </form>
+
+      <p class="text-body text-ink-mid text-center mt-6">
+        {{ "Don't have an account?" | translate }}
+        <a routerLink="/register" class="text-navy-light font-medium hover:underline">{{ 'Start free trial' | translate }}</a>
+      </p>
+    </div>
+  </div>
+</div>

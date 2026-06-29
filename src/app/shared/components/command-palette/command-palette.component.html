@@ -1,0 +1,31 @@
+@if (open()) {
+  <div class="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] bg-black/40 px-4" (click)="close()">
+    <div class="w-full max-w-lg bg-white rounded-lg shadow-md overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-2 px-3 border-b border-ink-light">
+        <i class="ti ti-search text-ink-mid"></i>
+        <input
+          #search
+          autofocus
+          [value]="query()"
+          (input)="onInput($any($event.target).value)"
+          [placeholder]="'Jump to…' | translate"
+          class="flex-1 py-3 text-body border-0 focus:ring-0 outline-none" />
+        <kbd class="text-micro text-ink-mid border border-ink-light rounded px-1.5 py-0.5">esc</kbd>
+      </div>
+      <ul class="max-h-80 overflow-auto py-1">
+        @for (cmd of results(); track cmd.route; let i = $index) {
+          <li
+            class="flex items-center gap-3 px-3 py-2 cursor-pointer text-body"
+            [class.bg-shell]="i === activeIndex()"
+            (mouseenter)="activeIndex.set(i)"
+            (click)="go(cmd)">
+            <i class="ti text-ink-mid" [class]="'ti-' + cmd.icon"></i>
+            <span>{{ cmd.label | translate }}</span>
+          </li>
+        } @empty {
+          <li class="px-3 py-4 text-center text-caption text-ink-mid">{{ 'No matches.' | translate }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+}

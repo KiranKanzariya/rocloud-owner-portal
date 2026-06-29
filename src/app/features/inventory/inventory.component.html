@@ -1,0 +1,64 @@
+<div class="flex flex-col gap-5">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Inventory' | translate }}</h1>
+    <button *appCan="'Inventory.Manage'" class="btn-primary" (click)="modalOpen.set(true)">
+      <i class="ti ti-plus"></i> {{ 'Stock entry' | translate }}
+    </button>
+  </div>
+
+  <!-- Float cards: 20L | 18L -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    @for (item of [{ label: '20L bottles', data: twentyL() }, { label: '18L bottles', data: eighteenL() }]; track item.label) {
+      <div class="card">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="ti ti-package text-navy text-xl"></i>
+          <h3 class="text-h3">{{ item.label | translate }}</h3>
+        </div>
+        @if (item.data; as d) {
+          <div class="grid grid-cols-4 gap-2 text-center">
+            <div><p class="metric-value">{{ d.totalStock }}</p><p class="metric-label">{{ 'Total' | translate }}</p></div>
+            <div><p class="metric-value text-navy">{{ d.issuedStock }}</p><p class="metric-label">{{ 'With customers' | translate }}</p></div>
+            <div><p class="metric-value text-teal">{{ d.availableStock }}</p><p class="metric-label">{{ 'At plant' | translate }}</p></div>
+            <div><p class="metric-value text-danger">{{ d.damagedStock }}</p><p class="metric-label">{{ 'Damaged' | translate }}</p></div>
+          </div>
+        } @else {
+          <p class="text-body text-ink-mid">{{ 'No stock data yet.' | translate }}</p>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Other sizes -->
+  @if (otherSizes().length) {
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      @for (s of otherSizes(); track s.productId) {
+        <div class="metric-card">
+          <p class="metric-label">{{ s.productName }} ({{ s.bottleSize }})</p>
+          <p class="metric-value">{{ s.availableStock }} <span class="text-caption text-ink-mid">{{ 'at plant' | translate }}</span></p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Movement log -->
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-h3">{{ 'Movement log' | translate }}</h3>
+      <select class="rounded-md border-ink-light text-body py-1.5" (change)="setType($any($event.target).value)">
+        <option value="">{{ 'All types' | translate }}</option>
+        @for (t of ['Issue','Return','Damage','Restock','Adjustment']; track t) { <option [value]="t">{{ t | translate }}</option> }
+      </select>
+    </div>
+
+    <roc-data-table
+      [columns]="columns" [rows]="movements()" [totalCount]="totalMovements()" [loading]="loadingMovements()"
+      [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
+      <ng-template appColumnCell="createdAt" let-row><span class="font-mono text-caption">{{ row.createdAt | date: 'dd MMM, HH:mm' }}</span></ng-template>
+      <ng-template appColumnCell="movementType" let-row><span [class]="typeClass(row.movementType)">{{ row.movementType | translate }}</span></ng-template>
+      <ng-template appColumnCell="customerName" let-row>{{ row.customerName || '—' }}</ng-template>
+      <ng-template appColumnCell="notes" let-row>{{ row.notes || '—' }}</ng-template>
+    </roc-data-table>
+  </div>
+</div>
+
+<app-stock-entry-modal [open]="modalOpen()" [products]="summary()" (saved)="onSaved()" (closed)="modalOpen.set(false)" />

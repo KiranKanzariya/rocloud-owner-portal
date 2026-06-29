@@ -1,0 +1,68 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ 'Record payment' | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
+        <!-- Customer autocomplete -->
+        <div class="relative">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Customer' | translate }}</span>
+            @if (effectiveCustomer(); as c) {
+              <div class="flex items-center justify-between rounded-md border border-ink-light px-3 py-1.5">
+                <span>{{ c.name }} <span class="text-caption text-ink-mid">{{ c.mobile | mobile }}</span></span>
+                @if (!presetCustomer()) {
+                  <button type="button" class="text-ink-mid hover:text-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+                }
+              </div>
+            } @else {
+              <input [formControl]="customerSearch" class="rounded-md border-ink-light py-1.5" [placeholder]="'Search by name or mobile…' | translate" />
+            }
+          </label>
+          @if (customerResults().length) {
+            <ul class="absolute z-10 mt-1 w-full rounded-md border border-ink-light bg-white shadow-card max-h-48 overflow-auto">
+              @for (c of customerResults(); track c.id) {
+                <li class="px-3 py-2 hover:bg-shell cursor-pointer text-body" (click)="selectCustomer(c)">
+                  {{ c.name }} <span class="text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Amount (₹)' | translate }}</span>
+            <input type="number" formControlName="amount" class="rounded-md border-ink-light py-1.5" />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Method' | translate }}</span>
+            <select formControlName="paymentMethod" class="rounded-md border-ink-light py-1.5">
+              @for (m of methods; track m) { <option [value]="m">{{ m | translate }}</option> }
+            </select>
+          </label>
+        </div>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Reference' | translate }}</span>
+          <input formControlName="referenceNumber" class="rounded-md border-ink-light py-1.5" [placeholder]="'UPI ref / cheque no. (optional)' | translate" />
+        </label>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Notes' | translate }}</span>
+          <input formControlName="notes" class="rounded-md border-ink-light py-1.5" [placeholder]="'Optional' | translate" />
+        </label>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

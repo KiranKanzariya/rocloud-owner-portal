@@ -1,0 +1,76 @@
+<div class="flex flex-col gap-4 max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-2 flex-wrap">
+    <h1 class="text-h1">{{ 'My route' | translate }}</h1>
+    <div class="flex items-center gap-2">
+      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid"></i> }
+      <input type="date" [value]="date()" (change)="changeDate($any($event.target).value)"
+             class="rounded-md border-ink-light text-body py-1.5" />
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card p-3 flex items-center gap-3">
+    <span class="text-caption text-ink-mid">{{ 'Done' | translate }}</span>
+    <span class="font-mono font-semibold text-navy">{{ done() }}/{{ total() }}</span>
+    @if (total() === 0) {
+      <span class="ml-auto text-caption text-ink-mid">—</span>
+    } @else if (remaining() > 0) {
+      <span class="ml-auto text-caption text-amber"><i class="ti ti-clock"></i> {{ remaining() }} {{ 'left' | translate }}</span>
+    } @else {
+      <span class="ml-auto text-caption text-teal"><i class="ti ti-circle-check"></i> {{ 'All done' | translate }}</span>
+    }
+  </div>
+
+  <!-- Stops -->
+  <div class="flex flex-col gap-2">
+    @for (d of sorted(); track d.id) {
+      <div (click)="selected.set(d)"
+           class="card p-3 cursor-pointer hover:border-navy transition-colors flex flex-col gap-1">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-medium text-ink">{{ d.customerName }}</span>
+          <span [class]="statusClass(d.status)">{{ d.status | translate }}</span>
+        </div>
+
+        <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }}</span>
+        @if (d.addressLine) { <span class="text-caption text-ink-mid">{{ d.addressLine }}</span> }
+
+        <div class="flex items-center justify-between gap-2 text-caption">
+          @if (d.customerMobile) {
+            <a [href]="'tel:' + d.customerMobile" (click)="$event.stopPropagation()"
+               class="text-navy font-mono inline-flex items-center gap-1"><i class="ti ti-phone"></i> {{ d.customerMobile | mobile }}</a>
+          } @else {
+            <span class="text-ink-mid">—</span>
+          }
+          @if (d.status === 'Delivered' && d.collectedAmount) {
+            <span class="font-mono text-teal">₹{{ d.collectedAmount | number: '1.0-0' }}</span>
+          }
+        </div>
+
+        <!-- Item-wise jars to hand over (before the stop is completed) -->
+        @if ((d.status === 'Pending' || d.status === 'InTransit') && d.items?.length) {
+          <div class="flex flex-wrap gap-1 pt-0.5">
+            @for (it of d.items; track it.productName) {
+              <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                {{ it.productName }} <span class="text-ink font-medium">×{{ it.quantity }}</span>
+              </span>
+            }
+          </div>
+        }
+
+        @if (d.status === 'Delivered') {
+          <span class="text-caption text-ink-mid">{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}</span>
+        }
+        @if (d.status === 'Failed' && d.notes) {
+          <span class="text-caption text-danger"><i class="ti ti-alert-triangle"></i> {{ d.notes }}</span>
+        }
+      </div>
+    } @empty {
+      <p class="text-caption text-ink-mid text-center py-8">{{ 'No stops assigned for this day.' | translate }}</p>
+    }
+  </div>
+</div>
+
+@if (selected(); as sel) {
+  <app-delivery-detail-modal [delivery]="sel" (completed)="onCompleted()" (closed)="selected.set(null)" />
+}

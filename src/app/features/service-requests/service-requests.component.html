@@ -1,0 +1,38 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'AMC / Service' | translate }}</h1>
+    <button *appCan="'AMC.Manage'" class="btn-primary" (click)="createOpen.set(true)">
+      <i class="ti ti-plus"></i> {{ 'New request' | translate }}
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card flex flex-wrap items-center gap-3">
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+      <option value="">{{ 'All statuses' | translate }}</option>
+      @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
+    </select>
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setPriority($any($event.target).value)">
+      <option value="">{{ 'All priorities' | translate }}</option>
+      @for (p of priorities; track p) { <option [value]="p">{{ p | translate }}</option> }
+    </select>
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
+
+    <ng-template appColumnCell="ticketNumber" let-row><span class="font-mono">{{ row.ticketNumber }}</span></ng-template>
+    <ng-template appColumnCell="assignedTechName" let-row>
+      @if (row.assignedTechName) { {{ row.assignedTechName }} } @else { <span class="text-ink-mid">{{ 'Unassigned' | translate }}</span> }
+    </ng-template>
+    <ng-template appColumnCell="priority" let-row><span [class]="priorityClass(row.priority)">{{ row.priority | translate }}</span></ng-template>
+    <ng-template appColumnCell="scheduledDate" let-row>
+      @if (row.scheduledDate) { <span class="font-mono text-caption">{{ row.scheduledDate | date: 'dd MMM' }}</span> } @else { <span class="text-ink-mid">—</span> }
+    </ng-template>
+    <ng-template appColumnCell="status" let-row><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></ng-template>
+  </roc-data-table>
+</div>
+
+<app-service-request-form-modal [open]="createOpen()" (saved)="onCreated()" (closed)="createOpen.set(false)" />
+<app-service-detail-modal [requestId]="detailId()" (updated)="onUpdated()" (closed)="detailId.set(null)" />

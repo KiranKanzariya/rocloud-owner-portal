@@ -1,0 +1,73 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ 'New service request' | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
+        <!-- Customer autocomplete -->
+        <div class="relative">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Customer' | translate }}</span>
+            @if (selectedCustomer(); as c) {
+              <div class="flex items-center justify-between rounded-md border border-ink-light px-3 py-1.5">
+                <span>{{ c.name }} <span class="text-caption text-ink-mid">{{ c.mobile | mobile }}</span></span>
+                <button type="button" class="text-ink-mid hover:text-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+              </div>
+            } @else {
+              <input [formControl]="customerSearch" class="rounded-md border-ink-light py-1.5" [placeholder]="'Search by name or mobile…' | translate" />
+            }
+          </label>
+          @if (customerResults().length) {
+            <ul class="absolute z-10 mt-1 w-full rounded-md border border-ink-light bg-white shadow-card max-h-48 overflow-auto">
+              @for (c of customerResults(); track c.id) {
+                <li class="px-3 py-2 hover:bg-shell cursor-pointer text-body" (click)="selectCustomer(c)">
+                  {{ c.name }} <span class="text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Title' | translate }}</span>
+          <input formControlName="title" class="rounded-md border-ink-light py-1.5" [placeholder]="'e.g. Filter change due' | translate" />
+        </label>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Type' | translate }}</span>
+            <select formControlName="serviceType" class="rounded-md border-ink-light py-1.5">
+              @for (t of types; track t) { <option [value]="t">{{ t | translate }}</option> }
+            </select>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Priority' | translate }}</span>
+            <select formControlName="priority" class="rounded-md border-ink-light py-1.5">
+              @for (p of priorities; track p) { <option [value]="p">{{ p | translate }}</option> }
+            </select>
+          </label>
+        </div>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Scheduled date' | translate }}</span>
+          <input type="date" formControlName="scheduledDate" class="rounded-md border-ink-light py-1.5" />
+        </label>
+
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Description' | translate }}</span>
+          <textarea formControlName="description" rows="3" class="rounded-md border-ink-light py-1.5" [placeholder]="'Optional' | translate"></textarea>
+        </label>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Create' | translate }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

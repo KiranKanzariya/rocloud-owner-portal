@@ -1,0 +1,69 @@
+@if (request(); as r) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-lg max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-h3 font-mono">{{ r.ticketNumber }}</h3>
+            <span [class]="statusClass(r.status)">{{ r.status | translate }}</span>
+            <span [class]="priorityClass(r.priority)">{{ r.priority | translate }}</span>
+          </div>
+          <p class="text-body text-ink-mid">{{ r.title }}</p>
+        </div>
+        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+      </div>
+
+      <!-- Info -->
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-body mb-4">
+        <div><dt class="text-caption text-ink-mid">{{ 'Customer' | translate }}</dt><dd>{{ r.customerName }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Mobile' | translate }}</dt><dd class="font-mono">{{ (r.customerMobile | mobile) || '—' }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Type' | translate }}</dt><dd>{{ r.serviceType | translate }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</dt><dd>{{ r.scheduledDate ? (r.scheduledDate | date: 'mediumDate') : '—' }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Technician' | translate }}</dt><dd>{{ r.assignedTechName || ('Unassigned' | translate) }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Created' | translate }}</dt><dd>{{ r.createdAt | date: 'medium' }}</dd></div>
+      </dl>
+
+      @if (r.description) {
+        <div class="mb-4"><p class="text-caption text-ink-mid mb-1">{{ 'Description' | translate }}</p><p class="text-body">{{ r.description }}</p></div>
+      }
+
+      <!-- Assign technician (AMC.Manage) -->
+      @if (canManage && r.status !== 'Resolved' && r.status !== 'Cancelled') {
+        <div class="border-t border-ink-light pt-3 mb-3">
+          <p class="text-caption font-medium mb-1">{{ 'Assign technician' | translate }}</p>
+          <div class="flex items-center gap-2">
+            <select [(ngModel)]="selectedTech" class="rounded-md border-ink-light text-body py-1.5 flex-1">
+              <option value="">{{ 'Select technician…' | translate }}</option>
+              @for (t of technicians(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
+            </select>
+            <button class="btn-secondary" [disabled]="busy() || !selectedTech" (click)="assign()">{{ 'Assign' | translate }}</button>
+          </div>
+          @if (!technicians().length) { <p class="text-caption text-ink-mid mt-1">{{ 'No technicians available.' | translate }}</p> }
+        </div>
+      }
+
+      <!-- Resolution + status workflow (AMC.Update) -->
+      @if (canUpdate && r.status !== 'Resolved' && r.status !== 'Cancelled') {
+        <div class="border-t border-ink-light pt-3">
+          <p class="text-caption font-medium mb-1">{{ 'Resolution notes' | translate }}</p>
+          <textarea [(ngModel)]="resolutionNotes" rows="2" class="w-full rounded-md border-ink-light text-body py-1.5 mb-2" [placeholder]="'Required to resolve' | translate"></textarea>
+          <div class="flex justify-end gap-2">
+            @if (r.status === 'Open') {
+              <button class="btn-secondary" [disabled]="busy()" (click)="setStatus('InProgress')">{{ 'Start work' | translate }}</button>
+            }
+            <button class="btn-primary" [disabled]="busy()" (click)="setStatus('Resolved')">
+              @if (busy()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Resolve' | translate }} }
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (r.status === 'Resolved') {
+        <div class="border-t border-ink-light pt-3 text-body">
+          <p class="text-caption text-ink-mid">{{ 'Resolved' | translate }} {{ r.resolvedAt ? (r.resolvedAt | date: 'medium') : '' }}</p>
+          @if (r.resolutionNotes) { <p class="mt-1">{{ r.resolutionNotes }}</p> }
+        </div>
+      }
+    </div>
+  </div>
+}

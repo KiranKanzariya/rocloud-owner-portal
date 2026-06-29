@@ -1,0 +1,75 @@
+<div class="flex flex-col gap-5">
+  <div>
+    <h1 class="text-h1">{{ 'Activity log' | translate }}</h1>
+    <p class="text-caption text-ink-mid">{{ 'Who did what, when, and the outcome. Recorded automatically and cannot be edited.' | translate }}</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="card flex flex-wrap items-end gap-3">
+    <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'Area' | translate }}</span>
+      <select [(ngModel)]="module" class="rounded-md border-ink-light py-1.5">
+        <option value="">{{ 'All' | translate }}</option>
+        @for (m of modules; track m) { <option [value]="m">{{ m }}</option> }
+      </select>
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'From' | translate }}</span>
+      <input type="date" [(ngModel)]="fromDate" class="rounded-md border-ink-light py-1.5" />
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'To' | translate }}</span>
+      <input type="date" [(ngModel)]="toDate" class="rounded-md border-ink-light py-1.5" />
+    </label>
+    <button class="btn-primary" (click)="applyFilters()"><i class="ti ti-filter"></i> {{ 'Apply' | translate }}</button>
+  </div>
+
+  <!-- Table -->
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="total()" [loading]="loading()"
+    [page]="page()" [pageSize]="pageSize"
+    (pageChange)="goTo($event)" (rowClick)="selected.set($any($event))">
+
+    <ng-template appColumnCell="createdAt" let-r><span class="font-mono text-caption whitespace-nowrap">{{ r.createdAt | date: 'medium' }}</span></ng-template>
+    <ng-template appColumnCell="userName" let-r>{{ r.userName || ('System' | translate) }}</ng-template>
+    <ng-template appColumnCell="action" let-r><span [title]="rawLabel(r)">{{ verbLabel(r) | translate }}</span></ng-template>
+    <ng-template appColumnCell="module" let-r><span class="capitalize">{{ r.module }}</span></ng-template>
+    <ng-template appColumnCell="statusCode" let-r><span [class]="statusClass(r.statusCode)">{{ statusLabel(r.statusCode) | translate }}</span></ng-template>
+    <ng-template appColumnCell="ipAddress" let-r><span class="font-mono text-caption text-ink-mid">{{ r.ipAddress || '—' }}</span></ng-template>
+  </roc-data-table>
+</div>
+
+<!-- Detail drill-down -->
+@if (selected(); as r) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" (click)="selected.set(null)">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[85vh] overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-ink-light px-5 py-3">
+        <h3 class="text-h3">{{ 'Activity detail' | translate }}</h3>
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="selected.set(null)"><i class="ti ti-x"></i></button>
+      </div>
+
+      <div class="p-5 flex flex-col gap-4">
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-body">
+          <div><dt class="text-caption text-ink-mid">{{ 'When' | translate }}</dt><dd class="font-mono">{{ r.createdAt | date: 'medium' }}</dd></div>
+          <div><dt class="text-caption text-ink-mid">{{ 'Who' | translate }}</dt><dd>{{ r.userName || ('System' | translate) }}</dd></div>
+          <div><dt class="text-caption text-ink-mid">{{ 'Action' | translate }}</dt><dd>{{ verbLabel(r) | translate }} <span class="text-caption text-ink-mid font-mono">({{ rawLabel(r) }})</span></dd></div>
+          <div><dt class="text-caption text-ink-mid">{{ 'Status' | translate }}</dt><dd><span [class]="statusClass(r.statusCode)">{{ statusLabel(r.statusCode) | translate }}</span> @if (r.statusCode) { <span class="text-caption text-ink-mid font-mono">{{ r.statusCode }}</span> }</dd></div>
+          <div><dt class="text-caption text-ink-mid">{{ 'Area' | translate }}</dt><dd class="capitalize">{{ r.module }}</dd></div>
+          @if (r.entityId) { <div><dt class="text-caption text-ink-mid">{{ 'Record' | translate }}</dt><dd class="font-mono text-caption break-all">{{ r.entityId }}</dd></div> }
+          <div><dt class="text-caption text-ink-mid">{{ 'IP' | translate }}</dt><dd class="font-mono text-caption">{{ r.ipAddress || '—' }}</dd></div>
+          @if (r.userAgent) { <div class="sm:col-span-2"><dt class="text-caption text-ink-mid">{{ 'Device' | translate }}</dt><dd class="text-caption text-ink-mid break-words">{{ r.userAgent }}</dd></div> }
+        </dl>
+
+        <div>
+          <dt class="text-caption text-ink-mid mb-1">{{ 'Submitted data' | translate }}</dt>
+          @if (r.newValues) {
+            <pre class="bg-shell rounded-md p-3 text-caption font-mono overflow-x-auto whitespace-pre-wrap break-words">{{ prettyPayload(r) }}</pre>
+            <p class="text-micro text-ink-mid mt-1">{{ 'Passwords and tokens are redacted.' | translate }}</p>
+          } @else {
+            <p class="text-body text-ink-mid">{{ 'No data was submitted with this action.' | translate }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

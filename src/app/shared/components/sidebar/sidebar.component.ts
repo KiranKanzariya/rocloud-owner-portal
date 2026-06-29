@@ -1,0 +1,87 @@
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { PermissionService, PlanType } from '../../../core/services/permission.service';
+import { LayoutService } from '../../../core/services/layout.service';
+import { LogoComponent } from '../logo/logo.component';
+
+interface NavItem {
+  label: string;
+  icon: string;
+  route: string;
+  permission?: string;
+  plan?: PlanType;
+  /** Show only to the tenant's Owner role (e.g. Activity log). */
+  ownerOnly?: boolean;
+}
+
+interface NavSection {
+  heading: string;
+  items: NavItem[];
+}
+
+@Component({
+  selector: 'roc-sidebar',
+  standalone: true,
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, LogoComponent],
+  templateUrl: './sidebar.component.html',
+})
+export class SidebarComponent {
+  protected readonly perms = inject(PermissionService);
+  protected readonly layout = inject(LayoutService);
+
+  // `label` / `heading` are i18n keys resolved by the translate pipe (see /assets/i18n).
+  protected readonly sections: NavSection[] = [
+    {
+      heading: 'Operations',
+      items: [
+        { label: 'Dashboard', icon: 'ti-layout-dashboard', route: '/dashboard' },
+        { label: 'Customers', icon: 'ti-users', route: '/customers', permission: 'Customers.View' },
+        { label: 'Orders', icon: 'ti-clipboard-list', route: '/orders', permission: 'Orders.View' },
+        { label: 'Deliveries', icon: 'ti-truck', route: '/deliveries', permission: 'Deliveries.View' },
+        { label: 'My route', icon: 'ti-route', route: '/my-route', permission: 'Deliveries.ViewOwn' },
+        { label: 'Inventory', icon: 'ti-package', route: '/inventory', permission: 'Inventory.View' },
+      ],
+    },
+    {
+      heading: 'Finance',
+      items: [
+        { label: 'Invoices', icon: 'ti-file-invoice', route: '/invoices', permission: 'Invoices.View' },
+        { label: 'Payments', icon: 'ti-cash', route: '/payments', permission: 'Payments.View' },
+        { label: 'Reports', icon: 'ti-chart-bar', route: '/reports', permission: 'Reports.View', plan: 'Pro' },
+      ],
+    },
+    {
+      heading: 'Service',
+      items: [
+        { label: 'AMC / Service', icon: 'ti-tool', route: '/service-requests', permission: 'AMC.View' },
+      ],
+    },
+    {
+      heading: 'Settings',
+      items: [
+        { label: 'Users', icon: 'ti-user-cog', route: '/settings/users', permission: 'Users.View' },
+        { label: 'Roles', icon: 'ti-shield', route: '/settings/roles', permission: 'Roles.Manage' },
+        { label: 'Products', icon: 'ti-bottle', route: '/settings/products', permission: 'Inventory.Manage' },
+        { label: 'Areas', icon: 'ti-map-pin', route: '/settings/areas', permission: 'Settings.View' },
+        { label: 'Notifications', icon: 'ti-bell', route: '/settings/notifications', permission: 'Settings.View' },
+        { label: 'Profile', icon: 'ti-user', route: '/settings/profile', permission: 'Settings.View' },
+        { label: 'Activity log', icon: 'ti-history', route: '/settings/activity', ownerOnly: true },
+        { label: 'Subscription', icon: 'ti-credit-card', route: '/settings/subscription' },
+      ],
+    },
+  ];
+
+  canShow(item: NavItem): boolean {
+    return (
+      (!item.ownerOnly || this.perms.isOwner()) &&
+      (!item.permission || this.perms.can(item.permission)) &&
+      (!item.plan || this.perms.hasPlan(item.plan))
+    );
+  }
+
+  /** True if a whole section has at least one visible item. */
+  hasVisible(section: NavSection): boolean {
+    return section.items.some((i) => this.canShow(i));
+  }
+}

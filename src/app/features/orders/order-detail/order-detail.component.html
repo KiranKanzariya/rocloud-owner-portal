@@ -1,0 +1,73 @@
+@if (order(); as o) {
+  <div class="flex flex-col gap-5 max-w-3xl">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-2">
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <div>
+          <div class="flex items-center gap-2">
+            <a [routerLink]="['/customers', o.customerId]" class="text-h1 hover:underline">{{ o.customerName }}</a>
+            <span [class]="statusClass(o.status)">{{ o.status | translate }}</span>
+            @if (o.status === 'Delivered') {
+              <span [class]="paymentClass(o.paymentStatus)">{{ o.paymentStatus | translate }}</span>
+            }
+          </div>
+          <p class="text-body text-ink-mid font-mono">{{ o.orderDate | date: 'mediumDate' }} · {{ o.orderType }}</p>
+          <p class="text-caption text-ink-mid">{{ 'Placed' | translate }} {{ o.createdAt | date: 'medium' }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        @if (o.status === 'Pending' || o.status === 'Confirmed') {
+          <button *appCan="'Orders.Edit'" class="btn-secondary" (click)="router.navigate(['/orders', o.id, 'edit'])"><i class="ti ti-edit"></i> {{ 'Edit' | translate }}</button>
+        }
+        @if (o.status === 'Pending') {
+          <button *appCan="'Orders.Cancel'" class="btn-danger" (click)="cancel()"><i class="ti ti-x"></i> {{ 'Cancel order' | translate }}</button>
+        }
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card">
+      <h3 class="text-h3 mb-3">{{ 'Items' | translate }}</h3>
+      <table class="w-full text-body">
+        <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Total' | translate }}</th></tr></thead>
+        <tbody>
+          @for (it of o.items; track it.id) {
+            <tr class="border-b border-ink-light/60"><td class="py-2">{{ it.productName }}</td><td class="py-2">{{ it.quantity }}</td><td class="py-2 text-right font-mono">₹{{ it.unitRate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ it.totalAmount | number: '1.0-0' }}</td></tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr><td colspan="3" class="py-2 text-right font-medium">{{ 'Total' | translate }}</td><td class="py-2 text-right font-mono text-h4 text-navy">₹{{ o.totalAmount | number: '1.0-0' }}</td></tr>
+          @if (o.status === 'Delivered' && o.paymentStatus !== 'Invoiced') {
+            <tr><td colspan="3" class="py-1 text-right text-caption text-ink-mid">{{ 'Paid' | translate }}</td><td class="py-1 text-right font-mono text-caption">₹{{ o.amountPaid | number: '1.0-0' }}</td></tr>
+            @if (o.totalAmount - o.amountPaid > 0) {
+              <tr><td colspan="3" class="py-1 text-right text-caption font-medium text-danger">{{ 'Due' | translate }}</td><td class="py-1 text-right font-mono text-caption font-medium text-danger">₹{{ o.totalAmount - o.amountPaid | number: '1.0-0' }}</td></tr>
+            }
+          } @else if (o.status === 'Delivered' && o.paymentStatus === 'Invoiced') {
+            <tr><td colspan="4" class="py-1 text-right text-caption text-ink-mid">{{ 'Billed on an invoice' | translate }}</td></tr>
+          }
+        </tfoot>
+      </table>
+      @if (o.notes) { <p class="text-caption text-ink-mid mt-3">{{ 'Notes' | translate }}: {{ o.notes }}</p> }
+    </div>
+
+    <!-- Delivery -->
+    <div class="card">
+      <h3 class="text-h3 mb-3">{{ 'Delivery' | translate }}</h3>
+      @if (o.delivery; as d) {
+        <div class="grid grid-cols-2 gap-y-2 gap-x-8 text-body">
+          <div><span class="text-caption text-ink-mid">{{ 'Status' | translate }}</span><div><span [class]="statusClass(d.status)">{{ d.status | translate }}</span></div></div>
+          <div><span class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</span><div>{{ d.scheduledDate | date: 'mediumDate' }}</div></div>
+          <div><span class="text-caption text-ink-mid">{{ 'Delivery boy' | translate }}</span><div>{{ o.deliveryBoyName || '—' }}</div></div>
+          <div><span class="text-caption text-ink-mid">{{ 'Delivered at' | translate }}</span><div>{{ d.deliveredAt ? (d.deliveredAt | date: 'short') : '—' }}</div></div>
+          @if (d.status === 'Delivered') {
+            <div><span class="text-caption text-ink-mid">{{ 'Jars (out / back)' | translate }}</span><div>{{ d.jarsDelivered ?? 0 }} / {{ d.jarsReturned ?? 0 }}</div></div>
+            <div><span class="text-caption text-ink-mid">{{ 'Collected' | translate }}</span><div class="font-mono">₹{{ (d.collectedAmount ?? 0) | number: '1.0-0' }} <span class="text-caption text-ink-mid">{{ d.paymentMethod | translate }}</span></div></div>
+          }
+        </div>
+      } @else { <p class="text-body text-ink-mid">{{ 'No delivery linked.' | translate }}</p> }
+    </div>
+  </div>
+} @else {
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+}

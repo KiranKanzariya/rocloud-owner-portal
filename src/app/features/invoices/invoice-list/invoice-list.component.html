@@ -1,0 +1,35 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Invoices' | translate }}</h1>
+    <button *appCan="'Invoices.Create'" class="btn-primary" (click)="router.navigate(['/invoices/new'])">
+      <i class="ti ti-plus"></i> {{ 'Generate invoice' | translate }}
+    </button>
+  </div>
+
+  <div class="card flex flex-wrap items-center gap-3">
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+      <option value="">{{ 'All statuses' | translate }}</option>
+      @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
+    </select>
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
+
+    <ng-template appColumnCell="invoiceNumber" let-row><span class="font-mono">{{ row.invoiceNumber }}</span>@if (row.discount > 0) { <i class="ti ti-discount-2 text-teal ml-1 align-middle" [title]="'Discount applied' | translate"></i> }</ng-template>
+    <ng-template appColumnCell="invoiceDate" let-row><span class="font-mono text-caption" [title]="row.createdAt | date: 'medium'">{{ row.invoiceDate | date: 'mediumDate' }} <span class="text-ink-mid">{{ row.createdAt | date: 'shortTime' }}</span></span></ng-template>
+    <ng-template appColumnCell="dueDate" let-row><span class="font-mono text-caption">{{ row.dueDate | date: 'dd MMM' }}</span></ng-template>
+    <ng-template appColumnCell="totalAmount" let-row><span class="font-mono">₹{{ row.totalAmount | number: '1.0-0' }}</span></ng-template>
+    <ng-template appColumnCell="balance" let-row><span class="font-mono" [class.text-danger]="row.balance > 0">₹{{ row.balance | number: '1.0-0' }}</span></ng-template>
+    <ng-template appColumnCell="status" let-row><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></ng-template>
+
+    <ng-template appColumnCell="actions" let-row>
+      <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadPdf(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
+        <button *appCan="'Invoices.Edit'" class="p-1.5 rounded hover:bg-shell text-teal" (click)="send(row)" [title]="'Send' | translate"><i class="ti ti-brand-whatsapp"></i></button>
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="open(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
+      </div>
+    </ng-template>
+  </roc-data-table>
+</div>

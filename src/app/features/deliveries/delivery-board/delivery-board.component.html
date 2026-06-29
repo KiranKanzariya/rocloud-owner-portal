@@ -1,0 +1,81 @@
+<div class="flex flex-col gap-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Delivery board' | translate }}</h1>
+    <div class="flex items-center gap-2">
+      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid"></i> }
+      <input type="date" [value]="date()" (change)="changeDate($any($event.target).value)"
+             class="rounded-md border-ink-light text-body py-1.5" />
+      <button class="btn-secondary" (click)="router.navigate(['/deliveries/map'])"><i class="ti ti-map"></i> {{ 'Route map' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Load summary: item-wise jar totals still to be delivered (Pending + In transit) -->
+  @if (board().toDeliver?.length) {
+    <div class="card p-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <span class="text-caption font-medium text-ink-mid"><i class="ti ti-package"></i> {{ 'To deliver' | translate }}</span>
+      @for (t of board().toDeliver; track t.productName) {
+        <span class="text-caption">
+          <span class="font-medium text-ink">{{ t.productName }}</span>
+          <span class="text-ink-mid">×{{ t.quantity }}</span>
+        </span>
+      }
+      <span class="ml-auto text-caption font-mono text-navy font-semibold">
+        {{ '{{count}} bottles' | translate: { count: totalToDeliver() } }}
+      </span>
+    </div>
+  }
+
+  <!-- Columns -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (col of [
+      { key: 'pending', label: 'Pending', items: board().pending, accent: 'amber' },
+      { key: 'inTransit', label: 'In transit', items: board().inTransit, accent: 'navy' },
+      { key: 'delivered', label: 'Delivered', items: board().delivered, accent: 'teal' },
+      { key: 'failed', label: 'Failed', items: board().failed, accent: 'danger' }
+    ]; track col.key) {
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-h4">{{ col.label | translate }}</h3>
+          <span class="text-caption text-ink-mid bg-shell rounded-full px-2 py-0.5">{{ col.items.length }}</span>
+        </div>
+
+        <div class="flex flex-col gap-2 min-h-[100px]">
+          @for (d of col.items; track d.id) {
+            <button type="button" (click)="selected.set(d)"
+                    class="card text-left p-3 hover:border-navy transition-colors flex flex-col gap-1">
+              <div class="flex items-center justify-between">
+                <span class="font-medium text-ink">{{ d.customerName }}</span>
+                @if (d.collectedAmount) { <span class="text-caption font-mono text-teal">₹{{ d.collectedAmount | number: '1.0-0' }}</span> }
+              </div>
+              <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
+              <div class="flex items-center justify-between text-caption text-ink-mid">
+                <span><i class="ti ti-user"></i> {{ d.deliveryBoyName || ('Unassigned' | translate) }}</span>
+                @if (d.status === 'Delivered') { <span>{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}</span> }
+              </div>
+              <!-- Item-wise jars to deliver for this stop (before it's completed) -->
+              @if ((d.status === 'Pending' || d.status === 'InTransit') && d.items?.length) {
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  @for (it of d.items; track it.productName) {
+                    <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                      {{ it.productName }} <span class="text-ink font-medium">×{{ it.quantity }}</span>
+                    </span>
+                  }
+                </div>
+              }
+              @if (d.status === 'Failed' && d.notes) {
+                <span class="text-caption text-danger"><i class="ti ti-alert-triangle"></i> {{ d.notes }}</span>
+              }
+            </button>
+          } @empty {
+            <p class="text-caption text-ink-mid text-center py-4">{{ 'Nothing here.' | translate }}</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (selected(); as sel) {
+  <app-delivery-detail-modal [delivery]="sel" (completed)="onCompleted()" (closed)="selected.set(null)" />
+}

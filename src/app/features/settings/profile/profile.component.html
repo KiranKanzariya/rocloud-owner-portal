@@ -1,0 +1,116 @@
+<div class="flex flex-col gap-5">
+  <h1 class="text-h1">{{ 'Business profile' | translate }}</h1>
+
+  @if (settings(); as s) {
+    <!-- Identity header -->
+    <div class="card flex items-center gap-4">
+      <span class="w-14 h-14 rounded-lg bg-navy text-white flex items-center justify-center text-h3 font-semibold overflow-hidden">
+        @if (s.logoUrl) { <img [src]="s.logoUrl" alt="Logo" class="w-full h-full object-cover" /> } @else { {{ initials() }} }
+      </span>
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-h3">{{ s.name }}</h2>
+          <span class="status-active-info">{{ s.planType }}</span>
+          <span class="status-pending">{{ s.status | translate }}</span>
+        </div>
+        <p class="text-caption text-ink-mid">{{ s.subdomain }}.rocloud.app · {{ 'Owner' | translate }} {{ s.ownerName }} · {{ s.ownerEmail }}</p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="card flex flex-col gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Business name' | translate }}</span>
+          <input formControlName="name" class="rounded-md border-ink-light py-1.5" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'GST number' | translate }}</span>
+          <input formControlName="gstNumber" class="rounded-md border-ink-light py-1.5 font-mono uppercase" [placeholder]="'15-char GSTIN' | translate" maxlength="15" />
+        </label>
+      </div>
+
+      <!-- GST on customer invoices (owner-configurable) -->
+      <div class="rounded-md border border-ink-light p-3 flex flex-col gap-3">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" formControlName="gstEnabled" class="mt-0.5 rounded border-ink-light text-navy" />
+          <span class="flex flex-col">
+            <span class="text-caption font-medium">{{ 'Charge GST on customer invoices' | translate }}</span>
+            <span class="text-micro text-ink-mid">{{ 'When on, GST is added automatically to every invoice you generate.' | translate }}</span>
+          </span>
+        </label>
+        @if (form.controls.gstEnabled.value) {
+          <div class="flex flex-col gap-1 max-w-[12rem]">
+            <span class="text-caption font-medium">{{ 'GST rate' | translate }}</span>
+            <div class="flex items-center gap-1">
+              <input type="number" formControlName="gstPercent" readonly tabindex="-1"
+                     class="rounded-md border-ink-light bg-shell py-1.5 w-24 text-right font-mono text-ink-mid cursor-not-allowed" />
+              <span class="text-caption text-ink-mid">%</span>
+            </div>
+            <span class="text-micro text-ink-mid">{{ 'Set by your plan — contact support to change it.' | translate }}</span>
+          </div>
+        }
+      </div>
+
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Address' | translate }}</span>
+        <input formControlName="addressLine" class="rounded-md border-ink-light py-1.5" />
+      </label>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'City' | translate }}</span>
+          <input formControlName="city" class="rounded-md border-ink-light py-1.5" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'State' | translate }}</span>
+          <input formControlName="state" class="rounded-md border-ink-light py-1.5" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Pincode' | translate }}</span>
+          <input formControlName="pincode" class="rounded-md border-ink-light py-1.5 font-mono" maxlength="6" />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Logo URL' | translate }}</span>
+          <input formControlName="logoUrl" class="rounded-md border-ink-light py-1.5" placeholder="https://…" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Default language' | translate }}</span>
+          <select formControlName="defaultLanguage" class="rounded-md border-ink-light py-1.5">
+            @for (l of languages; track l.code) { <option [value]="l.code">{{ l.label }}</option> }
+          </select>
+        </label>
+      </div>
+
+      <!-- White-label primary colour (Enterprise) -->
+      <div class="flex flex-col gap-1">
+        <span class="text-caption font-medium flex items-center gap-1.5">
+          {{ 'Brand colour' | translate }}
+          @if (!isEnterprise) { <span class="status-active-info">{{ 'Enterprise' | translate }}</span> }
+        </span>
+        @if (isEnterprise) {
+          <div class="flex items-center gap-2">
+            <input type="color" formControlName="primaryColor" class="h-9 w-14 rounded border-ink-light" />
+            <input formControlName="primaryColor" class="rounded-md border-ink-light py-1.5 font-mono w-32" />
+          </div>
+        } @else {
+          <p class="text-caption text-ink-mid">{{ 'White-label branding is available on the Enterprise plan.' | translate }}</p>
+        }
+      </div>
+
+      @if (canManage) {
+        <div class="flex justify-end pt-1">
+          <button type="submit" class="btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save changes' | translate }} }
+          </button>
+        </div>
+      } @else {
+        <p class="text-caption text-ink-mid">{{ 'You have read-only access to settings.' | translate }}</p>
+      }
+    </form>
+  } @else {
+    <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+  }
+</div>

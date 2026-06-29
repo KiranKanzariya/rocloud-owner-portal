@@ -1,0 +1,184 @@
+@if (delivery(); as d) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="closed.emit()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="text-h3">{{ d.customerName }}</h3>
+          <p class="text-caption text-ink-mid">
+            <i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span>
+          </p>
+          @if (d.addressLine) { <p class="text-caption text-ink-mid">{{ d.addressLine }}</p> }
+        </div>
+        <button class="text-ink-mid hover:text-danger" (click)="closed.emit()"><i class="ti ti-x"></i></button>
+      </div>
+
+      @if (editing()) {
+      <!-- Order preview: what to deliver + how many empties the customer holds (before marking delivered) -->
+      @if (choice() !== 'Delivered' && lines.controls.length) {
+        <div class="flex flex-col gap-1 mb-3">
+          <span class="text-micro text-ink-mid">{{ 'To deliver' | translate }}</span>
+          @for (line of lines.controls; track line) {
+            <div class="flex items-center justify-between text-caption border-b border-ink-light/60 py-1">
+              <span class="truncate">{{ line.value.productName }} <span class="text-micro text-ink-mid">×{{ line.value.ordered }}</span></span>
+              @if (line.value.held !== null) {
+                <span class="text-micro text-ink-mid whitespace-nowrap">{{ 'holds' | translate }} {{ line.value.held }}</span>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Status choice (hide "In transit" once the stop is already in transit) -->
+      <div class="flex gap-2 mb-4">
+        @if (d.status !== 'InTransit') {
+          <button type="button" class="flex-1 py-2 rounded-md border text-caption"
+                  [class.border-navy]="choice() === 'InTransit'" [class.bg-foam]="choice() === 'InTransit'" [class.border-ink-light]="choice() !== 'InTransit'"
+                  (click)="pick('InTransit')"><i class="ti ti-truck-delivery"></i> {{ 'In transit' | translate }}</button>
+        }
+        <button type="button" class="flex-1 py-2 rounded-md border text-caption"
+                [class.border-teal]="choice() === 'Delivered'" [class.bg-teal-light]="choice() === 'Delivered'" [class.border-ink-light]="choice() !== 'Delivered'"
+                (click)="pick('Delivered')"><i class="ti ti-circle-check"></i> {{ 'Delivered' | translate }}</button>
+        <button type="button" class="flex-1 py-2 rounded-md border text-caption"
+                [class.border-danger]="choice() === 'Failed'" [class.bg-danger-light]="choice() === 'Failed'" [class.border-ink-light]="choice() !== 'Failed'"
+                (click)="pick('Failed')"><i class="ti ti-circle-x"></i> {{ 'Failed' | translate }}</button>
+      </div>
+
+      <!-- Delivered details -->
+      @if (choice() === 'Delivered') {
+        <!-- Per-item jars: delivered / returned for each product on the order -->
+        <div class="flex flex-col gap-2 mb-3">
+          <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-micro text-ink-mid px-1">
+            <span>{{ 'Item' | translate }}</span>
+            <span class="w-16 text-center">{{ 'Delivered' | translate }}</span>
+            <span class="w-16 text-center">{{ 'Returned' | translate }}</span>
+          </div>
+          @for (line of lines.controls; track line; let i = $index) {
+            <div [formGroup]="$any(line)" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
+              <span class="text-caption truncate">{{ line.value.productName }}
+                <span class="text-micro text-ink-mid">×{{ line.value.ordered }}@if (line.value.held !== null) { · {{ 'holds' | translate }} {{ line.value.held }}}</span></span>
+              <input type="number" formControlName="delivered" min="0" class="w-16 rounded-md border-ink-light py-1 text-center" />
+              <input type="number" formControlName="returned" min="0" class="w-16 rounded-md border-ink-light py-1 text-center" />
+            </div>
+          }
+          @if (!lines.controls.length) {
+            <span class="text-caption text-ink-mid">{{ 'No items on this order.' | translate }}</span>
+          }
+        </div>
+
+        <!-- Other empties: products the customer holds that aren't on this order (e.g. a 20L on an 18L run) -->
+        @if (otherLines.controls.length) {
+          <div class="flex flex-col gap-2 mb-3 border-t border-ink-light pt-3">
+            <div class="grid grid-cols-[1fr_auto] gap-2 items-center text-micro text-ink-mid px-1">
+              <span>{{ 'Other empties returned' | translate }}</span>
+              <span class="w-16 text-center">{{ 'Returned' | translate }}</span>
+            </div>
+            @for (line of otherLines.controls; track line) {
+              <div [formGroup]="$any(line)" class="grid grid-cols-[1fr_auto] gap-2 items-center">
+                <span class="text-caption truncate">{{ line.value.productName }}
+                  <span class="text-micro text-ink-mid">({{ line.value.bottleSize }}) · {{ 'holds' | translate }} {{ line.value.held }}</span></span>
+                <input type="number" formControlName="returned" min="0" [max]="line.value.held"
+                       class="w-16 rounded-md border-ink-light py-1 text-center" />
+              </div>
+            }
+          </div>
+        }
+
+        <form [formGroup]="form" class="flex flex-col gap-3 mb-4">
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Collected (₹)' | translate }}</span>
+              <input type="number" formControlName="collectedAmount" min="0" class="rounded-md border-ink-light py-1.5" /></label>
+            <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Payment method' | translate }}</span>
+              <select formControlName="paymentMethod" class="rounded-md border-ink-light py-1.5">
+                @for (m of paymentMethods; track m) { <option [value]="m">{{ m | translate }}</option> }
+              </select></label>
+          </div>
+          <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Proof photo' | translate }}</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)" class="text-caption" />
+            @if (file()) { <span class="text-micro text-teal">{{ '{{name}} selected' | translate: { name: file()!.name } }}</span> }
+          </label>
+        </form>
+      }
+
+      <!-- Failure reason -->
+      @if (choice() === 'Failed') {
+        <label class="flex flex-col gap-1 mb-4">
+          <span class="text-caption font-medium">{{ 'Reason' | translate }}</span>
+          <textarea [formControl]="form.controls.notes" rows="2" class="rounded-md border-ink-light text-body"
+                    [placeholder]="'Why did the delivery fail? (e.g. customer not home)' | translate"></textarea>
+        </label>
+      }
+
+      <div class="flex justify-end gap-2">
+        <button class="btn-secondary" (click)="closed.emit()">{{ 'Close' | translate }}</button>
+        <button class="btn-primary" [disabled]="!choice() || saving()" (click)="submit()">
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Saving…' | translate }} } @else { {{ 'Update' | translate }} }
+        </button>
+      </div>
+      } @else {
+        <!-- Read-only summary of a completed (Delivered) stop -->
+        @if (detail(); as det) {
+          <div class="flex flex-col gap-3 mb-4">
+            @if (det.status === 'Failed') {
+              <span class="status-overdue w-fit">{{ 'Failed' | translate }}</span>
+              <div class="text-caption">
+                <span class="text-micro text-ink-mid block">{{ 'Reason' | translate }}</span>
+                {{ det.notes || ('No reason recorded.' | translate) }}
+              </div>
+            } @else {
+            <div class="flex items-center gap-2">
+              <span class="status-delivered">{{ 'Delivered' | translate }}</span>
+              @if (det.deliveredAt) { <span class="text-caption text-ink-mid font-mono">{{ det.deliveredAt | date: 'medium' }}</span> }
+            </div>
+
+            @if (det.items.length) {
+              <div class="flex flex-col gap-1">
+                <span class="text-micro text-ink-mid">{{ 'Items' | translate }}</span>
+                @for (it of det.items; track it.productName) {
+                  <div class="flex items-center justify-between text-caption border-b border-ink-light/60 py-1">
+                    <span class="truncate">{{ it.productName }} <span class="text-micro text-ink-mid">({{ it.bottleSize }})</span></span>
+                    <span class="text-ink-mid whitespace-nowrap">{{ 'Delivered' | translate }} {{ it.jarsDelivered }} · {{ 'Returned' | translate }} {{ it.jarsReturned }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (det.otherReturns.length) {
+              <div class="flex flex-col gap-1 border-t border-ink-light pt-2">
+                <span class="text-micro text-ink-mid">{{ 'Other empties returned' | translate }}</span>
+                @for (o of det.otherReturns; track o.productName) {
+                  <div class="flex items-center justify-between text-caption py-0.5">
+                    <span class="truncate">{{ o.productName }} <span class="text-micro text-ink-mid">({{ o.bottleSize }})</span></span>
+                    <span class="text-ink-mid whitespace-nowrap">{{ 'Returned' | translate }} {{ o.quantity }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="text-caption border-t border-ink-light pt-2">
+              <span class="text-micro text-ink-mid block">{{ 'Collected' | translate }}</span>
+              ₹{{ (det.collectedAmount || 0) | number: '1.0-0' }}@if (det.paymentMethod) { <span class="text-ink-mid"> · {{ det.paymentMethod | translate }}</span> }
+            </div>
+
+            @if (det.notes) {
+              <div class="text-caption"><span class="text-micro text-ink-mid block">{{ 'Notes' | translate }}</span>{{ det.notes }}</div>
+            }
+
+            @if (det.proofImageUrl) {
+              <a [href]="det.proofImageUrl" target="_blank" rel="noopener" class="text-caption text-navy hover:underline inline-flex items-center gap-1 w-fit">
+                <i class="ti ti-photo"></i> {{ 'View proof photo' | translate }}
+              </a>
+            }
+            }
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button class="btn-secondary" (click)="closed.emit()">{{ 'Close' | translate }}</button>
+            <button *appCan="'Deliveries.Update'" class="btn-primary" (click)="edit()"><i class="ti ti-edit"></i> {{ 'Edit' | translate }}</button>
+          </div>
+        } @else {
+          <div class="py-10 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+        }
+      }
+    </div>
+  </div>
+}

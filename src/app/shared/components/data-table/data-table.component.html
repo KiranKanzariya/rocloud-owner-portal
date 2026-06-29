@@ -1,0 +1,66 @@
+<div class="card p-0 overflow-hidden">
+  <!--
+    thead/tbody are `block` so the body scrolls on its own (scrollbar only beside the rows, not the
+    header). Each row is `table-fixed` at full width so header and body columns still line up.
+  -->
+  <table class="w-full text-body table-fixed">
+    <thead class="block overflow-y-auto">
+      <tr class="table table-fixed w-full text-left text-caption text-ink-mid border-b border-ink-light bg-shell">
+        @for (col of columns(); track col.key) {
+          <th
+            class="px-3 py-2.5 font-medium select-none"
+            [class.text-right]="col.align === 'right'"
+            [class.cursor-pointer]="col.sortable"
+            [style.width]="col.width"
+            (click)="onSort(col)"
+          >
+            <span class="inline-flex items-center gap-1">
+              {{ col.header | translate }}
+              @if (col.sortable && sortBy() === col.key) {
+                <i class="ti text-sm" [class.ti-arrow-up]="sortDir() === 'asc'" [class.ti-arrow-down]="sortDir() === 'desc'"></i>
+              }
+            </span>
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody class="stagger block max-h-[60vh] overflow-y-auto">
+      @if (loading()) {
+        @for (s of skeletonRows; track s) {
+          <tr class="table table-fixed w-full border-b border-ink-light/60">
+            @for (col of columns(); track col.key) {
+              <td class="px-3 py-2.5" [style.width]="col.width"><div class="h-4 skeleton"></div></td>
+            }
+          </tr>
+        }
+      } @else if (!rows().length) {
+        <tr class="table table-fixed w-full"><td [attr.colspan]="columns().length" class="px-3 py-8 text-center text-ink-mid">No records found.</td></tr>
+      } @else {
+        @for (row of rows(); track $index) {
+          <tr class="table table-fixed w-full border-b border-ink-light/60 hover:bg-shell/60 cursor-pointer" (click)="rowClick.emit(row)">
+            @for (col of columns(); track col.key) {
+              <td class="px-3 py-2.5" [class.text-right]="col.align === 'right'" [style.width]="col.width">
+                @if (cellMap().get(col.key); as tpl) {
+                  <ng-container [ngTemplateOutlet]="tpl" [ngTemplateOutletContext]="{ $implicit: row }" />
+                } @else {
+                  {{ value(row, col.key) }}
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="flex items-center justify-between px-3 py-2.5 border-t border-ink-light text-caption text-ink-mid">
+    <span>{{ totalCount() }} record{{ totalCount() === 1 ? '' : 's' }}</span>
+    <div class="flex items-center gap-2">
+      <button class="btn-secondary py-1 px-2" [disabled]="page() <= 1" (click)="prev()"><i class="ti ti-chevron-left"></i></button>
+      <span>Page {{ page() }} of {{ totalPages() }}</span>
+      <button class="btn-secondary py-1 px-2" [disabled]="page() >= totalPages()" (click)="next()"><i class="ti ti-chevron-right"></i></button>
+    </div>
+  </div>
+</div>

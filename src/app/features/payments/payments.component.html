@@ -1,0 +1,63 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Payments' | translate }}</h1>
+    <button *appCan="'Payments.Collect'" class="btn-primary" (click)="modalOpen.set(true)">
+      <i class="ti ti-plus"></i> {{ 'Record payment' | translate }}
+    </button>
+  </div>
+
+  <!-- Metric cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash"></i> {{ 'Collected' | translate }}</p>
+      <p class="metric-value">₹{{ collected() | number: '1.0-0' }}</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-coin text-teal"></i> {{ 'Cash' | translate }}</p>
+      <p class="metric-value">₹{{ cash() | number: '1.0-0' }}</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-brand-google-pay text-navy"></i> {{ 'UPI' | translate }}</p>
+      <p class="metric-value">₹{{ upi() | number: '1.0-0' }}</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle"></i> {{ 'Outstanding' | translate }}</p>
+      <p class="metric-value text-danger">₹{{ outstandingTotal() | number: '1.0-0' }}</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card flex flex-wrap items-center gap-3">
+    <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('fromDate', $any($event.target).value)" />
+    </label>
+    <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('toDate', $any($event.target).value)" />
+    </label>
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setMethod($any($event.target).value)">
+      <option value="">{{ 'All methods' | translate }}</option>
+      @for (m of methods; track m) { <option [value]="m">{{ m | translate }}</option> }
+    </select>
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+      <option value="">{{ 'All statuses' | translate }}</option>
+      @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
+    </select>
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
+
+    <ng-template appColumnCell="paidAt" let-row><span class="font-mono text-caption">{{ row.paidAt | date: 'dd MMM, HH:mm' }}</span></ng-template>
+    <ng-template appColumnCell="invoiceNumber" let-row>
+      @if (row.invoiceNumber) { <span class="font-mono text-caption">{{ row.invoiceNumber }}</span> } @else { <span class="text-ink-mid">—</span> }
+    </ng-template>
+    <ng-template appColumnCell="referenceNumber" let-row>
+      @if (row.referenceNumber) { <span class="font-mono text-caption">{{ row.referenceNumber }}</span> } @else { <span class="text-ink-mid">—</span> }
+    </ng-template>
+    <ng-template appColumnCell="amount" let-row><span class="font-mono">₹{{ row.amount | number: '1.0-0' }}</span></ng-template>
+    <ng-template appColumnCell="status" let-row><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></ng-template>
+  </roc-data-table>
+</div>
+
+<app-collect-payment-modal [open]="modalOpen()" (saved)="onSaved()" (closed)="modalOpen.set(false)" />

@@ -1,0 +1,94 @@
+<div class="flex flex-col gap-5">
+  <h1 class="text-h1">{{ 'Subscription' | translate }}</h1>
+
+  @if (loading()) {
+    <div class="card"><roc-skeleton [rows]="4" /></div>
+    <div class="card"><roc-skeleton [rows]="3" /></div>
+  } @else if (subscription(); as s) {
+    <!-- Current plan card -->
+    <div class="card flex flex-col gap-4">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-h2">{{ s.planName }}</h2>
+            <span [class]="statusClass(s.status)">{{ s.status | translate }}</span>
+          </div>
+          <p class="text-body text-ink-mid">
+            @if (s.subscriptionDiscountType !== 'None' && s.netMonthlyPrice < s.monthlyPrice) {
+              <span class="line-through">₹{{ s.monthlyPrice | number: '1.0-0' }}</span>
+              <span class="font-semibold text-teal ml-1.5">₹{{ s.netMonthlyPrice | number: '1.0-2' }}</span>{{ '/month' | translate }}
+              <span class="status-delivered ml-1">
+                @if (s.subscriptionDiscountType === 'Percentage') {
+                  {{ '{{value}}% off' | translate: { value: s.subscriptionDiscountValue } }}
+                } @else {
+                  {{ '₹{{value}} off' | translate: { value: s.subscriptionDiscountValue } }}
+                }
+              </span>
+            } @else {
+              ₹{{ s.monthlyPrice | number: '1.0-0' }}{{ '/month' | translate }}
+            }
+            @if (s.subscriptionEndsAt) { · {{ 'Renews' | translate }} {{ s.subscriptionEndsAt | date: 'mediumDate' }} }
+            @else if (s.trialEndsAt) { · {{ 'Trial ends' | translate }} {{ s.trialEndsAt | date: 'mediumDate' }} }
+          </p>
+          @if (s.subscriptionDiscountType !== 'None' && s.netMonthlyPrice < s.monthlyPrice) {
+            <p class="text-caption text-ink-mid mt-0.5"><i class="ti ti-discount-2 text-teal"></i> {{ 'A discount has been applied to your subscription by ROCloud.' | translate }}</p>
+          }
+        </div>
+        @if (canManage && !isEnterprise()) {
+          <button class="btn-primary" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ 'Upgrade' | translate }}</button>
+        }
+      </div>
+
+      <!-- Usage bars -->
+      <div class="flex flex-col gap-3 border-t border-ink-light pt-4">
+        @for (row of usageRows(); track row.label) {
+          <div>
+            <div class="flex items-center justify-between text-caption mb-1">
+              <span class="font-medium text-ink">{{ row.label | translate }}</span>
+              @if (row.unlimited) {
+                <span class="text-ink-mid font-mono">{{ row.used | number }} / <span class="text-teal">{{ 'Unlimited' | translate }}</span></span>
+              } @else {
+                <span class="text-ink-mid font-mono">{{ row.used | number }} / {{ row.max | number }}</span>
+              }
+            </div>
+            <div class="h-2 rounded-full bg-shell overflow-hidden">
+              @if (row.unlimited) {
+                <!-- No cap: show a full, calm teal track rather than a near-empty progress bar. -->
+                <div class="h-full bg-teal-light w-full"></div>
+              } @else {
+                <div class="h-full" [class]="barClass(row.pct)" [style.width.%]="row.pct"></div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Invoice history -->
+    <div class="card">
+      <h3 class="text-h3 mb-3">{{ 'Billing history' | translate }}</h3>
+      <div class="flex flex-col items-center justify-center text-center gap-2 py-8 text-ink-mid">
+        <i class="ti ti-file-invoice text-3xl"></i>
+        <p class="text-body">{{ 'No billing history yet.' | translate }}</p>
+        <p class="text-caption">{{ 'Your ROCloud subscription invoices will appear here once billing is live.' | translate }}</p>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    @if (canManage && s.status === 'Active') {
+      <div class="card border border-danger/30">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-h4">{{ 'Cancel subscription' | translate }}</h3>
+            <p class="text-caption text-ink-mid">{{ "You'll keep access until the end of the current billing period." | translate }}</p>
+          </div>
+          <button class="btn-secondary text-danger" (click)="cancel()">{{ 'Cancel subscription' | translate }}</button>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="card text-center text-ink-mid py-8">{{ 'Could not load your subscription.' | translate }} <button class="text-teal hover:underline" (click)="load()">{{ 'Retry' | translate }}</button></div>
+  }
+</div>
+
+<app-upgrade-modal [open]="upgradeOpen()" [plans]="plans()" (upgraded)="onUpgraded()" (closed)="upgradeOpen.set(false)" />

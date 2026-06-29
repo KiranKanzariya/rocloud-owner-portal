@@ -1,0 +1,63 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ 'Stock entry' | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Type' | translate }}</span>
+            <select formControlName="movementType" class="rounded-md border-ink-light py-1.5">
+              @for (t of types; track t) { <option [value]="t">{{ t | translate }}</option> }
+            </select>
+          </label>
+          <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Quantity' | translate }}</span>
+            <input type="number" formControlName="quantity" class="rounded-md border-ink-light py-1.5" />
+          </label>
+        </div>
+
+        <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Product' | translate }}</span>
+          <select formControlName="productId" class="rounded-md border-ink-light py-1.5">
+            <option value="" disabled>{{ 'Select product' | translate }}</option>
+            @for (p of products(); track p.productId) { <option [value]="p.productId">{{ p.productName }} ({{ p.bottleSize }})</option> }
+          </select>
+        </label>
+
+        <!-- Optional customer link -->
+        <div class="flex flex-col gap-1 relative">
+          <span class="text-caption font-medium">{{ 'Customer' | translate }} <span class="text-ink-mid">{{ '(optional)' | translate }}</span></span>
+          @if (selectedCustomer(); as c) {
+            <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
+              <span class="text-body">{{ c.name }} · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
+              <button type="button" class="text-ink-mid hover:text-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+            </div>
+          } @else {
+            <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer…' | translate" class="rounded-md border-ink-light py-1.5" />
+            @if (customerResults().length) {
+              <div class="absolute z-20 top-full mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-44 overflow-y-auto">
+                @for (c of customerResults(); track c.id) {
+                  <button type="button" (click)="selectCustomer(c)" class="w-full text-left px-3 py-2 hover:bg-shell flex justify-between">
+                    <span>{{ c.name }}</span><span class="font-mono text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
+                  </button>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Notes' | translate }}</span>
+          <input formControlName="notes" class="rounded-md border-ink-light py-1.5" [placeholder]="'Optional' | translate" />
+        </label>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

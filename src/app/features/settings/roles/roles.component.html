@@ -1,0 +1,104 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Roles & permissions' | translate }}</h1>
+    <button *appCanPlan="'Enterprise'" class="btn-primary" (click)="openCreate()">
+      <i class="ti ti-plus"></i> {{ 'Create custom role' | translate }}
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <!-- Role list -->
+    <div class="card lg:col-span-1 flex flex-col gap-1 h-fit">
+      @for (r of roles(); track r.id) {
+        <button
+          class="text-left px-3 py-2 rounded-md flex items-center justify-between transition-colors"
+          [class.bg-navy]="selectedId() === r.id" [class.text-white]="selectedId() === r.id"
+          [class.hover:bg-shell]="selectedId() !== r.id"
+          (click)="select(r)">
+          <span>{{ r.name }}</span>
+          @if (r.isSystem) { <i class="ti ti-lock text-caption opacity-70" title="System role"></i> }
+        </button>
+      }
+    </div>
+
+    <!-- Permission matrix -->
+    <div class="card lg:col-span-3">
+      @if (selected(); as role) {
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-h3">{{ role.name }}</h3>
+            <span [class]="role.isSystem ? 'status-active-info' : 'status-delivered'">{{ (role.isSystem ? 'System' : 'Custom') | translate }}</span>
+          </div>
+          @if (editable()) {
+            <div class="flex gap-2">
+              <button class="btn-secondary text-danger" (click)="deleteRole()">{{ 'Delete' | translate }}</button>
+              <button class="btn-primary" [disabled]="saving()" (click)="savePermissions()">
+                @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save permissions' | translate }} }
+              </button>
+            </div>
+          }
+        </div>
+
+        @if (role.isSystem) {
+          <p class="text-caption text-ink-mid mb-3">{{ 'System roles are read-only. Create a custom role to define your own permission set.' | translate }}</p>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          @for (g of groups(); track g.module) {
+            <div>
+              <p class="text-caption font-semibold text-ink mb-1.5">{{ g.module | translate }}</p>
+              <div class="flex flex-col gap-1">
+                @for (p of g.permissions; track p.code) {
+                  <label class="flex items-center gap-2 text-body" [class.opacity-60]="!editable()">
+                    <input type="checkbox" class="rounded border-ink-light"
+                      [checked]="has(p.code)" [disabled]="!editable()" (change)="toggle(p.code)" />
+                    {{ p.action | translate }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="py-12 text-center text-ink-mid">{{ 'Select a role to view its permissions.' | translate }}</p>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Create custom role modal -->
+@if (createOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="createOpen.set(false)">
+    <div class="card w-full max-w-2xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ 'Create custom role' | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="createOpen.set(false)"><i class="ti ti-x"></i></button>
+      </div>
+      <label class="flex flex-col gap-1 mb-4">
+        <span class="text-caption font-medium">{{ 'Role name' | translate }}</span>
+        <input [(ngModel)]="newRoleName" class="rounded-md border-ink-light py-1.5" [placeholder]="'e.g. Senior Accountant' | translate" />
+      </label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+        @for (g of groups(); track g.module) {
+          <div>
+            <p class="text-caption font-semibold text-ink mb-1.5">{{ g.module }}</p>
+            <div class="flex flex-col gap-1">
+              @for (p of g.permissions; track p.code) {
+                <label class="flex items-center gap-2 text-body">
+                  <input type="checkbox" class="rounded border-ink-light" [checked]="hasNew(p.code)" (change)="toggleNew(p.code)" />
+                  {{ p.action }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="flex justify-end gap-2">
+        <button class="btn-secondary" (click)="createOpen.set(false)">{{ 'Cancel' | translate }}</button>
+        <button class="btn-primary" [disabled]="saving()" (click)="createRole()">
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Create role' | translate }} }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,90 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center gap-2">
+    <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="cancel()"><i class="ti ti-arrow-left"></i></button>
+    <h1 class="text-h1">{{ 'Generate invoice' | translate }}</h1>
+  </div>
+
+  <div class="card flex flex-col gap-5">
+    <!-- Customer -->
+    <div class="flex flex-col gap-1 relative">
+      <span class="text-caption font-medium">{{ 'Customer' | translate }} <span class="text-danger">*</span></span>
+      @if (selectedCustomer(); as c) {
+        <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
+          <span class="text-body"><b>{{ c.name }}</b> · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
+          <button class="text-ink-mid hover:text-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+        </div>
+      } @else {
+        <div class="relative">
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+          <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer…' | translate"
+                 class="w-full pl-9 pr-3 py-1.5 rounded-md border-ink-light" />
+          @if (customerResults().length) {
+            <div class="absolute z-20 mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-56 overflow-y-auto">
+              @for (c of customerResults(); track c.id) {
+                <button type="button" (click)="selectCustomer(c)" class="w-full text-left px-3 py-2 hover:bg-shell flex justify-between">
+                  <span>{{ c.name }}</span><span class="font-mono text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="generate()" class="flex flex-col gap-4">
+      <!-- Period: whole month (quick) or a custom date range -->
+      <div class="flex flex-col gap-2">
+        <span class="text-caption font-medium">{{ 'Billing period' | translate }}</span>
+        <div class="flex gap-1 rounded-md border border-ink-light p-1 w-fit text-caption">
+          <button type="button" class="px-3 py-1 rounded transition-colors"
+                  [class.bg-navy]="periodMode() === 'month'" [class.text-white]="periodMode() === 'month'"
+                  (click)="setPeriodMode('month')">{{ 'Whole month' | translate }}</button>
+          <button type="button" class="px-3 py-1 rounded transition-colors"
+                  [class.bg-navy]="periodMode() === 'custom'" [class.text-white]="periodMode() === 'custom'"
+                  (click)="setPeriodMode('custom')">{{ 'Custom dates' | translate }}</button>
+        </div>
+
+        @if (periodMode() === 'month') {
+          <input type="month" formControlName="month" class="rounded-md border-ink-light py-1.5 w-48" />
+        } @else {
+          <div class="flex flex-wrap items-end gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-caption text-ink-mid">{{ 'From' | translate }}</span>
+              <input type="date" formControlName="fromDate" class="rounded-md border-ink-light py-1.5" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-caption text-ink-mid">{{ 'To' | translate }}</span>
+              <input type="date" formControlName="toDate" class="rounded-md border-ink-light py-1.5" />
+            </label>
+          </div>
+        }
+      </div>
+
+      <div class="rounded-md bg-foam p-3 text-caption text-navy flex items-start gap-2">
+        <i class="ti ti-info-circle mt-0.5"></i>
+        <span>
+          {{ 'The invoice is generated from all delivered orders in the selected period.' | translate }}
+          @if (gst(); as g) {
+            @if (g.enabled) {
+              {{ 'GST ({{percent}}%) is applied automatically.' | translate: { percent: g.percent } }}
+            } @else {
+              {{ 'GST is currently turned off in Settings.' | translate }}
+            }
+          }
+        </span>
+      </div>
+
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Notes' | translate }}</span>
+        <textarea formControlName="notes" rows="2" class="rounded-md border-ink-light" [placeholder]="'Optional' | translate"></textarea>
+      </label>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" class="btn-secondary" (click)="cancel()">{{ 'Cancel' | translate }}</button>
+        <button type="submit" class="btn-primary" [disabled]="saving()">
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Generating…' | translate }} } @else { {{ 'Generate invoice' | translate }} }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

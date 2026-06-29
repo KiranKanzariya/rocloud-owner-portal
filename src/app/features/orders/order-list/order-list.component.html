@@ -1,0 +1,83 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-h1">{{ 'Orders' | translate }}</h1>
+    <div class="flex gap-2">
+      <button *appCanPlan="'Pro'" class="btn-secondary" [disabled]="bulkRunning()" (click)="bulkImport()">
+        @if (bulkRunning()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-download"></i> }
+        {{ 'Bulk from subscriptions' | translate }}
+      </button>
+      <button *appCan="'Orders.Create'" class="btn-primary" (click)="router.navigate(['/orders/new'])">
+        <i class="ti ti-plus"></i> {{ 'New order' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Active customer filter (from a customer's "View all orders") -->
+  @if (customerFilterName(); as name) {
+    <div class="flex items-center gap-2 text-caption">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-foam text-navy px-3 py-1">
+        <i class="ti ti-user"></i> {{ 'Orders for {{name}}' | translate: { name } }}
+        <button class="hover:text-danger" (click)="clearCustomerFilter()" aria-label="Clear filter"><i class="ti ti-x"></i></button>
+      </span>
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="card flex flex-wrap items-center gap-3">
+    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+      <option value="">{{ 'All statuses' | translate }}</option>
+      @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
+    </select>
+    <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'From' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1" (change)="setDate('fromDate', $any($event.target).value)" />
+    </label>
+    <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'To' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1" (change)="setDate('toDate', $any($event.target).value)" />
+    </label>
+  </div>
+
+  <roc-data-table
+    [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
+    [page]="filter.page" [pageSize]="filter.pageSize" [sortBy]="filter.sortBy" [sortDir]="$any(filter.sortDir)"
+    (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
+
+    <ng-template appColumnCell="orderDate" let-row>
+      <span class="font-mono text-caption" [title]="row.createdAt | date: 'medium'">{{ row.orderDate | date: 'mediumDate' }} <span class="text-ink-mid">{{ row.createdAt | date: 'shortTime' }}</span></span>
+    </ng-template>
+
+    <ng-template appColumnCell="customerName" let-row>
+      <div class="flex flex-col">
+        <span class="font-medium text-ink">{{ row.customerName }}</span>
+        <span class="text-caption text-ink-mid font-mono">{{ row.customerMobile | mobile }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template appColumnCell="deliveryBoyName" let-row>{{ row.deliveryBoyName || '—' }}</ng-template>
+
+    <ng-template appColumnCell="totalAmount" let-row>
+      <span class="font-mono">₹{{ row.totalAmount | number: '1.0-0' }}</span>
+    </ng-template>
+
+    <ng-template appColumnCell="paymentStatus" let-row>
+      @if (row.status === 'Delivered') {
+        <span [class]="paymentClass(row.paymentStatus)">{{ row.paymentStatus | translate }}</span>
+      } @else {
+        <span class="text-micro text-ink-mid">—</span>
+      }
+    </ng-template>
+
+    <ng-template appColumnCell="status" let-row>
+      <div class="flex items-center gap-1">
+        @if (row.deliveryStatus === 'Failed') {
+          <!-- A failed delivery attempt: show a single red chip, not "InTransit · Failed". -->
+          <span class="status-overdue">{{ 'Failed' | translate }}</span>
+        } @else {
+          <span [class]="statusClass(row.status)">{{ row.status | translate }}</span>
+          @if (row.deliveryStatus && row.deliveryStatus !== row.status) {
+            <span class="text-micro text-ink-mid">· {{ row.deliveryStatus | translate }}</span>
+          }
+        }
+      </div>
+    </ng-template>
+  </roc-data-table>
+</div>

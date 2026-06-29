@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; }
+  body { @apply text-ink bg-shell; }
+  h1, h2, h3, h4, h5, h6 { @apply font-display text-navy; }
+  code, pre { font-family: 'JetBrains Mono', monospace; }
+
+  /* Selection colour matches brand */
+  ::selection { background: #B5D4F4; color: #0C447C; }
+}
+
+@layer components {
+  /* Bottle badge — used everywhere bottle size is shown */
+  .bottle-20l {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md
+           bg-foam text-navy text-xs font-medium;
+  }
+  .bottle-18l {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md
+           bg-teal-light text-[#085041] text-xs font-medium;
+  }
+
+  /* Status badges — items-center keeps any leading icon vertically aligned with the label */
+  .status-delivered, .status-paid, .status-active {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           bg-teal-light text-[#085041] text-[11px] font-medium;
+  }
+  .status-pending, .status-due, .status-trial {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           bg-amber-light text-[#633806] text-[11px] font-medium;
+  }
+  .status-overdue, .status-failed {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           bg-danger-light text-[#791F1F] text-[11px] font-medium;
+  }
+  .status-in-transit, .status-active-info {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           bg-foam text-navy text-[11px] font-medium;
+  }
+
+  /* Buttons — `transition active:scale` adds a subtle press feedback (item 4) */
+  .btn-primary {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+           bg-navy text-white text-sm font-medium font-display
+           hover:bg-navy-mid transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+           border border-ink-light bg-transparent text-ink text-sm font-medium
+           hover:bg-shell transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+           bg-danger text-white text-sm font-medium font-display
+           hover:bg-[#A32D2D] transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white border border-ink-light rounded-lg p-4;
+  }
+
+  /* Metric card */
+  .metric-card {
+    @apply bg-white border border-ink-light rounded-md p-3.5;
+  }
+  .metric-value {
+    @apply text-xl font-medium font-display text-navy leading-none;
+  }
+  .metric-label {
+    @apply text-xs text-ink-mid mb-1.5;
+  }
+
+  /* ─── Motion / animation library ───────────────────────────────────────
+     CSS-first (the app is zoneless). All effects use transform/opacity only,
+     and are disabled under prefers-reduced-motion at the bottom of this file. */
+
+  /* Skeleton loader (item 5): a shimmering placeholder block. */
+  .skeleton {
+    @apply relative overflow-hidden bg-ink-light/40 rounded;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-100%);
+    animation: roc-shimmer 1.3s infinite;
+  }
+
+  /* Rows fade/slide up; add `.stagger` to a list container to cascade children (item 7). */
+  .stagger > * { animation: roc-fade-up 320ms ease-out both; }
+  /* Inside a scrollable table body, fade with opacity only — the translateY of roc-fade-up counts as
+     scrollable overflow and flashes a scrollbar on otherwise-fitting rows. Keeps the staggered delays. */
+  tbody.stagger > * { animation-name: roc-fade-in; }
+  .stagger > *:nth-child(1) { animation-delay: 20ms; }
+  .stagger > *:nth-child(2) { animation-delay: 50ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 110ms; }
+  .stagger > *:nth-child(5) { animation-delay: 140ms; }
+  .stagger > *:nth-child(6) { animation-delay: 170ms; }
+  .stagger > *:nth-child(7) { animation-delay: 200ms; }
+  .stagger > *:nth-child(8) { animation-delay: 230ms; }
+  .stagger > *:nth-child(9) { animation-delay: 260ms; }
+  .stagger > *:nth-child(n+10) { animation-delay: 290ms; }
+}
+
+/* ─── Grid scroll: cap a plain <table> and scroll only the body (header stays put) ───────────
+   Add `class="grid-scroll"` to a <table>. thead/tbody become block boxes so only the body scrolls;
+   rows stay `table-fixed` at full width so columns line up. BOTH thead and tbody use overflow-y:scroll
+   so they reserve the SAME scrollbar gutter and stay aligned (our themed track is transparent, so the
+   header's reserved gutter is invisible). Height defaults to 60vh — override with `--grid-max`. */
+.grid-scroll { table-layout: fixed; width: 100%; }
+.grid-scroll > thead, .grid-scroll > tbody { display: block; overflow-y: auto; }
+.grid-scroll > thead > tr, .grid-scroll > tbody > tr { display: table; width: 100%; table-layout: fixed; }
+.grid-scroll > tbody { max-height: var(--grid-max, 60vh); }
+
+/* ─── Animation utilities (outside @layer so they always win) ───────────── */
+.animate-fade-in { animation: roc-fade-in 200ms ease-out both; }
+.animate-fade-up { animation: roc-fade-up 260ms ease-out both; }
+.animate-scale-in { animation: roc-scale-in 160ms ease-out both; }      /* modals (item 2) */
+.animate-slide-down { animation: roc-slide-down 240ms ease-out both; }  /* banners (item 12) */
+.animate-slide-in-right { animation: roc-slide-in-right 220ms ease-out both; } /* toasts (item 1) */
+.animate-shake { animation: roc-shake 360ms ease-in-out both; }         /* invalid form (item 14) */
+.pulse-once { animation: roc-pulse 900ms ease-out 1; }                  /* status change (item 11) */
+
+/* Page transition (item 6): the routed component is the element right after the outlet. */
+main > router-outlet + * { animation: roc-fade-up 220ms ease-out both; }
+
+/* Modals (item 2): every overlay uses a `bg-black/NN` backdrop — fade it in and scale its panel. */
+[class*="bg-black/"] { animation: roc-fade-in 150ms ease-out both; }
+[class*="bg-black/"] > * { animation: roc-scale-in 170ms ease-out both; }
+
+/* Smooth hover for interactive table rows & cards (items 3) */
+table tbody tr { transition: background-color 120ms ease; }
+.hover-lift { transition: transform 140ms ease, box-shadow 140ms ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -8px rgba(12, 68, 124, 0.25); }
+
+@keyframes roc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes roc-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes roc-scale-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes roc-slide-down { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+@keyframes roc-slide-in-right { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes roc-shimmer { to { transform: translateX(100%); } }
+@keyframes roc-pulse { 0% { box-shadow: 0 0 0 0 rgba(12, 68, 124, 0.35); } 100% { box-shadow: 0 0 0 10px rgba(12, 68, 124, 0); } }
+@keyframes roc-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+/* Accessibility: honour reduced-motion — kill animations & transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Themed scrollbars ───────────────────────────────────────────────────────
+   Light areas: a slim neutral thumb (ink-light → ink-mid on hover) on a clear
+   track. The navy sidebar overrides to a translucent-white thumb so it reads on
+   the dark background. */
+* {
+  scrollbar-width: thin;                       /* Firefox */
+  scrollbar-color: #D3D1C7 transparent;        /* thumb / track (ink-light) */
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: #D3D1C7;                    /* ink-light */
+  border-radius: 9999px;
+  border: 2px solid transparent;               /* inset the thumb from the edge */
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: #888780; }  /* ink-mid */
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Dark sidebar (bg-navy / bg-midnight): lighter thumb so it's visible on the dark background. */
+.bg-navy, .bg-midnight { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+.bg-navy ::-webkit-scrollbar-thumb,
+.bg-midnight ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.25); }
+.bg-navy ::-webkit-scrollbar-thumb:hover,
+.bg-midnight ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.45); }

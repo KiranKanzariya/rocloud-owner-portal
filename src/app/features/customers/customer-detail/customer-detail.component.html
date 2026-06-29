@@ -1,0 +1,408 @@
+@if (customer(); as c) {
+  <div class="flex flex-col gap-5">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-2">
+        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-h1">{{ c.name }}</h1>
+            <span [class]="c.isActive ? 'status-active' : 'status-overdue'">{{ (c.isActive ? 'Active' : 'Inactive') | translate }}</span>
+            @if (c.discountType !== 'None') {
+              <span class="status-delivered"><i class="ti ti-discount-2"></i>{{ discountLabel(c) }}</span>
+            }
+          </div>
+          <p class="text-body text-ink-mid">
+            <i class="ti ti-phone"></i> {{ c.mobile | mobile }}
+            @if (c.areaName) { · <i class="ti ti-map-pin"></i> {{ c.areaName }} }
+            @if (c.customerCode) { · <span class="font-mono">{{ c.customerCode }}</span> }
+          </p>
+        </div>
+      </div>
+      <button *appCan="'Customers.Edit'" class="btn-secondary" (click)="edit()"><i class="ti ti-edit"></i> {{ 'Edit' | translate }}</button>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="flex flex-wrap gap-2">
+      <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus"></i> {{ 'New order' | translate }}</button>
+      <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
+      <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices'])"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
+      <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="metric-card">
+        <p class="metric-label">{{ 'Jars delivered' | translate }}</p>
+        <p class="metric-value">{{ stats()?.lifetimeJarsDelivered ?? 0 }}</p>
+        @if (stats()?.jarsDeliveredByProduct?.length) {
+          <div class="flex flex-col gap-0.5 mt-1.5 border-t border-ink-light pt-1.5">
+            @for (j of stats()!.jarsDeliveredByProduct; track j.productName) {
+              <div class="flex items-center justify-between text-micro text-ink-mid">
+                <span class="truncate">{{ j.productName }} <span class="opacity-70">({{ j.bottleSize }})</span></span>
+                <span class="font-medium text-ink">{{ j.quantity }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="metric-card"><p class="metric-label">{{ 'Lifetime payments' | translate }}</p><p class="metric-value">₹{{ (stats()?.lifetimePayments ?? 0) | number: '1.0-0' }}</p></div>
+      <div class="metric-card"><p class="metric-label">{{ 'Avg monthly spend' | translate }}</p><p class="metric-value">₹{{ (stats()?.averageMonthlySpend ?? 0) | number: '1.0-0' }}</p></div>
+      <div class="metric-card">
+        @if (c.balance < 0) {
+          <p class="metric-label">{{ 'Advance' | translate }}</p>
+          <p class="metric-value text-teal">₹{{ -c.balance | number: '1.0-0' }}</p>
+          <p class="text-micro text-ink-mid mt-0.5">{{ 'Credit on account' | translate }}</p>
+        } @else {
+          <p class="metric-label">{{ 'Balance' | translate }}</p>
+          <p class="metric-value" [class.text-danger]="c.balance > 0" [rocPulseOnChange]="c.balance">₹{{ c.balance | number: '1.0-0' }}</p>
+          @if (c.balance > 0) { <p class="text-micro text-ink-mid mt-0.5">{{ 'Includes unpaid deliveries' | translate }}</p> }
+        }
+      </div>
+    </div>
+
+    <!-- Jars with customer (bottle float) -->
+    <div class="card flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-h3">{{ 'Jars with customer' | translate }}</h3>
+          <p class="text-caption text-ink-mid">{{ 'Empty jars this customer still holds.' | translate }}</p>
+        </div>
+        <span class="text-h2 font-semibold" [class.text-amber]="totalJars() > 0">{{ totalJars() }}</span>
+      </div>
+      @if (jarBalances().length) {
+        <div class="flex flex-col gap-2">
+          @for (b of jarBalances(); track b.productId) {
+            <div class="flex items-center justify-between border-t border-ink-light pt-2">
+              <span class="text-body">{{ b.productName }} <span class="text-caption text-ink-mid">({{ b.bottleSize }})</span></span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-body">{{ b.outstanding }}</span>
+                <div *appCan="'Inventory.Manage'" class="flex items-center gap-2">
+                  <input type="number" min="1" [max]="b.outstanding" [(ngModel)]="returnQty[b.productId]"
+                         class="w-16 rounded-md border-ink-light text-body py-1" />
+                  <label class="flex items-center gap-1 text-caption text-ink-mid cursor-pointer" [title]="'Returned broken — write off instead of re-stocking.' | translate">
+                    <input type="checkbox" [(ngModel)]="returnDamaged[b.productId]" class="rounded border-ink-light text-danger" />
+                    {{ 'Damaged' | translate }}
+                  </label>
+                  <button class="btn-secondary py-1" [disabled]="returning()" (click)="recordReturn(b)">{{ 'Record return' | translate }}</button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-body text-ink-mid">{{ 'No jars outstanding.' | translate }}</p>
+      }
+    </div>
+
+    <!-- Standing invoice discount (tenant-managed) -->
+    <div *appCan="'Customers.Edit'" class="card flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-h3">{{ 'Invoice discount' | translate }}</h3>
+          <p class="text-caption text-ink-mid">{{ "Applied automatically to this customer's future invoices." | translate }}</p>
+        </div>
+        <span class="status-active-info">{{ discountLabel(c) }}</span>
+      </div>
+      <div class="flex flex-wrap items-end gap-2">
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Type' | translate }}</span>
+          <select [(ngModel)]="discountType" class="rounded-md border-ink-light text-body py-1.5">
+            @for (t of discountTypes; track t) { <option [value]="t">{{ t | translate }}</option> }
+          </select>
+        </label>
+        <label class="flex flex-col gap-1 flex-1 min-w-[140px]" [class.opacity-50]="discountType === 'None'">
+          <span class="text-caption font-medium">{{ (discountType === 'Percentage' ? 'Percent (0–100)' : 'Amount (₹)') | translate }}</span>
+          <input type="number" min="0" [(ngModel)]="discountValue" [disabled]="discountType === 'None'"
+                 class="rounded-md border-ink-light text-body py-1.5" />
+        </label>
+        <button class="btn-primary" [disabled]="savingDiscount()" (click)="saveDiscount()">{{ 'Save discount' | translate }}</button>
+      </div>
+    </div>
+
+    <!-- Opening balance (migration from paper book) -->
+    <div *appCan="'Customers.Edit'" class="card flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-h3">{{ 'Opening balance' | translate }}</h3>
+          <p class="text-caption text-ink-mid">{{ 'Starting jars held and dues carried over from your book.' | translate }}</p>
+        </div>
+        @if (openingBalance()?.isSet) {
+          <span class="status-active-info">{{ 'Set' | translate }}</span>
+        }
+      </div>
+
+      @if (openingBalance(); as ob) {
+        @if (ob.isSet) {
+          <!-- Already seeded: summary + clear -->
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption">
+            @if (ob.cutoverDate) { <span class="text-ink-mid">{{ 'As of' | translate }} {{ ob.cutoverDate | date: 'mediumDate' }}</span> }
+            @for (j of ob.jars; track j.productName) {
+              <span><span class="font-medium text-ink">{{ j.productName }}</span> <span class="text-ink-mid">×{{ j.quantity }}</span></span>
+            }
+            @if (ob.dues > 0) { <span class="text-danger">{{ 'Dues' | translate }} ₹{{ ob.dues | number: '1.0-0' }}</span> }
+            @else if (ob.dues < 0) { <span class="text-teal">{{ 'Advance' | translate }} ₹{{ -ob.dues | number: '1.0-0' }}</span> }
+          </div>
+          <div>
+            <button class="btn-secondary text-danger" [disabled]="clearingOpening()" (click)="clearOpeningBalance()">
+              <i class="ti ti-trash"></i> {{ 'Clear opening balance' | translate }}
+            </button>
+          </div>
+        } @else if (!showOpeningForm()) {
+          <!-- Not set yet -->
+          <div>
+            <button class="btn-secondary" (click)="openOpeningForm()"><i class="ti ti-history"></i> {{ 'Set opening balance' | translate }}</button>
+          </div>
+        }
+      }
+
+      @if (showOpeningForm() && !openingBalance()?.isSet) {
+        <div class="flex flex-col gap-3 border-t border-ink-light pt-3">
+          <label class="flex flex-col gap-1 w-fit">
+            <span class="text-caption font-medium">{{ 'Cutover date' | translate }}</span>
+            <input type="date" [(ngModel)]="openingCutover" [max]="openingCutover" class="rounded-md border-ink-light text-body py-1.5" />
+          </label>
+
+          <div class="flex flex-col gap-2">
+            <span class="text-caption font-medium">{{ 'Jars currently held' | translate }}</span>
+            @for (p of products(); track p.id) {
+              <div class="flex items-center justify-between gap-3 max-w-sm">
+                <span class="text-body">{{ p.name }} <span class="text-caption text-ink-mid">({{ p.bottleSize }})</span></span>
+                <input type="number" min="0" [(ngModel)]="openingJarQty[p.id]" placeholder="0"
+                       class="w-20 rounded-md border-ink-light text-body py-1 text-center" />
+              </div>
+            } @empty {
+              <span class="text-caption text-ink-mid">{{ 'No products yet — add products first.' | translate }}</span>
+            }
+          </div>
+
+          <label class="flex flex-col gap-1 max-w-sm">
+            <span class="text-caption font-medium">{{ 'Opening dues (₹)' | translate }}</span>
+            <input type="number" [(ngModel)]="openingDues" class="rounded-md border-ink-light text-body py-1.5" />
+            <span class="text-micro text-ink-mid">{{ 'Positive = customer owes. Negative = advance paid.' | translate }}</span>
+          </label>
+
+          <label class="flex flex-col gap-1 max-w-sm">
+            <span class="text-caption font-medium">{{ 'Note' | translate }}</span>
+            <input type="text" [(ngModel)]="openingNote" [placeholder]="'Carried forward from book' | translate"
+                   class="rounded-md border-ink-light text-body py-1.5" />
+          </label>
+
+          <div class="flex gap-2">
+            <button class="btn-primary" [disabled]="savingOpening()" (click)="saveOpeningBalance()">
+              @if (savingOpening()) { <i class="ti ti-loader-2 animate-spin"></i> } {{ 'Save opening balance' | translate }}
+            </button>
+            <button class="btn-secondary" (click)="showOpeningForm.set(false)">{{ 'Cancel' | translate }}</button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-ink-light flex gap-1">
+      @for (t of tabs; track t.id) {
+        <button class="px-3 py-2 text-body border-b-2 -mb-px transition-colors"
+                [class.border-navy]="tab() === t.id" [class.text-navy]="tab() === t.id"
+                [class.border-transparent]="tab() !== t.id" [class.text-ink-mid]="tab() !== t.id"
+                (click)="selectTab(t.id)">{{ t.label | translate }}</button>
+      }
+    </div>
+
+    <!-- Tab content -->
+    <div class="card" [rocAnimateOnChange]="tab()">
+      @switch (tab()) {
+        @case ('overview') {
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-body">
+            <div><dt class="text-caption text-ink-mid">{{ 'Address' | translate }}</dt><dd>{{ c.addressLine || '—' }}@if (c.landmark) {, {{ c.landmark }}}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Preferred bottle' | translate }}</dt><dd>@if (asBottle(c.preferredBottleSize); as s) { <roc-bottle-badge [size]="s" /> } @else { — }</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Delivery mode' | translate }}</dt><dd>{{ c.deliveryMode }}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Payment preference' | translate }}</dt><dd>{{ c.paymentPreference }}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Email' | translate }}</dt><dd>{{ c.email || '—' }}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Invoice discount' | translate }}</dt><dd>{{ discountLabel(c) }}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Customer since' | translate }}</dt><dd>{{ c.createdAt | date: 'mediumDate' }}</dd></div>
+            @if (c.notes) { <div class="sm:col-span-2"><dt class="text-caption text-ink-mid">{{ 'Notes' | translate }}</dt><dd>{{ c.notes }}</dd></div> }
+          </dl>
+        }
+        @case ('subscriptions') {
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-caption text-ink-mid">{{ 'Active subscriptions auto-generate this customer\'s orders every night.' | translate }}</p>
+            <button *appCan="'Customers.Edit'" class="btn-secondary py-1 px-2" (click)="toggleSubForm()">
+              <i class="ti" [class.ti-plus]="!showSubForm()" [class.ti-x]="showSubForm()"></i>
+              {{ (showSubForm() ? 'Cancel' : 'Add subscription') | translate }}
+            </button>
+          </div>
+
+          <!-- Add subscription -->
+          @if (showSubForm()) {
+            <div class="card bg-shell flex flex-wrap items-end gap-3 mb-4">
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Product' | translate }}</span>
+                @if (editingSubId()) {
+                  <!-- Product is fixed when editing — switch product = end this one and add a new one. -->
+                  <span class="rounded-md border border-ink-light bg-white px-3 py-1.5 text-body text-ink-mid">{{ editingSubProductName }}</span>
+                } @else {
+                  <select [(ngModel)]="subProductId" class="rounded-md border-ink-light py-1.5">
+                    <option value="" disabled>{{ 'Select product' | translate }}</option>
+                    @for (p of products(); track p.id) { <option [value]="p.id">{{ p.name }} (₹{{ p.defaultRate }})</option> }
+                  </select>
+                }
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Qty' | translate }}</span>
+                <input type="number" min="1" [(ngModel)]="subQuantity" class="w-20 rounded-md border-ink-light py-1.5" />
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Frequency' | translate }}</span>
+                <select [(ngModel)]="subFrequency" class="rounded-md border-ink-light py-1.5">
+                  @for (f of frequencies; track f) { <option [value]="f">{{ f | translate }}</option> }
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-caption font-medium">{{ 'Rate' | translate }} <span class="text-ink-mid">{{ '(optional)' | translate }}</span></span>
+                <input type="number" min="0" [(ngModel)]="subRate" [placeholder]="'Product rate' | translate" class="w-28 rounded-md border-ink-light py-1.5" />
+              </label>
+              <button class="btn-primary" [disabled]="savingSub()" (click)="saveSubscription()">
+                @if (savingSub()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ (editingSubId() ? 'Save' : 'Add') | translate }} }
+              </button>
+            </div>
+          }
+
+          @if (c.subscriptions.length) {
+            <table class="w-full text-body">
+              <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2">{{ 'Frequency' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2">{{ 'Status' | translate }}</th><th class="py-2 w-8"></th></tr></thead>
+              <tbody>@for (s of c.subscriptions; track s.id) {
+                <tr class="border-b border-ink-light/60"><td class="py-2">{{ s.productName }}</td><td class="py-2">{{ s.quantity }}</td><td class="py-2">{{ s.frequency | translate }}</td><td class="py-2 text-right font-mono">₹{{ s.ratePerUnit | number: '1.0-2' }}</td><td class="py-2"><span [class]="s.isActive ? 'status-active' : 'status-overdue'">{{ (s.isActive ? 'Active' : 'Ended') | translate }}</span></td>
+                  <td class="py-2 text-right">@if (s.isActive) {
+                    <div class="flex items-center justify-end gap-2">
+                      <button *appCan="'Customers.Edit'" class="text-ink-mid hover:text-navy" [title]="'Edit subscription' | translate" (click)="startEditSub(s)"><i class="ti ti-edit"></i></button>
+                      <button *appCan="'Customers.Edit'" class="text-ink-mid hover:text-danger" [title]="'End subscription' | translate" (click)="cancelSubscription(s.id)"><i class="ti ti-square-x"></i></button>
+                    </div>
+                  }</td></tr>
+              }</tbody>
+            </table>
+          } @else { <p class="text-body text-ink-mid">{{ 'No subscriptions yet.' | translate }}</p> }
+        }
+        @case ('orders') {
+          @if (ordersLoading() && !orderRows().length) {
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+          } @else if (orderRows().length) {
+            <table class="w-full text-body">
+              <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
+                <th class="py-2">{{ 'Date' | translate }}</th>
+                <th class="py-2">{{ 'Mode' | translate }}</th>
+                <th class="py-2">{{ 'Delivery boy' | translate }}</th>
+                <th class="py-2 text-center">{{ 'Items' | translate }}</th>
+                <th class="py-2 text-right">{{ 'Amount' | translate }}</th>
+                <th class="py-2">{{ 'Payment' | translate }}</th>
+                <th class="py-2">{{ 'Status' | translate }}</th>
+                <th class="py-2 w-8"></th>
+              </tr></thead>
+              <tbody class="stagger">
+                @for (o of orderRows(); track o.id) {
+                  <tr class="border-b border-ink-light/60 hover:bg-shell cursor-pointer" (click)="openOrder(o)">
+                    <td class="py-2 font-mono" [title]="o.createdAt | date: 'medium'">{{ o.orderDate | date: 'mediumDate' }} <span class="text-ink-mid">{{ o.createdAt | date: 'shortTime' }}</span></td>
+                    <td class="py-2">{{ o.deliveryMode }}</td>
+                    <td class="py-2">{{ o.deliveryBoyName || '—' }}</td>
+                    <td class="py-2 text-center">{{ o.itemCount }}</td>
+                    <td class="py-2 text-right font-mono">₹{{ o.totalAmount | number: '1.0-0' }}</td>
+                    <td class="py-2">@if (o.status === 'Delivered') { <span [class]="paymentClass(o.paymentStatus)">{{ o.paymentStatus | translate }}</span> } @else { <span class="text-micro text-ink-mid">—</span> }</td>
+                    <td class="py-2"><span [class]="orderStatusClass(o.status)">{{ o.status }}</span></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Footer: total + pagination + view-all -->
+            <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
+              <span>{{ '{{count}} order(s)' | translate: { count: ordersTotal() } }}</span>
+              <div class="flex items-center gap-3">
+                @if (ordersTotalPages() > 1) {
+                  <div class="flex items-center gap-2">
+                    <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="ordersPage() === 1" (click)="ordersGoTo(ordersPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                    <span>{{ ordersPage() }} / {{ ordersTotalPages() }}</span>
+                    <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="ordersPage() === ordersTotalPages()" (click)="ordersGoTo(ordersPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                  </div>
+                }
+                <button class="text-navy hover:underline" (click)="viewAllOrders()">{{ 'View all orders' | translate }}</button>
+              </div>
+            </div>
+          } @else {
+            <p class="text-body text-ink-mid">{{ 'No orders yet.' | translate }}</p>
+          }
+        }
+        @case ('returns') {
+          @if (returnsLoading() && !returnRows().length) {
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+          } @else if (returnRows().length) {
+            <table class="w-full text-body">
+              <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
+                <th class="py-2">{{ 'Date' | translate }}</th>
+                <th class="py-2">{{ 'Item' | translate }}</th>
+                <th class="py-2 text-center">{{ 'Jars returned' | translate }}</th>
+                <th class="py-2">{{ 'Condition' | translate }}</th>
+                <th class="py-2">{{ 'Source' | translate }}</th>
+                <th class="py-2">{{ 'Note' | translate }}</th>
+              </tr></thead>
+              <tbody class="stagger">
+                @for (r of returnRows(); track r.id) {
+                  <tr class="border-b border-ink-light/60">
+                    <td class="py-2 font-mono">{{ r.createdAt | date: 'medium' }}</td>
+                    <td class="py-2">{{ r.productName }}</td>
+                    <td class="py-2 text-center font-mono">{{ r.quantity }}</td>
+                    <td class="py-2">
+                      @if (r.movementType === 'Damage') {
+                        <span class="status-overdue"><i class="ti ti-alert-triangle"></i>{{ 'Damaged' | translate }}</span>
+                      } @else {
+                        <span class="status-active">{{ 'Good' | translate }}</span>
+                      }
+                    </td>
+                    <td class="py-2">
+                      @if (r.orderId) {
+                        <button class="text-navy hover:underline" (click)="router.navigate(['/orders', r.orderId])">{{ 'On delivery' | translate }}</button>
+                      } @else {
+                        <span class="text-ink-mid">{{ 'Manual entry' | translate }}</span>
+                      }
+                    </td>
+                    <td class="py-2 text-ink-mid">{{ r.notes || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Footer: total + pagination -->
+            <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
+              <span>{{ '{{count}} return(s)' | translate: { count: returnsTotal() } }}</span>
+              @if (returnsTotalPages() > 1) {
+                <div class="flex items-center gap-2">
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="returnsPage() === 1" (click)="returnsGoTo(returnsPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <span>{{ returnsPage() }} / {{ returnsTotalPages() }}</span>
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="returnsPage() === returnsTotalPages()" (click)="returnsGoTo(returnsPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-body text-ink-mid">{{ 'No returns recorded yet.' | translate }}</p>
+          }
+        }
+        @case ('payments') {
+          @if (c.recentPayments.length) {
+            <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
+              <tbody class="stagger">@for (p of c.recentPayments; track p.id) { <tr class="border-b border-ink-light/60"><td class="py-2 font-mono">{{ p.paidAt | date: 'medium' }}</td><td class="py-2">{{ p.paymentMethod }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr> }</tbody></table>
+          } @else { <p class="text-body text-ink-mid">{{ 'No payments yet.' | translate }}</p> }
+        }
+        @case ('service') {
+          <p class="text-body text-ink-mid">{{ 'Service requests for this customer are managed in the AMC / Service module.' | translate }}</p>
+        }
+      }
+    </div>
+  </div>
+
+  <app-collect-payment-modal
+    [open]="showPayment()"
+    [presetCustomer]="{ id: c.id, name: c.name, mobile: c.mobile }"
+    (saved)="onPaymentSaved()"
+    (closed)="showPayment.set(false)" />
+} @else {
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+}

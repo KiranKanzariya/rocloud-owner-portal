@@ -1,0 +1,67 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-4xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-h2">{{ 'Choose your plan' | translate }}</h3>
+        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+      </div>
+
+      <!-- Billing toggle -->
+      <div class="flex items-center justify-center gap-2 mb-5">
+        <button class="px-3 py-1.5 rounded-md text-body" [class.bg-navy]="billing() === 'Monthly'"
+          [class.text-white]="billing() === 'Monthly'" [class.bg-shell]="billing() !== 'Monthly'" (click)="billing.set('Monthly')">{{ 'Monthly' | translate }}</button>
+        <button class="px-3 py-1.5 rounded-md text-body" [class.bg-navy]="billing() === 'Yearly'"
+          [class.text-white]="billing() === 'Yearly'" [class.bg-shell]="billing() !== 'Yearly'" (click)="billing.set('Yearly')">
+          {{ 'Yearly' | translate }} <span class="text-caption opacity-80">{{ '(2 months free)' | translate }}</span>
+        </button>
+      </div>
+
+      <!-- Plan cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @for (p of plans(); track p.id) {
+          <div class="rounded-lg border p-4 flex flex-col gap-3"
+            [class.border-navy]="p.planType === 'Pro'" [class.border-ink-light]="p.planType !== 'Pro'">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-h3">{{ p.name }}</h4>
+                @if (p.planType === 'Pro') { <span class="status-active-info">{{ 'Popular' | translate }}</span> }
+                @if (isCurrent(p)) { <span class="status-delivered">{{ 'Current' | translate }}</span> }
+              </div>
+              <p class="mt-1"><span class="text-h2 font-semibold">₹{{ price(p) | number: '1.0-0' }}</span>
+                <span class="text-caption text-ink-mid">/{{ (billing() === 'Yearly' ? 'year' : 'month') | translate }}</span></p>
+            </div>
+
+            <ul class="flex flex-col gap-1.5 text-body flex-1">
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
+                {{ (p.maxCustomers === 0 ? 'Unlimited customers' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</li>
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
+                {{ (p.maxUsers === 0 ? 'Unlimited team members' : '{{count}} team members') | translate: { count: p.maxUsers } }}</li>
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
+                {{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</li>
+              <li class="flex items-center gap-2">
+                <i class="ti" [class.ti-check]="p.whatsappEnabled" [class.text-teal]="p.whatsappEnabled" [class.ti-minus]="!p.whatsappEnabled" [class.text-ink-light]="!p.whatsappEnabled"></i> {{ 'WhatsApp notifications' | translate }}</li>
+              <li class="flex items-center gap-2">
+                <i class="ti" [class.ti-check]="p.customRolesEnabled" [class.text-teal]="p.customRolesEnabled" [class.ti-minus]="!p.customRolesEnabled" [class.text-ink-light]="!p.customRolesEnabled"></i> {{ 'Custom roles' | translate }}</li>
+              <li class="flex items-center gap-2">
+                <i class="ti" [class.ti-check]="p.multiBranchEnabled" [class.text-teal]="p.multiBranchEnabled" [class.ti-minus]="!p.multiBranchEnabled" [class.text-ink-light]="!p.multiBranchEnabled"></i> {{ 'Multi-branch' | translate }}</li>
+            </ul>
+
+            @if (isCurrent(p)) {
+              <button class="btn-secondary" disabled>{{ 'Current plan' | translate }}</button>
+            } @else if (isDowngrade(p)) {
+              <button class="btn-secondary" disabled>{{ 'Contact us to downgrade' | translate }}</button>
+            } @else {
+              <button class="btn-primary" [disabled]="busyPlan() !== null" (click)="choose(p)">
+                @if (busyPlan() === p.planType) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Choose {{name}}' | translate: { name: p.name } }} }
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <p class="text-caption text-ink-mid mt-4 text-center">
+        {{ 'Secured by Razorpay. Plan changes take effect immediately.' | translate }}
+      </p>
+    </div>
+  </div>
+}

@@ -1,0 +1,79 @@
+<div class="flex flex-col gap-6">
+  <h1 class="text-h1">{{ 'Dashboard' | translate }}</h1>
+
+  <!-- Metric cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-truck"></i> {{ "Today's deliveries" | translate }}</p>
+      <p class="metric-value"><span [rocCountUp]="todaysDeliveries()"></span></p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-package"></i> {{ 'Bottles out' | translate }}</p>
+      <p class="metric-value"><span [rocCountUp]="bottlesOut()"></span></p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash"></i> {{ 'Collection today' | translate }}</p>
+      <p class="metric-value">₹<span [rocCountUp]="collectionToday()" [currency]="true"></span></p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle"></i> {{ 'Outstanding dues' | translate }}</p>
+      <p class="metric-value text-danger">₹<span [rocCountUp]="outstandingTotal()" [currency]="true"></span></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Route progress -->
+    <div class="card lg:col-span-2">
+      <h3 class="text-h3 mb-3">{{ 'Route progress' | translate }}</h3>
+      @if (routeProgress().length) {
+        <div class="flex flex-col gap-3">
+          @for (r of routeProgress(); track r.deliveryBoyId) {
+            <div>
+              <div class="flex items-center justify-between text-caption mb-1">
+                <span class="font-medium text-ink">{{ r.deliveryBoyName }}</span>
+                <span class="text-ink-mid">{{ r.delivered }}/{{ r.total }} · {{ r.completedPercentage }}%</span>
+              </div>
+              <div class="h-2 rounded-full bg-shell overflow-hidden">
+                <div class="h-full bg-teal" [style.width.%]="r.completedPercentage"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-body text-ink-mid">{{ 'No deliveries scheduled today.' | translate }}</p>
+      }
+    </div>
+
+    <!-- Payment mode split -->
+    <div class="card">
+      <h3 class="text-h3 mb-3">{{ 'Payment modes (today)' | translate }}</h3>
+      <ul class="flex flex-col gap-2 text-body">
+        <li class="flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="ti ti-coin text-teal"></i> {{ 'Cash' | translate }}</span>
+          <span class="font-mono">₹{{ paymentSplit().cash | number: '1.0-0' }}</span>
+        </li>
+        <li class="flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="ti ti-brand-google-pay text-navy"></i> {{ 'UPI' | translate }}</span>
+          <span class="font-mono">₹{{ paymentSplit().upi | number: '1.0-0' }}</span>
+        </li>
+        <li class="flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="ti ti-dots text-ink-mid"></i> {{ 'Other' | translate }}</span>
+          <span class="font-mono">₹{{ paymentSplit().other | number: '1.0-0' }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Recent activity -->
+  <div class="flex flex-col gap-2">
+    <h3 class="text-h3">{{ 'Recent orders' | translate }}</h3>
+    <roc-data-table
+      [columns]="recentOrderColumns" [rows]="recentOrders()" [totalCount]="recentOrders().length" [pageSize]="50">
+      <ng-template appColumnCell="orderDate" let-o><span class="font-mono text-caption">{{ o.orderDate }}</span></ng-template>
+      <ng-template appColumnCell="customerName" let-o>{{ o.customerName }}</ng-template>
+      <ng-template appColumnCell="itemCount" let-o>{{ o.itemCount }}</ng-template>
+      <ng-template appColumnCell="totalAmount" let-o><span class="font-mono">₹{{ o.totalAmount | number: '1.0-0' }}</span></ng-template>
+      <ng-template appColumnCell="status" let-o><span [class]="statusClass(o.status)">{{ o.status }}</span></ng-template>
+    </roc-data-table>
+  </div>
+</div>

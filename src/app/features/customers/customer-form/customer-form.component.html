@@ -1,0 +1,97 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center gap-2">
+    <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="cancel()"><i class="ti ti-arrow-left"></i></button>
+    <h1 class="text-h1">{{ (isEdit() ? 'Edit customer' : 'New customer') | translate }}</h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="card flex flex-col gap-5">
+    <!-- Identity -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Name' | translate }} <span class="text-danger">*</span></span>
+        <input formControlName="name" class="rounded-md border-ink-light" placeholder="Ravi Kumar" />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <span class="text-micro text-danger">{{ 'Enter a valid name (2–200 characters).' | translate }}</span>
+        }
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Mobile' | translate }} <span class="text-danger">*</span></span>
+        <roc-mobile-input formControlName="mobile" />
+        @if (form.controls.mobile.touched && form.controls.mobile.invalid) {
+          <span class="text-micro text-danger">{{ 'Enter a 10-digit mobile number.' | translate }}</span>
+        }
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Alternate mobile' | translate }}</span>
+        <roc-mobile-input formControlName="alternateMobile" />
+        @if (form.controls.alternateMobile.touched && form.controls.alternateMobile.invalid) {
+          <span class="text-micro text-danger">{{ 'Enter a 10-digit mobile number.' | translate }}</span>
+        }
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Email' | translate }}</span>
+        <input type="email" formControlName="email" class="rounded-md border-ink-light" [placeholder]="'Optional' | translate" />
+      </label>
+    </div>
+
+    <!-- Address -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="flex flex-col gap-1 sm:col-span-2">
+        <span class="text-caption font-medium">{{ 'Address' | translate }}</span>
+        <input formControlName="addressLine" class="rounded-md border-ink-light" [placeholder]="'House, street, area' | translate" />
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Landmark' | translate }}</span>
+        <input formControlName="landmark" class="rounded-md border-ink-light" [placeholder]="'Optional' | translate" />
+      </label>
+    </div>
+
+    <!-- Preferences -->
+    <div class="flex flex-col gap-2">
+      <span class="text-caption font-medium">{{ 'Preferred bottle' | translate }}</span>
+      <div class="flex flex-wrap gap-2">
+        @for (s of bottleSizes; track s) {
+          <button type="button" (click)="pickBottle(s)"
+                  class="px-3 py-1.5 text-caption rounded-md border"
+                  [class.border-navy]="form.controls.preferredBottleSize.value === s"
+                  [class.bg-foam]="form.controls.preferredBottleSize.value === s"
+                  [class.border-ink-light]="form.controls.preferredBottleSize.value !== s">{{ s }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Delivery mode' | translate }}</span>
+        <select formControlName="deliveryMode" class="rounded-md border-ink-light">
+          @for (m of deliveryModes; track m.value) { <option [value]="m.value">{{ m.label | translate }}</option> }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Payment preference' | translate }}</span>
+        <select formControlName="paymentPreference" class="rounded-md border-ink-light">
+          @for (p of paymentPreferences; track p.value) { <option [value]="p.value">{{ p.label | translate }}</option> }
+        </select>
+      </label>
+    </div>
+
+    <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'Notes' | translate }}</span>
+      <textarea formControlName="notes" rows="2" class="rounded-md border-ink-light" [placeholder]="'Optional' | translate"></textarea>
+    </label>
+
+    @if (isEdit()) {
+      <label class="flex items-center gap-2">
+        <input type="checkbox" formControlName="isActive" class="rounded border-ink-light text-navy" />
+        <span class="text-body">{{ 'Active customer' | translate }}</span>
+      </label>
+    }
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" class="btn-secondary" (click)="cancel()">{{ 'Cancel' | translate }}</button>
+      <button type="submit" class="btn-primary" [disabled]="saving()">
+        @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Saving…' | translate }} } @else { {{ (isEdit() ? 'Save changes' : 'Create customer') | translate }} }
+      </button>
+    </div>
+  </form>
+</div>
