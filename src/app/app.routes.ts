@@ -3,6 +3,7 @@ import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { planGuard } from './core/guards/plan.guard';
+import { activityEnabledGuard } from './core/guards/activity-enabled.guard';
 
 export const routes: Routes = [
   // ── Public auth screens ──────────────────────────────────────────────
@@ -100,6 +101,12 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'Orders.View' },
         loadComponent: () => import('./features/orders/order-list/order-list.component').then((m) => m.OrderListComponent),
+      },
+      {
+        path: 'scheduled',
+        canActivate: [permissionGuard],
+        data: { permission: 'Orders.View' },
+        loadComponent: () => import('./features/orders/scheduled/scheduled.component').then((m) => m.ScheduledComponent),
       },
       {
         path: 'orders/new',
@@ -236,8 +243,16 @@ export const routes: Routes = [
           import('./features/settings/subscription/subscription.component').then((m) => m.SubscriptionComponent),
       },
       {
+        path: 'settings/subscription/invoices/:id',
+        data: { title: 'Invoice' },
+        loadComponent: () =>
+          import('./features/settings/subscription/invoice-detail/subscription-invoice-detail.component').then(
+            (m) => m.SubscriptionInvoiceDetailComponent,
+          ),
+      },
+      {
         path: 'settings/activity',
-        canActivate: [permissionGuard],
+        canActivate: [permissionGuard, activityEnabledGuard],
         data: { ownerOnly: true, title: 'Activity log', icon: 'history' },
         loadComponent: () =>
           import('./features/settings/activity/activity.component').then((m) => m.ActivityComponent),

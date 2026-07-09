@@ -28,7 +28,7 @@
     </ng-template>
     <ng-template appColumnCell="priority" let-row><span [class]="priorityClass(row.priority)">{{ row.priority | translate }}</span></ng-template>
     <ng-template appColumnCell="scheduledDate" let-row>
-      @if (row.scheduledDate) { <span class="font-mono text-caption">{{ row.scheduledDate | date: 'dd MMM' }}</span> } @else { <span class="text-ink-mid">—</span> }
+      @if (row.scheduledDate) { <span class="font-mono text-caption">{{ row.scheduledDate | date: 'MMM d, y' }}</span> } @else { <span class="text-ink-mid">—</span> }
     </ng-template>
     <ng-template appColumnCell="status" let-row><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></ng-template>
   </roc-data-table>

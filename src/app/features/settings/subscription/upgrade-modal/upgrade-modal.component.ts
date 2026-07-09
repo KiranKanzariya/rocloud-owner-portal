@@ -65,15 +65,15 @@ export class UpgradeModalComponent {
           return;
         }
       }
-      await firstValueFrom(this.service.completeUpgrade(p.planType, this.billing()));
+      await firstValueFrom(this.service.completeUpgrade(p.planType, this.billing(), init.orderId));
       // Re-issue the JWT so the new plan_type claim (and gated features) take effect.
       await firstValueFrom(this.auth.refreshToken());
       this.busyPlan.set(null);
       this.toast.success(this.t.instant("You're now on the {{name}} plan.", { name: p.name }));
       this.upgraded.emit();
-    } catch {
+    } catch (err) {
       this.busyPlan.set(null);
-      this.toast.error(this.t.instant('Could not complete the upgrade.'));
+      this.toast.apiError(err, this.t.instant('Could not complete the upgrade.'));
     }
   }
 

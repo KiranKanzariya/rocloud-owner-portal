@@ -74,6 +74,46 @@
       </div>
     }
   </div>
+
+  <!-- Plant pickups: collected at the plant, no route/van. Own section, not a status column. -->
+  @if (board().pickups?.length) {
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center gap-2 px-1">
+        <h3 class="text-h4"><i class="ti ti-building-warehouse"></i> {{ 'Plant pickups' | translate }}</h3>
+        <span class="text-caption text-ink-mid bg-shell rounded-full px-2 py-0.5">{{ board().pickups.length }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+        @for (d of board().pickups; track d.id) {
+          <button type="button" (click)="selected.set(d)"
+                  class="card text-left p-3 hover:border-navy transition-colors flex flex-col gap-1">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-ink">{{ d.customerName }}</span>
+              @if (d.status === 'Delivered') {
+                <span class="status-delivered">{{ 'Delivered' | translate }}</span>
+              } @else if (d.status === 'Failed') {
+                <span class="status-overdue">{{ 'Failed' | translate }}</span>
+              } @else {
+                <span class="text-caption text-amber font-medium">{{ 'Awaiting pickup' | translate }}</span>
+              }
+            </div>
+            <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
+            @if (d.status === 'Delivered') {
+              <span class="text-caption text-ink-mid">{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}@if (d.collectedAmount) { <span class="font-mono text-teal"> · ₹{{ d.collectedAmount | number: '1.0-0' }}</span> }</span>
+            } @else if (d.items?.length) {
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                @for (it of d.items; track it.productName) {
+                  <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                    {{ it.productName }} <span class="text-ink font-medium">×{{ it.quantity }}</span>
+                  </span>
+                }
+              </div>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  }
 </div>
 
 @if (selected(); as sel) {

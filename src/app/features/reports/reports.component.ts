@@ -16,6 +16,7 @@ import { ChartCardComponent } from '../../shared/components/chart-card/chart-car
 import { UpgradeBannerComponent } from '../../shared/components/upgrade-banner/upgrade-banner.component';
 import { PermissionService } from '../../core/services/permission.service';
 import { ToastService } from '../../core/services/toast.service';
+import { istMonthStart, istToday } from '../../shared/util/ist-date.util';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 
@@ -26,11 +27,10 @@ const DANGER = '#D14343';
 const MIST = '#9DB2C9';
 
 function monthStart(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  return istMonthStart();
 }
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return istToday();
 }
 
 @Component({
@@ -191,7 +191,7 @@ export class ReportsComponent {
         a.click();
         URL.revokeObjectURL(objUrl);
       },
-      error: () => this.toast.error(this.t.instant('Could not export the report.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not export the report.')),
     });
   }
 }

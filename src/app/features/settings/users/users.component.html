@@ -16,7 +16,7 @@
     <ng-template appColumnCell="mobile" let-row><span class="font-mono text-caption">{{ (row.mobile | mobile) || '—' }}</span></ng-template>
     <ng-template appColumnCell="roleName" let-row>{{ row.roleName || '—' }}</ng-template>
     <ng-template appColumnCell="areas" let-row><span class="text-caption">{{ areaNames(row) }}</span></ng-template>
-    <ng-template appColumnCell="lastLoginAt" let-row><span class="font-mono text-caption">{{ row.lastLoginAt ? (row.lastLoginAt | date: 'dd MMM, HH:mm') : ('Never' | translate) }}</span></ng-template>
+    <ng-template appColumnCell="lastLoginAt" let-row><span class="font-mono text-caption">{{ row.lastLoginAt ? (row.lastLoginAt | date: 'MMM d, y h:mm a') : ('Never' | translate) }}</span></ng-template>
     <ng-template appColumnCell="isActive" let-row><span [class]="row.isActive ? 'status-delivered' : 'status-active-info'">{{ (row.isActive ? 'Active' : 'Inactive') | translate }}</span></ng-template>
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" *appCan="'Users.Manage'">

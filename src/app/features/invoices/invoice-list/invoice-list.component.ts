@@ -83,14 +83,23 @@ export class InvoiceListComponent {
         a.click();
         URL.revokeObjectURL(url);
       },
-      error: () => this.toast.error(this.t.instant('Could not download the PDF.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not download the PDF.')),
     });
   }
 
   send(i: InvoiceListItem): void {
     this.service.send(i.id).subscribe({
-      next: () => this.toast.success(this.t.instant('Invoice {{number}} sent.', { number: i.invoiceNumber })),
-      error: () => this.toast.error(this.t.instant('Could not send the invoice.')),
+      next: (r) => {
+        if (r.emailed) {
+          this.toast.success(this.t.instant('Invoice {{number}} emailed.', { number: i.invoiceNumber }));
+        } else {
+          this.toast.show(
+            this.t.instant('Invoice {{number}} ready, but the customer has no email — nothing was sent.', { number: i.invoiceNumber }),
+            'info',
+          );
+        }
+      },
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not send the invoice.')),
     });
   }
 

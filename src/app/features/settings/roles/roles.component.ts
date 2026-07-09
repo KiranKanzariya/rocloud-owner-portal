@@ -90,9 +90,9 @@ export class RolesComponent {
         this.toast.success(this.t.instant('Permissions updated for {{name}}.', { name: role.name }));
         this.load();
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.toast.error(this.t.instant('Could not update permissions.'));
+        this.toast.apiError(err, this.t.instant('Could not update permissions.'));
       },
     });
   }
@@ -107,7 +107,7 @@ export class RolesComponent {
         this.selectedId.set(null);
         this.load();
       },
-      error: () => this.toast.error(this.t.instant('Could not delete the role (it may have users assigned).')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not delete the role (it may have users assigned).')),
     });
   }
 
@@ -141,9 +141,9 @@ export class RolesComponent {
         this.toast.success(this.t.instant('Custom role created.'));
         this.load();
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.toast.error(this.t.instant('Could not create the role.'));
+        this.toast.apiError(err, this.t.instant('Could not create the role.'));
       },
     });
   }

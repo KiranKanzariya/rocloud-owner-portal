@@ -23,7 +23,7 @@ export class RazorpayService {
 
   /** Opens checkout for the given plan; resolves true on success, false on dismiss/failure. */
   async pay(init: SubscriptionInitiate, prefill: { name?: string; email?: string }): Promise<boolean> {
-    if (init.devMode || !init.subscriptionId) {
+    if (init.devMode || !init.orderId) {
       // No live gateway configured — simulate a successful payment (dev only).
       return true;
     }
@@ -34,7 +34,7 @@ export class RazorpayService {
     return new Promise<boolean>((resolve) => {
       const rzp = new window.Razorpay!({
         key: init.keyId,
-        subscription_id: init.subscriptionId,
+        order_id: init.orderId,
         name: 'ROCloud',
         description: `${init.planType} plan`,
         prefill: { name: prefill.name ?? '', email: prefill.email ?? '' },

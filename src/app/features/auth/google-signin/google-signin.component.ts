@@ -96,9 +96,9 @@ export class GoogleSigninComponent {
         }
         this.workspaces.set(list); // multiple workspaces, no hint — let the user pick
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.toast.error(this.t.instant('Google sign-in failed.'));
+        this.toast.apiError(err, this.t.instant('Google sign-in failed.'));
       },
     });
   }

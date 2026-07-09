@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { DATE_PIPE_DEFAULT_OPTIONS } from '@angular/common';
 import {
   GoogleLoginProvider,
   SOCIAL_AUTH_CONFIG,
@@ -33,6 +34,13 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([authInterceptor, tenantInterceptor, csrfInterceptor, errorInterceptor]),
     ),
+
+    // Timestamps are stored and sent by the API as UTC (ISO 8601 with a trailing 'Z'). Render every
+    // `| date` in the configured timezone (environment.timeZoneOffset, default IST) regardless of the
+    // viewer's browser timezone, so every owner sees the same wall-clock time. Individual pipes can
+    // still override the timezone if ever needed.
+    { provide: DATE_PIPE_DEFAULT_OPTIONS, useValue: { timezone: environment.timeZoneOffset } },
+
     // NOTE: Chart.js (ng2-charts) is provided at the Reports route, not here, so it lazy-loads
     // with that feature chunk instead of bloating the initial bundle (guide §25 bundle budget).
 

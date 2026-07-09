@@ -12,8 +12,8 @@
               <span [class]="paymentClass(o.paymentStatus)">{{ o.paymentStatus | translate }}</span>
             }
           </div>
-          <p class="text-body text-ink-mid font-mono">{{ o.orderDate | date: 'mediumDate' }} · {{ o.orderType }}</p>
-          <p class="text-caption text-ink-mid">{{ 'Placed' | translate }} {{ o.createdAt | date: 'medium' }}</p>
+          <p class="text-body text-ink-mid font-mono">{{ o.orderDate | date: 'MMM d, y' }} · {{ o.orderType }}</p>
+          <p class="text-caption text-ink-mid">{{ 'Placed' | translate }} {{ o.createdAt | date: 'MMM d, y h:mm a' }}</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -57,9 +57,9 @@
       @if (o.delivery; as d) {
         <div class="grid grid-cols-2 gap-y-2 gap-x-8 text-body">
           <div><span class="text-caption text-ink-mid">{{ 'Status' | translate }}</span><div><span [class]="statusClass(d.status)">{{ d.status | translate }}</span></div></div>
-          <div><span class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</span><div>{{ d.scheduledDate | date: 'mediumDate' }}</div></div>
+          <div><span class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</span><div>{{ d.scheduledDate | date: 'MMM d, y' }}</div></div>
           <div><span class="text-caption text-ink-mid">{{ 'Delivery boy' | translate }}</span><div>{{ o.deliveryBoyName || '—' }}</div></div>
-          <div><span class="text-caption text-ink-mid">{{ 'Delivered at' | translate }}</span><div>{{ d.deliveredAt ? (d.deliveredAt | date: 'short') : '—' }}</div></div>
+          <div><span class="text-caption text-ink-mid">{{ 'Delivered at' | translate }}</span><div>{{ d.deliveredAt ? (d.deliveredAt | date: 'MMM d, y h:mm a') : '—' }}</div></div>
           @if (d.status === 'Delivered') {
             <div><span class="text-caption text-ink-mid">{{ 'Jars (out / back)' | translate }}</span><div>{{ d.jarsDelivered ?? 0 }} / {{ d.jarsReturned ?? 0 }}</div></div>
             <div><span class="text-caption text-ink-mid">{{ 'Collected' | translate }}</span><div class="font-mono">₹{{ (d.collectedAmount ?? 0) | number: '1.0-0' }} <span class="text-caption text-ink-mid">{{ d.paymentMethod | translate }}</span></div></div>

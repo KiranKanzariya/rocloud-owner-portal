@@ -14,6 +14,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-order-form',
@@ -53,10 +54,23 @@ export class OrderFormComponent {
   // frozen price rather than the current catalogue price. Mirrors the backend's freeze-on-edit.
   private readonly frozenRates = signal<Map<string, number>>(new Map());
 
+  /** Today in yyyy-MM-dd — the date input's default (deliver today) and min (no past dates). */
+  protected readonly todayIso = istToday();
+
   protected readonly customerSearch = this.fb.nonNullable.control('');
   protected readonly form = this.fb.nonNullable.group({
+    // Defaults to today (a normal same-day order). A future date turns this into an Advance booking
+    // (event/program) that surfaces on the delivery board when its day arrives.
+    orderDate: [this.todayIso],
     items: this.fb.array([this.newItem()]),
     notes: [''],
+  });
+
+  private readonly orderDateValue = signal(this.todayIso);
+  /** A chosen date strictly after today makes this an Advance booking. */
+  protected readonly isAdvance = computed(() => {
+    const d = this.orderDateValue();
+    return !!d && d > this.todayIso;
   });
 
   // Recomputed on every form change so the total stays live.
@@ -105,6 +119,10 @@ export class OrderFormComponent {
     this.form.controls.items.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.itemsValue.set(this.form.controls.items.getRawValue()));
+
+    this.form.controls.orderDate.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((d) => this.orderDateValue.set(d ?? ''));
   }
 
   /** Loads an existing order into the form for editing; only Pending/Confirmed orders are editable. */
@@ -131,6 +149,7 @@ export class OrderFormComponent {
         this.items.push(g);
       }
       this.form.controls.notes.setValue(o.notes ?? '');
+      this.form.controls.orderDate.setValue(o.orderDate?.slice(0, 10) ?? '');
       // Assign each line's productId only AFTER its <option>s have rendered. A native <select> can't
       // select a value whose <option> doesn't exist yet, so setting it in the same tick the rows are
       // created leaves the dropdown blank (and the line invalid, blocking save). Deferring one tick lets
@@ -202,31 +221,37 @@ export class OrderFormComponent {
     const items = v.items.map((i) => ({ productId: i.productId, quantity: i.quantity }));
     const notes = v.notes || null;
 
+    // A future date books this as an Advance order (event/program); blank/today stays a Regular order.
+    const orderDate = v.orderDate || null;
+    const orderType = this.isAdvance() ? 'Advance' : null;
+
     const deliveryMode = this.showModeToggle() ? this.orderDeliveryMode() : null;
     const editId = this.editId();
     if (editId) {
-      this.orders.update(editId, { notes, items, deliveryMode }).subscribe({
+      this.orders.update(editId, { orderDate, orderType, notes, items, deliveryMode }).subscribe({
         next: () => {
           this.toast.success(this.t.instant('Order updated.'));
           this.router.navigate(['/orders', editId]);
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
-          this.toast.error(this.t.instant('Could not update the order.'));
+          this.toast.apiError(err, this.t.instant('Could not update the order.'));
         },
       });
       return;
     }
 
-    const body: CreateOrder = { customerId: customer.id, notes, items, deliveryMode };
+    const body: CreateOrder = { customerId: customer.id, orderDate, orderType, notes, items, deliveryMode };
+    const advance = this.isAdvance();
     this.orders.create(body).subscribe({
       next: () => {
-        this.toast.success(this.t.instant('Order created.'));
-        this.router.navigate(['/deliveries']);
+        this.toast.success(this.t.instant(advance ? 'Advance order booked.' : 'Order created.'));
+        // An advance order isn't on today's board yet — send the owner to the scheduled view instead.
+        this.router.navigate([advance ? '/scheduled' : '/deliveries']);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.toast.error(this.t.instant('Could not create the order.'));
+        this.toast.apiError(err, this.t.instant('Could not create the order.'));
       },
     });
   }

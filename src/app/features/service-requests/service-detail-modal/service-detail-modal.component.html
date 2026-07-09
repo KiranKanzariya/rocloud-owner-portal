@@ -18,9 +18,9 @@
         <div><dt class="text-caption text-ink-mid">{{ 'Customer' | translate }}</dt><dd>{{ r.customerName }}</dd></div>
         <div><dt class="text-caption text-ink-mid">{{ 'Mobile' | translate }}</dt><dd class="font-mono">{{ (r.customerMobile | mobile) || '—' }}</dd></div>
         <div><dt class="text-caption text-ink-mid">{{ 'Type' | translate }}</dt><dd>{{ r.serviceType | translate }}</dd></div>
-        <div><dt class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</dt><dd>{{ r.scheduledDate ? (r.scheduledDate | date: 'mediumDate') : '—' }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Scheduled' | translate }}</dt><dd>{{ r.scheduledDate ? (r.scheduledDate | date: 'MMM d, y') : '—' }}</dd></div>
         <div><dt class="text-caption text-ink-mid">{{ 'Technician' | translate }}</dt><dd>{{ r.assignedTechName || ('Unassigned' | translate) }}</dd></div>
-        <div><dt class="text-caption text-ink-mid">{{ 'Created' | translate }}</dt><dd>{{ r.createdAt | date: 'medium' }}</dd></div>
+        <div><dt class="text-caption text-ink-mid">{{ 'Created' | translate }}</dt><dd>{{ r.createdAt | date: 'MMM d, y h:mm a' }}</dd></div>
       </dl>
 
       @if (r.description) {
@@ -60,7 +60,7 @@
 
       @if (r.status === 'Resolved') {
         <div class="border-t border-ink-light pt-3 text-body">
-          <p class="text-caption text-ink-mid">{{ 'Resolved' | translate }} {{ r.resolvedAt ? (r.resolvedAt | date: 'medium') : '' }}</p>
+          <p class="text-caption text-ink-mid">{{ 'Resolved' | translate }} {{ r.resolvedAt ? (r.resolvedAt | date: 'MMM d, y h:mm a') : '' }}</p>
           @if (r.resolutionNotes) { <p class="mt-1">{{ r.resolutionNotes }}</p> }
         </div>
       }

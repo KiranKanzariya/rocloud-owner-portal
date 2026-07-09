@@ -76,6 +76,23 @@
         }
       </div>
 
+      <!-- Plan-limit warning: some rows were dropped because the customer cap was hit -->
+      @if (planLimitSkipped(); as capped) {
+        <div class="flex items-center gap-3 rounded-md border-l-4 border-amber bg-amber/10 p-3">
+          <i class="ti ti-crown text-amber text-h2"></i>
+          <p class="flex-1 text-body font-medium">
+            @if (plan(); as p) {
+              {{ "{{count}} customers weren't imported because your {{plan}} plan is limited to {{max}}. Upgrade to add the rest."
+                 | translate: { count: capped, plan: p.name, max: (p.maxCustomers | number) } }}
+            } @else {
+              {{ "{{count}} customers weren't imported because your plan's customer limit was reached. Upgrade to add the rest."
+                 | translate: { count: capped } }}
+            }
+          </p>
+          <a routerLink="/settings/subscription" class="btn-primary shrink-0">{{ 'Upgrade now →' | translate }}</a>
+        </div>
+      }
+
       <!-- Tallies -->
       <div class="flex flex-wrap gap-4 text-body">
         <span><span class="font-semibold text-teal">{{ r.created | number }}</span> {{ (r.dryRun ? 'will be created' : 'created') | translate }}</span>

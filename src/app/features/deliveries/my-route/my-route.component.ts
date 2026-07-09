@@ -5,6 +5,7 @@ import { DeliveryListItem } from '../delivery.models';
 import { DeliveryDetailModalComponent } from '../delivery-detail-modal/delivery-detail-modal.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 /**
  * Mobile-first "My route" screen for a delivery boy: their own stops for the day, tap one to
@@ -20,7 +21,7 @@ import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 export class MyRouteComponent {
   private readonly service = inject(DeliveryService);
 
-  protected readonly date = signal(new Date().toISOString().slice(0, 10));
+  protected readonly date = signal(istToday());
   protected readonly stops = signal<DeliveryListItem[]>([]);
   protected readonly selected = signal<DeliveryListItem | null>(null);
   protected readonly loading = signal(false);

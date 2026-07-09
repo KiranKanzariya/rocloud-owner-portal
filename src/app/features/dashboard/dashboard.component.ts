@@ -15,6 +15,7 @@ import {
 } from '../../core/models/dashboard.models';
 import { DataTableComponent, ColumnDef } from '../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../shared/components/data-table/column-cell.directive';
+import { istToday } from '../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-dashboard',
@@ -52,7 +53,7 @@ export class DashboardComponent {
 
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
-  private readonly today = new Date().toISOString().slice(0, 10);
+  private readonly today = istToday();
 
   // Raw data signals
   protected readonly routeProgress = signal<DeliverySummaryRow[]>([]);

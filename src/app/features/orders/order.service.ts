@@ -3,7 +3,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PagedResult } from '../../core/models/api-response';
-import { BulkCreateResult, CreateOrder, OrderDetail, OrderFilter, OrderListItem } from './order.models';
+import {
+  BulkCreateResult,
+  CreateOrder,
+  OrderDetail,
+  OrderFilter,
+  OrderListItem,
+  ProductionPlanDay,
+  UpcomingOrder,
+} from './order.models';
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
@@ -40,6 +48,24 @@ export class OrderService {
   bulkFromSubscriptions(targetDate?: string): Observable<BulkCreateResult> {
     return this.http
       .post<ApiResponse<BulkCreateResult>>(`${this.base}/bulk-from-subscriptions`, { targetDate: targetDate ?? null })
+      .pipe(map((r) => r.data!));
+  }
+
+  /** Future-dated bookings (event/program orders) not yet on the day's delivery board. */
+  upcoming(days = 60): Observable<UpcomingOrder[]> {
+    const params = new HttpParams().set('days', days);
+    return this.http
+      .get<ApiResponse<UpcomingOrder[]>>(`${this.base}/upcoming`, { params })
+      .pipe(map((r) => r.data!));
+  }
+
+  /** Per-day, per-product demand from upcoming bookings so the plant can prepare stock. */
+  productionPlan(from?: string, to?: string): Observable<ProductionPlanDay[]> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http
+      .get<ApiResponse<ProductionPlanDay[]>>(`${this.base}/production-plan`, { params })
       .pipe(map((r) => r.data!));
   }
 }

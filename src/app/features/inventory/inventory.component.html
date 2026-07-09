@@ -53,7 +53,7 @@
     <roc-data-table
       [columns]="columns" [rows]="movements()" [totalCount]="totalMovements()" [loading]="loadingMovements()"
       [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
-      <ng-template appColumnCell="createdAt" let-row><span class="font-mono text-caption">{{ row.createdAt | date: 'dd MMM, HH:mm' }}</span></ng-template>
+      <ng-template appColumnCell="createdAt" let-row><span class="font-mono text-caption">{{ row.createdAt | date: 'MMM d, y h:mm a' }}</span></ng-template>
       <ng-template appColumnCell="movementType" let-row><span [class]="typeClass(row.movementType)">{{ row.movementType | translate }}</span></ng-template>
       <ng-template appColumnCell="customerName" let-row>{{ row.customerName || '—' }}</ng-template>
       <ng-template appColumnCell="notes" let-row>{{ row.notes || '—' }}</ng-template>

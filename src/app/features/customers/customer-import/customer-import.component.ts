@@ -1,11 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CustomerService } from '../customer.service';
 import { ImportResult } from '../customer.models';
 import { ToastService } from '../../../core/services/toast.service';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 /** Canonical template header — keep in sync with docs/migration/customer-import-template.md. */
 const TEMPLATE_HEADER =
@@ -18,13 +20,14 @@ const TEMPLATE_SAMPLE =
 @Component({
   selector: 'app-customer-import',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, TranslatePipe],
+  imports: [DecimalPipe, FormsModule, TranslatePipe, RouterLink],
   templateUrl: './customer-import.component.html',
 })
 export class CustomerImportComponent {
   protected readonly router = inject(Router);
   private readonly service = inject(CustomerService);
   private readonly toast = inject(ToastService);
+  private readonly subscription = inject(SubscriptionService);
   private readonly t = inject(TranslateService);
 
   protected readonly showGuide = signal(false);
@@ -55,15 +58,36 @@ export class CustomerImportComponent {
   ];
 
   protected readonly file = signal<File | null>(null);
-  protected readonly cutover = signal(new Date().toISOString().slice(0, 10));
+  protected readonly cutover = signal(istToday());
   protected readonly previewing = signal(false);
   protected readonly importing = signal(false);
   protected readonly preview = signal<ImportResult | null>(null);
   protected readonly committed = signal<ImportResult | null>(null);
+  /** Current plan name + customer cap, for the plan-limit banner (null until loaded / on error). */
+  protected readonly plan = signal<{ name: string; maxCustomers: number } | null>(null);
 
   /** The result currently on screen — the commit result once done, otherwise the dry-run preview. */
   protected readonly result = computed(() => this.committed() ?? this.preview());
   protected readonly problemRows = computed(() => (this.result()?.rows ?? []).filter((r) => r.status !== 'Created'));
+
+  /**
+   * Rows skipped specifically because the plan's customer cap was hit (not duplicates or bad data).
+   * Matched on the API's English message, which is the raw `row.message` (not a translated string).
+   */
+  protected readonly planLimitSkipped = computed(
+    () =>
+      (this.result()?.rows ?? []).filter(
+        (r) => r.status === 'Skipped' && (r.message ?? '').toLowerCase().includes('customer limit is reached'),
+      ).length,
+  );
+
+  constructor() {
+    // Loaded so the plan-limit banner can name the current plan and its customer cap.
+    this.subscription.current().subscribe({
+      next: (s) => this.plan.set({ name: s.planName, maxCustomers: s.usage.maxCustomers }),
+      error: () => {}, // banner falls back to a generic message when this is unavailable
+    });
+  }
 
   onFile(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -101,11 +125,15 @@ export class CustomerImportComponent {
       next: (r) => {
         this.importing.set(false);
         this.committed.set(r);
-        this.toast.success(this.t.instant('{{count}} customers imported.', { count: r.created }));
+        const msg =
+          r.skipped > 0
+            ? this.t.instant('{{created}} imported, {{skipped}} skipped.', { created: r.created, skipped: r.skipped })
+            : this.t.instant('{{count}} customers imported.', { count: r.created });
+        this.toast.success(msg);
       },
-      error: () => {
+      error: (err) => {
         this.importing.set(false);
-        this.toast.error(this.t.instant('The import failed. No changes were saved.'));
+        this.toast.apiError(err, this.t.instant('The import failed. No changes were saved.'));
       },
     });
   }

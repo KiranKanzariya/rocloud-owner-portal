@@ -2,6 +2,8 @@ export interface DeliveryListItem {
   id: string;
   orderId: string;
   status: string;
+  /** 'HomeDelivery' | 'PlantPickup' — pickups skip InTransit and are marked delivered directly. */
+  deliveryMode: string | null;
   scheduledDate: string;
   deliveredAt: string | null;
   customerId: string;
@@ -40,6 +42,8 @@ export interface DeliveryBoard {
   inTransit: DeliveryListItem[];
   delivered: DeliveryListItem[];
   failed: DeliveryListItem[];
+  /** Plant-pickup stops, shown separately from the route columns. */
+  pickups: DeliveryListItem[];
   toDeliver: BoardItemTotal[];
 }
 

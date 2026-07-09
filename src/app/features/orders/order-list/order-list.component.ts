@@ -108,9 +108,9 @@ export class OrderListComponent {
         this.toast.success(this.t.instant('{{count}} order(s) created from subscriptions.', { count: r.ordersCreated }));
         this.load();
       },
-      error: () => {
+      error: (err) => {
         this.bulkRunning.set(false);
-        this.toast.error(this.t.instant('Bulk import failed.'));
+        this.toast.apiError(err, this.t.instant('Bulk import failed.'));
       },
     });
   }

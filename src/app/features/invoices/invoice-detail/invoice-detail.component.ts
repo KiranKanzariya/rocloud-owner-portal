@@ -66,13 +66,20 @@ export class InvoiceDetailComponent {
   send(): void {
     this.sending.set(true);
     this.service.send(this.id).subscribe({
-      next: () => {
+      next: (r) => {
         this.sending.set(false);
-        this.toast.success(this.t.instant('Invoice sent to the customer.'));
+        if (r.emailed) {
+          this.toast.success(this.t.instant('Invoice emailed to the customer.'));
+        } else {
+          this.toast.show(
+            this.t.instant('Invoice ready, but the customer has no email — nothing was sent.'),
+            'info',
+          );
+        }
       },
-      error: () => {
+      error: (err) => {
         this.sending.set(false);
-        this.toast.error(this.t.instant('Could not send the invoice.'));
+        this.toast.apiError(err, this.t.instant('Could not send the invoice.'));
       },
     });
   }
@@ -98,9 +105,9 @@ export class InvoiceDetailComponent {
           this.toast.success(this.t.instant('Payment recorded.'));
           this.reload();
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
-          this.toast.error(this.t.instant('Could not record the payment.'));
+          this.toast.apiError(err, this.t.instant('Could not record the payment.'));
         },
       });
   }

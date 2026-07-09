@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DeliveryService } from '../delivery.service';
@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { CanDirective } from '../../../shared/directives/can.directive';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 type Choice = 'InTransit' | 'Delivered' | 'Failed';
 
@@ -39,6 +40,16 @@ export class DeliveryDetailModalComponent {
   protected readonly detail = signal<DeliveryDetail | null>(null);
   /** False = show the read-only summary (completed stop); true = show the editable status form. */
   protected readonly editing = signal(false);
+  /**
+   * True when an un-completed stop is scheduled for a future day (e.g. tomorrow's delivery generated
+   * tonight by the rollover job). Such a stop isn't actionable yet — the server rejects early updates —
+   * so the modal shows a notice instead of the status form. "Today" is the owner's local (IST) date.
+   */
+  protected readonly notYetDue = computed(() => {
+    const d = this.delivery();
+    if (!d || d.status === 'Delivered' || d.status === 'Failed') return false;
+    return !!d.scheduledDate && d.scheduledDate > this.todayLocal();
+  });
   private lat: number | null = null;
   private lng: number | null = null;
   /** Guards against a slow item load for a previous delivery overwriting the current one's lines. */
@@ -71,11 +82,23 @@ export class DeliveryDetailModalComponent {
       if (!d) return;
       if (d.status === 'Delivered' || d.status === 'Failed') {
         this.loadDetail(d.id); // completed → show the read-only summary first
+      } else if (d.scheduledDate && d.scheduledDate > this.todayLocal()) {
+        // Future-dated stop (e.g. tonight's rollover created tomorrow's deliveries) — not actionable
+        // yet. Leave editing off; the template shows the "not due yet" notice (notYetDue()).
+        this.editing.set(false);
       } else {
         this.editing.set(true); // pending / in-transit → go straight to the editable form
+        // Plant-pickup has no in-transit leg (customer collects at the plant) — pre-select the
+        // Delivered form so the stop is marked delivered directly.
+        if (d.deliveryMode === 'PlantPickup') this.choice.set('Delivered');
         this.loadItems(d);
       }
     });
+  }
+
+  /** Today's date in IST as 'yyyy-MM-dd', matching the server's day guard regardless of viewer timezone. */
+  private todayLocal(): string {
+    return istToday();
   }
 
   /** Loads what was recorded at a completed stop for the read-only summary. */
@@ -242,9 +265,9 @@ export class DeliveryDetailModalComponent {
         this.toast.success(this.t.instant('Delivery updated.'));
         this.completed.emit();
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.toast.error(this.t.instant('Could not update the delivery.'));
+        this.toast.apiError(err, this.t.instant('Could not update the delivery.'));
       },
     });
   }

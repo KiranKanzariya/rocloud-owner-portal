@@ -125,8 +125,8 @@ export class CustomerListComponent {
         this.deleteTarget.set(null);
         this.load();
       },
-      error: () => {
-        this.toast.error(this.t.instant('Could not delete this customer (they may have open orders).'));
+      error: (err) => {
+        this.toast.apiError(err, this.t.instant('Could not delete this customer (they may have open orders).'));
         this.deleteTarget.set(null);
       },
     });

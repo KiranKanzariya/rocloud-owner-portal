@@ -5,6 +5,38 @@
     <div class="card"><roc-skeleton [rows]="4" /></div>
     <div class="card"><roc-skeleton [rows]="3" /></div>
   } @else if (subscription(); as s) {
+    <!-- Pending cancellation banner (still within the paid period) -->
+    @if (pendingCancel()) {
+      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Subscription cancelled' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            {{ 'You keep full access until' | translate }}
+            <span class="font-medium">{{ accessUntil() | date: 'MMM d, y' }}</span>.
+            {{ 'Change your mind? Resume any time before then.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary" (click)="resume()"><i class="ti ti-refresh"></i> {{ 'Resume subscription' | translate }}</button>
+        }
+      </div>
+    }
+
+    <!-- Reactivation banner (cancelled and the period has ended) -->
+    @if (cancelledEnded()) {
+      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Subscription ended' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            {{ 'Subscribe to reactivate your workspace — your data is safe and will be restored.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary" (click)="upgradeOpen.set(true)"><i class="ti ti-rocket"></i> {{ 'Subscribe to reactivate' | translate }}</button>
+        }
+      </div>
+    }
+
     <!-- Current plan card -->
     <div class="card flex flex-col gap-4">
       <div class="flex items-start justify-between">
@@ -27,16 +59,23 @@
             } @else {
               ₹{{ s.monthlyPrice | number: '1.0-0' }}{{ '/month' | translate }}
             }
-            @if (s.subscriptionEndsAt) { · {{ 'Renews' | translate }} {{ s.subscriptionEndsAt | date: 'mediumDate' }} }
-            @else if (s.trialEndsAt) { · {{ 'Trial ends' | translate }} {{ s.trialEndsAt | date: 'mediumDate' }} }
+            @if (s.subscriptionEndsAt) { · {{ 'Renews' | translate }} {{ s.subscriptionEndsAt | date: 'MMM d, y' }} }
+            @else if (s.trialEndsAt) { · {{ 'Trial ends' | translate }} {{ s.trialEndsAt | date: 'MMM d, y' }} }
           </p>
           @if (s.subscriptionDiscountType !== 'None' && s.netMonthlyPrice < s.monthlyPrice) {
             <p class="text-caption text-ink-mid mt-0.5"><i class="ti ti-discount-2 text-teal"></i> {{ 'A discount has been applied to your subscription by ROCloud.' | translate }}</p>
           }
         </div>
-        @if (canManage && !isEnterprise()) {
-          <button class="btn-primary" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ 'Upgrade' | translate }}</button>
-        }
+        <div class="flex items-center gap-2 shrink-0">
+          @if (canRenew()) {
+            <button class="btn-primary" [disabled]="renewing() || payingId() !== null" (click)="renewNow()">
+              @if (renewing()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-refresh"></i> {{ 'Renew now' | translate }} }
+            </button>
+          }
+          @if (canManage && !isEnterprise()) {
+            <button [class]="canRenew() ? 'btn-secondary' : 'btn-primary'" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ 'Upgrade' | translate }}</button>
+          }
+        </div>
       </div>
 
       <!-- Usage bars -->
@@ -64,18 +103,45 @@
       </div>
     </div>
 
-    <!-- Invoice history -->
-    <div class="card">
-      <h3 class="text-h3 mb-3">{{ 'Billing history' | translate }}</h3>
-      <div class="flex flex-col items-center justify-center text-center gap-2 py-8 text-ink-mid">
-        <i class="ti ti-file-invoice text-3xl"></i>
-        <p class="text-body">{{ 'No billing history yet.' | translate }}</p>
-        <p class="text-caption">{{ 'Your ROCloud subscription invoices will appear here once billing is live.' | translate }}</p>
-      </div>
+    <!-- Billing history -->
+    <div class="flex flex-col gap-3">
+      <h3 class="text-h3">{{ 'Billing history' | translate }}</h3>
+      @if (invoices().length === 0) {
+        <div class="card flex flex-col items-center justify-center text-center gap-2 py-8 text-ink-mid">
+          <i class="ti ti-file-invoice text-3xl"></i>
+          <p class="text-body">{{ 'No billing history yet.' | translate }}</p>
+          <p class="text-caption">{{ 'Your ROCloud subscription invoices will appear here.' | translate }}</p>
+        </div>
+      } @else {
+        <roc-data-table
+          [columns]="invoiceColumns" [rows]="invoices()" [totalCount]="invoices().length"
+          [page]="1" [pageSize]="100" (rowClick)="openInvoice($any($event))">
+
+          <ng-template appColumnCell="invoiceNumber" let-row><span class="font-mono">{{ row.invoiceNumber }}</span></ng-template>
+          <ng-template appColumnCell="description" let-row>{{ row.description || row.planType + ' plan' }}</ng-template>
+          <ng-template appColumnCell="dueDate" let-row><span class="font-mono text-caption">{{ row.dueDate | date: 'MMM d, y' }}</span></ng-template>
+          <ng-template appColumnCell="amount" let-row><span class="font-mono">₹{{ row.amount | number: '1.0-2' }}</span></ng-template>
+          <ng-template appColumnCell="status" let-row><span [class]="invoiceStatusClass(row.status)">{{ row.status | translate }}</span></ng-template>
+
+          <ng-template appColumnCell="actions" let-row>
+            <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+              @if (row.hasPdf) {
+                <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
+              }
+              @if (row.status === 'Pending' && canManage) {
+                <button class="p-1.5 rounded hover:bg-shell text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate">
+                  @if (payingId() === row.id) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+                </button>
+              }
+              <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openInvoice(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
+            </div>
+          </ng-template>
+        </roc-data-table>
+      }
     </div>
 
-    <!-- Danger zone -->
-    @if (canManage && s.status === 'Active') {
+    <!-- Danger zone (hidden once a cancellation is already pending) -->
+    @if (canManage && !pendingCancel() && (s.status === 'Active' || s.status === 'Trial')) {
       <div class="card border border-danger/30">
         <div class="flex items-center justify-between">
           <div>

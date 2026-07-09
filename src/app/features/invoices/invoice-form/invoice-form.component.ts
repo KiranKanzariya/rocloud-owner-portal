@@ -12,6 +12,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
+import { istMonth, istMonthStart, istToday } from '../../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-invoice-form',
@@ -41,9 +42,9 @@ export class InvoiceFormComponent {
 
   protected readonly customerSearch = this.fb.nonNullable.control('');
   protected readonly form = this.fb.nonNullable.group({
-    month: [new Date().toISOString().slice(0, 7), Validators.required], // YYYY-MM
-    fromDate: [`${new Date().toISOString().slice(0, 7)}-01`], // YYYY-MM-DD, defaults to 1st of this month
-    toDate: [new Date().toISOString().slice(0, 10)], // defaults to today
+    month: [istMonth(), Validators.required], // YYYY-MM
+    fromDate: [istMonthStart()], // YYYY-MM-DD, defaults to 1st of this month
+    toDate: [istToday()], // defaults to today
     notes: [''],
   });
 

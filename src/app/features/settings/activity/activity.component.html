@@ -14,6 +14,18 @@
       </select>
     </label>
     <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'Result' | translate }}</span>
+      <select [(ngModel)]="result" class="rounded-md border-ink-light py-1.5">
+        <option value="">{{ 'All' | translate }}</option>
+        <option value="success">{{ 'Success' | translate }}</option>
+        <option value="failed">{{ 'Failed' | translate }}</option>
+      </select>
+    </label>
+    <label class="flex flex-col gap-1">
+      <span class="text-caption font-medium">{{ 'Search' | translate }}</span>
+      <input type="search" [(ngModel)]="search" [placeholder]="'Area or entity…' | translate" class="rounded-md border-ink-light py-1.5" />
+    </label>
+    <label class="flex flex-col gap-1">
       <span class="text-caption font-medium">{{ 'From' | translate }}</span>
       <input type="date" [(ngModel)]="fromDate" class="rounded-md border-ink-light py-1.5" />
     </label>
@@ -22,6 +34,10 @@
       <input type="date" [(ngModel)]="toDate" class="rounded-md border-ink-light py-1.5" />
     </label>
     <button class="btn-primary" (click)="applyFilters()"><i class="ti ti-filter"></i> {{ 'Apply' | translate }}</button>
+    <button class="btn-secondary" [disabled]="exporting()" (click)="exportCsv()">
+      @if (exporting()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-download"></i> }
+      {{ 'Export CSV' | translate }}
+    </button>
   </div>
 
   <!-- Table -->
@@ -30,7 +46,7 @@
     [page]="page()" [pageSize]="pageSize"
     (pageChange)="goTo($event)" (rowClick)="selected.set($any($event))">
 
-    <ng-template appColumnCell="createdAt" let-r><span class="font-mono text-caption whitespace-nowrap">{{ r.createdAt | date: 'medium' }}</span></ng-template>
+    <ng-template appColumnCell="createdAt" let-r><span class="font-mono text-caption whitespace-nowrap">{{ r.createdAt | date: 'MMM d, y h:mm a' }}</span></ng-template>
     <ng-template appColumnCell="userName" let-r>{{ r.userName || ('System' | translate) }}</ng-template>
     <ng-template appColumnCell="action" let-r><span [title]="rawLabel(r)">{{ verbLabel(r) | translate }}</span></ng-template>
     <ng-template appColumnCell="module" let-r><span class="capitalize">{{ r.module }}</span></ng-template>
@@ -50,7 +66,7 @@
 
       <div class="p-5 flex flex-col gap-4">
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-body">
-          <div><dt class="text-caption text-ink-mid">{{ 'When' | translate }}</dt><dd class="font-mono">{{ r.createdAt | date: 'medium' }}</dd></div>
+          <div><dt class="text-caption text-ink-mid">{{ 'When' | translate }}</dt><dd class="font-mono">{{ r.createdAt | date: 'MMM d, y h:mm a' }}</dd></div>
           <div><dt class="text-caption text-ink-mid">{{ 'Who' | translate }}</dt><dd>{{ r.userName || ('System' | translate) }}</dd></div>
           <div><dt class="text-caption text-ink-mid">{{ 'Action' | translate }}</dt><dd>{{ verbLabel(r) | translate }} <span class="text-caption text-ink-mid font-mono">({{ rawLabel(r) }})</span></dd></div>
           <div><dt class="text-caption text-ink-mid">{{ 'Status' | translate }}</dt><dd><span [class]="statusClass(r.statusCode)">{{ statusLabel(r.statusCode) | translate }}</span> @if (r.statusCode) { <span class="text-caption text-ink-mid font-mono">{{ r.statusCode }}</span> }</dd></div>

@@ -128,8 +128,12 @@
 .animate-shake { animation: roc-shake 360ms ease-in-out both; }         /* invalid form (item 14) */
 .pulse-once { animation: roc-pulse 900ms ease-out 1; }                  /* status change (item 11) */
 
-/* Page transition (item 6): the routed component is the element right after the outlet. */
-main > router-outlet + * { animation: roc-fade-up 220ms ease-out both; }
+/* Page transition (item 6): the routed component is the element right after the outlet.
+   Fill-mode is `backwards` (not `both`): `both` would retain the final `transform: translateY(0)`
+   forever, and a non-none transform makes the page the containing block for its `position: fixed`
+   descendants — clipping page-level modal backdrops to the content area so they can't cover the
+   topbar/sidebar. `backwards` gives the identical entrance but leaves no lingering transform. */
+main > router-outlet + * { animation: roc-fade-up 220ms ease-out backwards; }
 
 /* Modals (item 2): every overlay uses a `bg-black/NN` backdrop — fade it in and scale its panel. */
 [class*="bg-black/"] { animation: roc-fade-in 150ms ease-out both; }

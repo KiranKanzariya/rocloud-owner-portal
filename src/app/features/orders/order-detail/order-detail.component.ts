@@ -44,7 +44,7 @@ export class OrderDetailComponent {
         this.toast.success(this.t.instant('Order cancelled.'));
         this.reload();
       },
-      error: () => this.toast.error(this.t.instant('Only pending orders can be cancelled.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Only pending orders can be cancelled.')),
     });
   }
 

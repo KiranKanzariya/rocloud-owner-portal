@@ -92,7 +92,7 @@ export class ProductsComponent {
           this.toast.success(this.t.instant(p.isActive ? '{{name}} deactivated.' : '{{name}} activated.', { name: p.name }));
           this.load();
         },
-        error: () => this.toast.error(this.t.instant('Could not update the product.')),
+        error: (err) => this.toast.apiError(err, this.t.instant('Could not update the product.')),
       });
   }
 

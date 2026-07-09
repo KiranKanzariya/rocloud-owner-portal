@@ -1,0 +1,132 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <div class="flex flex-col gap-0.5">
+      <h1 class="text-h1">{{ 'Scheduled orders' | translate }}</h1>
+      <p class="text-caption text-ink-mid">{{ 'Future-dated bookings for events & programs, before they reach the delivery board.' | translate }}</p>
+    </div>
+    <button class="btn-primary" (click)="router.navigate(['/orders/new'])">
+      <i class="ti ti-calendar-plus"></i> {{ 'Book advance order' | translate }}
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 rounded-md border border-ink-light p-1 w-fit text-caption">
+    <button type="button" class="px-4 py-1.5 rounded transition-colors"
+            [class.bg-navy]="tab() === 'upcoming'" [class.text-white]="tab() === 'upcoming'"
+            (click)="setTab('upcoming')"><i class="ti ti-calendar-event"></i> {{ 'Upcoming' | translate }}</button>
+    <button type="button" class="px-4 py-1.5 rounded transition-colors"
+            [class.bg-navy]="tab() === 'plan'" [class.text-white]="tab() === 'plan'"
+            (click)="setTab('plan')"><i class="ti ti-clipboard-check"></i> {{ 'Production plan' | translate }}</button>
+  </div>
+
+  @if (loading()) {
+    <div class="card flex items-center gap-2 text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+  }
+
+  <!-- ── Upcoming tab ─────────────────────────────────────────── -->
+  @if (tab() === 'upcoming' && !loading()) {
+    @if (!upcomingGroups().length) {
+      <div class="card flex flex-col items-center gap-2 py-10 text-center">
+        <i class="ti ti-calendar-off text-4xl text-ink-light"></i>
+        <p class="text-body text-ink-mid">{{ 'No upcoming bookings.' | translate }}</p>
+        <p class="text-caption text-ink-mid">{{ 'Book an advance order from the New order screen by choosing a future delivery date.' | translate }}</p>
+      </div>
+    } @else {
+      @for (g of upcomingGroups(); track g.date) {
+        <div class="card flex flex-col gap-2">
+          <div class="flex items-center justify-between border-b border-ink-light pb-2">
+            <span class="text-h4">{{ g.date | date: 'MMM d, y' }}</span>
+            <span class="text-caption text-ink-mid">{{ g.orders.length }} {{ 'booking(s)' | translate }} · {{ g.totalItems }} {{ 'items' | translate }}</span>
+          </div>
+          @for (o of g.orders; track o.id) {
+            <button type="button" (click)="open(o)" class="flex flex-col gap-1.5 rounded-md px-2 py-2 hover:bg-shell text-left">
+              <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                  <span class="font-medium text-ink">{{ o.customerName }}</span>
+                  <span class="text-caption text-ink-mid">{{ o.areaName || ('No area' | translate) }} · {{ o.deliveryMode | translate }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="rounded-full px-2 py-0.5 text-micro font-medium" [class]="typeClass(o.orderType)">{{ o.orderType | translate }}</span>
+                  <span class="font-mono text-body">₹{{ o.totalAmount | number: '1.0-0' }}</span>
+                  <i class="ti ti-chevron-right text-ink-light"></i>
+                </div>
+              </div>
+              <!-- Line items: what's actually booked -->
+              <div class="flex flex-wrap gap-1.5">
+                @for (line of o.items; track line.productName) {
+                  <span class="inline-flex items-center gap-1 rounded bg-shell px-2 py-0.5 text-micro text-ink">
+                    {{ line.productName }} <span class="font-mono font-medium text-navy">× {{ line.quantity }}</span>
+                  </span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    }
+  }
+
+  <!-- ── Production plan tab ──────────────────────────────────── -->
+  @if (tab() === 'plan' && !loading()) {
+    @if (!plan().length) {
+      <div class="card flex flex-col items-center gap-2 py-10 text-center">
+        <i class="ti ti-clipboard-off text-4xl text-ink-light"></i>
+        <p class="text-body text-ink-mid">{{ 'Nothing to prepare in the next 30 days.' | translate }}</p>
+      </div>
+    } @else {
+      <div class="card flex items-center justify-between bg-foam">
+        <span class="text-h4 text-navy">{{ 'Total to prepare (next 30 days)' | translate }}</span>
+        <span class="text-h3 text-navy font-mono">{{ planTotalUnits() | number: '1.0-0' }} {{ 'units' | translate }}</span>
+      </div>
+      @for (day of plan(); track day.date) {
+        <div class="card flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-h4">{{ day.date | date: 'MMM d, y' }}</span>
+            <span class="text-caption text-ink-mid">{{ day.orderCount }} {{ 'booking(s)' | translate }}</span>
+          </div>
+
+          <!-- Per-product demand -->
+          <div class="flex flex-col gap-1.5">
+            @for (line of day.lines; track line.productId) {
+              <div class="flex items-center justify-between">
+                <span class="text-body">{{ line.productName }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-micro text-ink-mid">{{ line.orderCount }} {{ 'order(s)' | translate }}</span>
+                  <span class="font-mono text-h4 text-navy">{{ line.totalQuantity | number: '1.0-0' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="flex items-center justify-between border-t border-ink-light pt-2">
+            <button type="button" class="text-caption text-navy-light hover:underline" (click)="toggleDay(day.date)">
+              <i class="ti" [class.ti-chevron-down]="expandedDay() !== day.date" [class.ti-chevron-up]="expandedDay() === day.date"></i>
+              {{ (expandedDay() === day.date ? 'Hide bookings' : 'Show bookings') | translate }}
+            </button>
+            <span class="text-caption text-ink-mid">{{ 'Total' | translate }}: <span class="font-mono text-ink">{{ day.totalUnits | number: '1.0-0' }}</span></span>
+          </div>
+
+          @if (expandedDay() === day.date) {
+            <div class="flex flex-col gap-2 border-t border-ink-light pt-2">
+              @for (b of day.bookings; track b.orderId) {
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between text-caption">
+                    <span class="text-ink">{{ b.customerName }} <span class="text-ink-mid">· {{ b.areaName || ('No area' | translate) }}</span></span>
+                    <span class="font-mono text-ink-mid">{{ b.totalQuantity | number: '1.0-0' }} {{ 'units' | translate }}</span>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pl-2">
+                    @for (line of b.items; track line.productName) {
+                      <span class="inline-flex items-center gap-1 rounded bg-shell px-2 py-0.5 text-micro text-ink">
+                        {{ line.productName }} <span class="font-mono font-medium text-navy">× {{ line.quantity }}</span>
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+</div>

@@ -42,8 +42,11 @@ export class ActivityComponent {
 
   // Filters
   protected module = '';
+  protected result = '';
+  protected search = '';
   protected fromDate = '';
   protected toDate = '';
+  protected readonly exporting = signal(false);
 
   /** Modules that appear in the trail (URL first segment) — drives the filter dropdown. */
   protected readonly modules = [
@@ -58,13 +61,7 @@ export class ActivityComponent {
   load(): void {
     this.loading.set(true);
     this.api
-      .list({
-        module: this.module || undefined,
-        fromDate: this.fromDate || undefined,
-        toDate: this.toDate || undefined,
-        page: this.page(),
-        pageSize: this.pageSize,
-      })
+      .list(this.currentFilter())
       .subscribe({
         next: (res) => {
           this.rows.set(res.items);
@@ -78,6 +75,35 @@ export class ActivityComponent {
   applyFilters(): void {
     this.page.set(1);
     this.load();
+  }
+
+  private currentFilter() {
+    return {
+      module: this.module || undefined,
+      result: this.result || undefined,
+      search: this.search.trim() || undefined,
+      fromDate: this.fromDate || undefined,
+      toDate: this.toDate || undefined,
+      page: this.page(),
+      pageSize: this.pageSize,
+    };
+  }
+
+  /** Download the filtered trail as a CSV file. */
+  exportCsv(): void {
+    this.exporting.set(true);
+    this.api.exportCsv(this.currentFilter()).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'activity-log.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.exporting.set(false);
+      },
+      error: () => this.exporting.set(false),
+    });
   }
 
   goTo(page: number): void {

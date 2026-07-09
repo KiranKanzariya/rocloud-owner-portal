@@ -17,6 +17,10 @@ export interface AuditLogFilter {
   userId?: string;
   module?: string;
   action?: string;
+  /** 'success' (status < 400 or none) or 'failed' (status >= 400). */
+  result?: string;
+  /** Free-text match over area/entity. */
+  search?: string;
   fromDate?: string;
   toDate?: string;
   page: number;

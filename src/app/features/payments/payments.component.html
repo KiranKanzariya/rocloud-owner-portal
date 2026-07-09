@@ -48,7 +48,7 @@
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
 
-    <ng-template appColumnCell="paidAt" let-row><span class="font-mono text-caption">{{ row.paidAt | date: 'dd MMM, HH:mm' }}</span></ng-template>
+    <ng-template appColumnCell="paidAt" let-row><span class="font-mono text-caption">{{ row.paidAt | date: 'MMM d, y h:mm a' }}</span></ng-template>
     <ng-template appColumnCell="invoiceNumber" let-row>
       @if (row.invoiceNumber) { <span class="font-mono text-caption">{{ row.invoiceNumber }}</span> } @else { <span class="text-ink-mid">—</span> }
     </ng-template>

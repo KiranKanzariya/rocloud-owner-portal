@@ -93,9 +93,9 @@ export class ServiceRequestFormModalComponent {
           this.reset();
           this.saved.emit();
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
-          this.toast.error(this.t.instant('Could not create the request.'));
+          this.toast.apiError(err, this.t.instant('Could not create the request.'));
         },
       });
   }

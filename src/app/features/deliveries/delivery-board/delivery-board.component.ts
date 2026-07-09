@@ -8,6 +8,7 @@ import { DeliveryBoard, DeliveryListItem } from '../delivery.models';
 import { DeliveryDetailModalComponent } from '../delivery-detail-modal/delivery-detail-modal.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-delivery-board',
@@ -19,8 +20,8 @@ export class DeliveryBoardComponent {
   private readonly service = inject(DeliveryService);
   protected readonly router = inject(Router);
 
-  protected readonly date = signal(new Date().toISOString().slice(0, 10));
-  protected readonly board = signal<DeliveryBoard>({ pending: [], inTransit: [], delivered: [], failed: [], toDeliver: [] });
+  protected readonly date = signal(istToday());
+  protected readonly board = signal<DeliveryBoard>({ pending: [], inTransit: [], delivered: [], failed: [], pickups: [], toDeliver: [] });
   protected readonly selected = signal<DeliveryListItem | null>(null);
   protected readonly loading = signal(false);
 

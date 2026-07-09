@@ -136,7 +136,7 @@
         @if (ob.isSet) {
           <!-- Already seeded: summary + clear -->
           <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption">
-            @if (ob.cutoverDate) { <span class="text-ink-mid">{{ 'As of' | translate }} {{ ob.cutoverDate | date: 'mediumDate' }}</span> }
+            @if (ob.cutoverDate) { <span class="text-ink-mid">{{ 'As of' | translate }} {{ ob.cutoverDate | date: 'MMM d, y' }}</span> }
             @for (j of ob.jars; track j.productName) {
               <span><span class="font-medium text-ink">{{ j.productName }}</span> <span class="text-ink-mid">×{{ j.quantity }}</span></span>
             }
@@ -219,7 +219,7 @@
             <div><dt class="text-caption text-ink-mid">{{ 'Payment preference' | translate }}</dt><dd>{{ c.paymentPreference }}</dd></div>
             <div><dt class="text-caption text-ink-mid">{{ 'Email' | translate }}</dt><dd>{{ c.email || '—' }}</dd></div>
             <div><dt class="text-caption text-ink-mid">{{ 'Invoice discount' | translate }}</dt><dd>{{ discountLabel(c) }}</dd></div>
-            <div><dt class="text-caption text-ink-mid">{{ 'Customer since' | translate }}</dt><dd>{{ c.createdAt | date: 'mediumDate' }}</dd></div>
+            <div><dt class="text-caption text-ink-mid">{{ 'Customer since' | translate }}</dt><dd>{{ c.createdAt | date: 'MMM d, y' }}</dd></div>
             @if (c.notes) { <div class="sm:col-span-2"><dt class="text-caption text-ink-mid">{{ 'Notes' | translate }}</dt><dd>{{ c.notes }}</dd></div> }
           </dl>
         }
@@ -300,7 +300,7 @@
               <tbody class="stagger">
                 @for (o of orderRows(); track o.id) {
                   <tr class="border-b border-ink-light/60 hover:bg-shell cursor-pointer" (click)="openOrder(o)">
-                    <td class="py-2 font-mono" [title]="o.createdAt | date: 'medium'">{{ o.orderDate | date: 'mediumDate' }} <span class="text-ink-mid">{{ o.createdAt | date: 'shortTime' }}</span></td>
+                    <td class="py-2 font-mono" [title]="o.createdAt | date: 'MMM d, y h:mm a'">{{ o.orderDate | date: 'MMM d, y' }} <span class="text-ink-mid">{{ o.createdAt | date: 'shortTime' }}</span></td>
                     <td class="py-2">{{ o.deliveryMode }}</td>
                     <td class="py-2">{{ o.deliveryBoyName || '—' }}</td>
                     <td class="py-2 text-center">{{ o.itemCount }}</td>
@@ -347,7 +347,7 @@
               <tbody class="stagger">
                 @for (r of returnRows(); track r.id) {
                   <tr class="border-b border-ink-light/60">
-                    <td class="py-2 font-mono">{{ r.createdAt | date: 'medium' }}</td>
+                    <td class="py-2 font-mono">{{ r.createdAt | date: 'MMM d, y h:mm a' }}</td>
                     <td class="py-2">{{ r.productName }}</td>
                     <td class="py-2 text-center font-mono">{{ r.quantity }}</td>
                     <td class="py-2">
@@ -388,11 +388,61 @@
         @case ('payments') {
           @if (c.recentPayments.length) {
             <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
-              <tbody class="stagger">@for (p of c.recentPayments; track p.id) { <tr class="border-b border-ink-light/60"><td class="py-2 font-mono">{{ p.paidAt | date: 'medium' }}</td><td class="py-2">{{ p.paymentMethod }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr> }</tbody></table>
+              <tbody class="stagger">@for (p of c.recentPayments; track p.id) { <tr class="border-b border-ink-light/60"><td class="py-2 font-mono">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td><td class="py-2">{{ p.paymentMethod }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr> }</tbody></table>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments yet.' | translate }}</p> }
         }
         @case ('service') {
-          <p class="text-body text-ink-mid">{{ 'Service requests for this customer are managed in the AMC / Service module.' | translate }}</p>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-caption text-ink-mid">{{ 'Repair, maintenance and AMC tickets for this customer.' | translate }}</p>
+            <button *appCan="'AMC.Manage'" class="btn-secondary py-1 px-2" (click)="router.navigate(['/service-requests'])">
+              <i class="ti ti-plus"></i> {{ 'Log complaint' | translate }}
+            </button>
+          </div>
+
+          @if (serviceLoading() && !serviceRows().length) {
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+          } @else if (serviceRows().length) {
+            <table class="w-full text-body">
+              <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
+                <th class="py-2">{{ 'Ticket' | translate }}</th>
+                <th class="py-2">{{ 'Title' | translate }}</th>
+                <th class="py-2">{{ 'Type' | translate }}</th>
+                <th class="py-2">{{ 'Technician' | translate }}</th>
+                <th class="py-2">{{ 'Priority' | translate }}</th>
+                <th class="py-2">{{ 'Scheduled' | translate }}</th>
+                <th class="py-2">{{ 'Status' | translate }}</th>
+                <th class="py-2 w-8"></th>
+              </tr></thead>
+              <tbody class="stagger">
+                @for (s of serviceRows(); track s.id) {
+                  <tr class="border-b border-ink-light/60 hover:bg-shell cursor-pointer" (click)="openService(s)">
+                    <td class="py-2 font-mono">{{ s.ticketNumber }}</td>
+                    <td class="py-2">{{ s.title }}</td>
+                    <td class="py-2">{{ s.serviceType | translate }}</td>
+                    <td class="py-2">{{ s.assignedTechName || '—' }}</td>
+                    <td class="py-2"><span [class]="servicePriorityClass(s.priority)">{{ s.priority | translate }}</span></td>
+                    <td class="py-2 font-mono">{{ s.scheduledDate ? (s.scheduledDate | date: 'MMM d, y') : '—' }}</td>
+                    <td class="py-2"><span [class]="serviceStatusClass(s.status)">{{ s.status | translate }}</span></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Footer: total + pagination -->
+            <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
+              <span>{{ '{{count}} ticket(s)' | translate: { count: serviceTotal() } }}</span>
+              @if (serviceTotalPages() > 1) {
+                <div class="flex items-center gap-2">
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="servicePage() === 1" (click)="servicesGoTo(servicePage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <span>{{ servicePage() }} / {{ serviceTotalPages() }}</span>
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="servicePage() === serviceTotalPages()" (click)="servicesGoTo(servicePage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-body text-ink-mid">{{ 'No service requests yet.' | translate }}</p>
+          }
         }
       }
     </div>
@@ -403,6 +453,11 @@
     [presetCustomer]="{ id: c.id, name: c.name, mobile: c.mobile }"
     (saved)="onPaymentSaved()"
     (closed)="showPayment.set(false)" />
+
+  <app-service-detail-modal
+    [requestId]="serviceDetailId()"
+    (updated)="onServiceUpdated()"
+    (closed)="serviceDetailId.set(null)" />
 } @else {
   <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
 }

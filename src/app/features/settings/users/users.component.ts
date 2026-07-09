@@ -91,14 +91,14 @@ export class UsersComponent {
         this.toast.success(this.t.instant('{{name}} deactivated.', { name: u.name }));
         this.load();
       },
-      error: () => this.toast.error(this.t.instant('Could not deactivate the user.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not deactivate the user.')),
     });
   }
 
   resetPassword(u: UserListItem): void {
     this.users.resetPassword(u.id).subscribe({
       next: () => this.toast.success(this.t.instant('Password reset email sent to {{name}}.', { name: u.name })),
-      error: () => this.toast.error(this.t.instant('Could not reset the password.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not reset the password.')),
     });
   }
 

@@ -23,7 +23,10 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
             <button type="submit" class="btn-primary w-full justify-center" [disabled]="loading()">
               @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Updating…' | translate }} } @else { {{ 'Reset password' | translate }} }
             </button>
-            <a routerLink="/login" class="text-caption text-navy-light hover:underline text-center">{{ 'Back to sign in' | translate }}</a>
+            <div class="flex flex-col items-center gap-1">
+              <a routerLink="/forgot-password" class="text-caption text-navy-light hover:underline">{{ 'Request a new link' | translate }}</a>
+              <a routerLink="/login" class="text-caption text-navy-light hover:underline">{{ 'Back to sign in' | translate }}</a>
+            </div>
           </form>
         </div>
       </div>

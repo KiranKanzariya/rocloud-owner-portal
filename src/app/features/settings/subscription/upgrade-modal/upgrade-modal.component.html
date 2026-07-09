@@ -38,12 +38,16 @@
                 {{ (p.maxUsers === 0 ? 'Unlimited team members' : '{{count}} team members') | translate: { count: p.maxUsers } }}</li>
               <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
                 {{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</li>
-              <li class="flex items-center gap-2">
-                <i class="ti" [class.ti-check]="p.whatsappEnabled" [class.text-teal]="p.whatsappEnabled" [class.ti-minus]="!p.whatsappEnabled" [class.text-ink-light]="!p.whatsappEnabled"></i> {{ 'WhatsApp notifications' | translate }}</li>
+              <li class="flex items-center gap-2 text-ink-mid">
+                <i class="ti ti-clock text-ink-light shrink-0"></i>
+                <span>{{ 'WhatsApp notifications' | translate }}</span>
+                <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
               <li class="flex items-center gap-2">
                 <i class="ti" [class.ti-check]="p.customRolesEnabled" [class.text-teal]="p.customRolesEnabled" [class.ti-minus]="!p.customRolesEnabled" [class.text-ink-light]="!p.customRolesEnabled"></i> {{ 'Custom roles' | translate }}</li>
-              <li class="flex items-center gap-2">
-                <i class="ti" [class.ti-check]="p.multiBranchEnabled" [class.text-teal]="p.multiBranchEnabled" [class.ti-minus]="!p.multiBranchEnabled" [class.text-ink-light]="!p.multiBranchEnabled"></i> {{ 'Multi-branch' | translate }}</li>
+              <li class="flex items-center gap-2 text-ink-mid">
+                <i class="ti ti-clock text-ink-light shrink-0"></i>
+                <span>{{ 'Multi-branch' | translate }}</span>
+                <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
             </ul>
 
             @if (isCurrent(p)) {

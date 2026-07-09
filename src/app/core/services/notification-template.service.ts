@@ -12,6 +12,7 @@ export interface NotificationTemplate {
   subject: string | null;
   body: string;
   updatedAt: string | null;
+  isCustom: boolean; // true = this tenant's override; false = inherited system default
 }
 
 export interface UpsertNotificationTemplate {
@@ -34,5 +35,10 @@ export class NotificationTemplateService {
 
   upsert(body: UpsertNotificationTemplate): Observable<{ id: string }> {
     return this.http.put<ApiResponse<{ id: string }>>(this.base, body).pipe(map((r) => r.data!));
+  }
+
+  /** Delete this tenant's override, reverting the template to the system default. */
+  remove(id: string): Observable<unknown> {
+    return this.http.delete<ApiResponse<unknown>>(`${this.base}/${id}`);
   }
 }

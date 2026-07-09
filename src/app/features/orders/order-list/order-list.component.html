@@ -42,7 +42,7 @@
     (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
 
     <ng-template appColumnCell="orderDate" let-row>
-      <span class="font-mono text-caption" [title]="row.createdAt | date: 'medium'">{{ row.orderDate | date: 'mediumDate' }} <span class="text-ink-mid">{{ row.createdAt | date: 'shortTime' }}</span></span>
+      <span class="font-mono text-caption" [title]="row.createdAt | date: 'MMM d, y h:mm a'">{{ row.orderDate | date: 'MMM d, y' }} <span class="text-ink-mid">{{ row.createdAt | date: 'shortTime' }}</span></span>
     </ng-template>
 
     <ng-template appColumnCell="customerName" let-row>

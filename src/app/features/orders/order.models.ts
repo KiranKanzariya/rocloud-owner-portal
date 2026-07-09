@@ -92,3 +92,54 @@ export interface BulkCreateResult {
   subscriptionsConsidered: number;
   skipped: number;
 }
+
+/** A product + quantity line shown inside a booking. */
+export interface OrderLineSummary {
+  productName: string;
+  quantity: number;
+}
+
+/** A future-dated booking for the Upcoming tab, with its line items. */
+export interface UpcomingOrder {
+  id: string;
+  orderDate: string;
+  customerName: string;
+  customerMobile: string | null;
+  areaName: string | null;
+  deliveryBoyName: string | null;
+  orderType: string;
+  deliveryMode: string;
+  status: string;
+  itemCount: number;
+  totalQuantity: number;
+  totalAmount: number;
+  items: OrderLineSummary[];
+  createdAt: string;
+}
+
+/** One product's total demand on a production-plan day. */
+export interface ProductionPlanLine {
+  productId: string;
+  productName: string;
+  totalQuantity: number;
+  orderCount: number;
+}
+
+/** A single customer booking behind a production-plan day (drill-down). */
+export interface ProductionPlanBooking {
+  orderId: string;
+  customerName: string;
+  areaName: string | null;
+  orderType: string;
+  totalQuantity: number;
+  items: OrderLineSummary[];
+}
+
+/** Everything the plant must prepare for one future date. */
+export interface ProductionPlanDay {
+  date: string;
+  totalUnits: number;
+  orderCount: number;
+  lines: ProductionPlanLine[];
+  bookings: ProductionPlanBooking[];
+}

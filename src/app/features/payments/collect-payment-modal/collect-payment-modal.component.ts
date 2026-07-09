@@ -94,9 +94,9 @@ export class CollectPaymentModalComponent {
           this.reset();
           this.saved.emit();
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
-          this.toast.error(this.t.instant('Could not record the payment.'));
+          this.toast.apiError(err, this.t.instant('Could not record the payment.'));
         },
       });
   }

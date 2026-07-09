@@ -27,8 +27,11 @@ export class InvoiceService {
     return this.http.post<ApiResponse<{ id: string }>>(`${this.base}/generate`, body).pipe(map((r) => r.data!));
   }
 
-  send(id: string): Observable<unknown> {
-    return this.http.post<ApiResponse<unknown>>(`${this.base}/${id}/send`, {});
+  /** Sends the invoice. `emailed` is false when the customer has no email on file (nothing went out). */
+  send(id: string): Observable<{ emailed: boolean }> {
+    return this.http
+      .post<ApiResponse<{ id: string; pdfUrl: string; emailed: boolean }>>(`${this.base}/${id}/send`, {})
+      .pipe(map((r) => ({ emailed: r.data?.emailed ?? false })));
   }
 
   /** The PDF endpoint URL (fetched as a blob by roc-pdf-preview / download). */

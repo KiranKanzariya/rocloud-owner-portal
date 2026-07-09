@@ -1,17 +1,12 @@
 <div class="flex flex-col gap-4">
   <div class="flex items-center justify-between">
     <h1 class="text-h1">{{ 'Notification templates' | translate }}</h1>
-    @if (canManage) {
-      <button class="btn-primary" (click)="openCreate()"><i class="ti ti-plus"></i> {{ 'Add / edit template' | translate }}</button>
-    }
   </div>
 
-  @if (!isPro) {
-    <div class="card flex items-center gap-3 border-l-4 border-amber">
-      <i class="ti ti-brand-whatsapp text-teal text-h2"></i>
-      <p class="text-body">{{ 'WhatsApp templates are available on the Pro plan. Email & SMS templates are available now.' | translate }}</p>
-    </div>
-  }
+  <div class="card flex items-start gap-3 border-l-4 border-teal">
+    <i class="ti ti-info-circle text-teal text-h2"></i>
+    <p class="text-body">{{ 'These are the messages sent to your customers. Every template already has a ready-to-use default — you only need to edit one if you want to change the wording.' | translate }}</p>
+  </div>
 
   <roc-data-table
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
@@ -20,48 +15,40 @@
 
     <ng-template appColumnCell="templateCode" let-row><span class="font-medium text-ink">{{ label(row.templateCode) | translate }}</span></ng-template>
     <ng-template appColumnCell="channel" let-row><span class="status-active-info">{{ row.channel }}</span></ng-template>
-    <ng-template appColumnCell="languageCode" let-row><span class="uppercase text-caption">{{ row.languageCode }}</span></ng-template>
+    <ng-template appColumnCell="languageCode" let-row>{{ languageLabel(row.languageCode) }}</ng-template>
+    <ng-template appColumnCell="status" let-row>
+      @if (row.isCustom) { <span class="status-delivered">{{ 'Customised' | translate }}</span> }
+      @else { <span class="text-caption text-ink-mid">{{ 'Default' | translate }}</span> }
+    </ng-template>
     <ng-template appColumnCell="body" let-row><span class="text-caption text-ink-mid line-clamp-1">{{ row.body }}</span></ng-template>
-    <ng-template appColumnCell="updatedAt" let-row><span class="font-mono text-caption">{{ row.updatedAt ? (row.updatedAt | date: 'medium') : '—' }}</span></ng-template>
+    <ng-template appColumnCell="updatedAt" let-row><span class="font-mono text-caption">{{ row.updatedAt ? (row.updatedAt | date: 'MMM d, y h:mm a') : '—' }}</span></ng-template>
     <ng-template appColumnCell="actions" let-row>
       @if (canManage) {
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+        <div class="flex items-center justify-end gap-1">
+          <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+          @if (row.isCustom) {
+            <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="resetToDefault(row)" [title]="'Reset to default' | translate"><i class="ti ti-rotate-2"></i></button>
+          }
+        </div>
       }
     </ng-template>
   </roc-data-table>
 </div>
 
-@if (modalOpen()) {
+@if (modalOpen() && editing(); as ed) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="modalOpen.set(false)">
-    <div class="card w-full max-w-lg" (click)="$event.stopPropagation()">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-h3">{{ 'Template' | translate }}</h3>
+    <div class="card w-full max-w-lg max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="text-h3">{{ label(ed.templateCode) | translate }}</h3>
         <button class="text-ink-mid hover:text-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="flex items-center gap-2 mb-3 text-caption">
+        <span class="status-active-info">{{ ed.channel }}</span>
+        <span class="text-ink-mid">{{ languageLabel(ed.languageCode) }}</span>
       </div>
 
       <div class="flex flex-col gap-3">
-        <div class="grid grid-cols-3 gap-3">
-          <label class="flex flex-col gap-1">
-            <span class="text-caption font-medium">{{ 'Template' | translate }}</span>
-            <select [(ngModel)]="templateCode" class="rounded-md border-ink-light py-1.5">
-              @for (c of templateCodes; track c.code) { <option [value]="c.code">{{ c.label | translate }}</option> }
-            </select>
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-caption font-medium">{{ 'Channel' | translate }}</span>
-            <select [(ngModel)]="channel" class="rounded-md border-ink-light py-1.5">
-              @for (c of channels(); track c) { <option [value]="c">{{ c }}</option> }
-            </select>
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-caption font-medium">{{ 'Language' | translate }}</span>
-            <select [(ngModel)]="languageCode" class="rounded-md border-ink-light py-1.5">
-              @for (l of languages; track l.code) { <option [value]="l.code">{{ l.label }}</option> }
-            </select>
-          </label>
-        </div>
-
-        @if (channel === 'Email') {
+        @if (ed.channel === 'Email') {
           <label class="flex flex-col gap-1">
             <span class="text-caption font-medium">{{ 'Subject' | translate }}</span>
             <input [(ngModel)]="subject" class="rounded-md border-ink-light py-1.5" />
@@ -70,15 +57,29 @@
 
         <label class="flex flex-col gap-1">
           <span class="text-caption font-medium">{{ 'Body' | translate }}</span>
-          <textarea [(ngModel)]="body" rows="5" class="rounded-md border-ink-light py-1.5" placeholder="Use placeholders like {{ '{' }}{{ '{' }}customerName{{ '}' }}{{ '}' }}"></textarea>
-          <span class="text-caption text-ink-mid">Tip: placeholders like {{ '{' }}{{ '{' }}invoiceNumber{{ '}' }}{{ '}' }} are filled in when the message is sent.</span>
+          <textarea [(ngModel)]="body" rows="6" class="rounded-md border-ink-light py-1.5"></textarea>
         </label>
 
-        <div class="flex justify-end gap-2 pt-1">
-          <button type="button" class="btn-secondary" (click)="modalOpen.set(false)">{{ 'Cancel' | translate }}</button>
-          <button type="button" class="btn-primary" [disabled]="saving()" (click)="save()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save template' | translate }} }
-          </button>
+        <div class="text-caption text-ink-mid">
+          {{ 'Placeholders (click to insert):' | translate }}
+          @for (tok of currentTokens(); track tok) {
+            <button type="button" class="inline-block font-mono bg-shell rounded px-1.5 py-0.5 mr-1 mb-1 hover:bg-ink-light/20"
+              (click)="insertToken(tok)">{{ '{' }}{{ '{' }}{{ tok }}{{ '}' }}{{ '}' }}</button>
+          }
+        </div>
+
+        <div class="flex justify-between items-center gap-2 pt-1">
+          @if (ed.isCustom) {
+            <button type="button" class="text-caption text-danger hover:underline" [disabled]="saving()" (click)="resetToDefault(ed)">{{ 'Reset to default' | translate }}</button>
+          } @else {
+            <span></span>
+          }
+          <div class="flex gap-2">
+            <button type="button" class="btn-secondary" (click)="modalOpen.set(false)">{{ 'Cancel' | translate }}</button>
+            <button type="button" class="btn-primary" [disabled]="saving()" (click)="save()">
+              @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save template' | translate }} }
+            </button>
+          </div>
         </div>
       </div>
     </div>

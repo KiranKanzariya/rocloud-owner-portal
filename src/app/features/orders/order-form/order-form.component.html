@@ -53,6 +53,23 @@
 
     <!-- Items -->
     <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+      <!-- Schedule: blank = deliver today; a future date books an Advance order (event/program). -->
+      <div class="flex flex-col gap-1">
+        <span class="text-caption font-medium">{{ 'Deliver on' | translate }}</span>
+        <div class="flex items-center gap-2">
+          <input type="date" formControlName="orderDate" [min]="todayIso"
+                 class="rounded-md border-ink-light text-body py-1.5" />
+          @if (isAdvance()) {
+            <span class="inline-flex items-center gap-1 rounded-full bg-foam text-navy px-2.5 py-1 text-micro font-medium">
+              <i class="ti ti-calendar-event"></i> {{ 'Advance booking' | translate }}
+            </span>
+          }
+        </div>
+        <span class="text-micro text-ink-mid">
+          {{ 'Defaults to today. Pick a future date to book ahead — it appears under Scheduled until its day.' | translate }}
+        </span>
+      </div>
+
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <span class="text-caption font-medium">{{ 'Items' | translate }}</span>

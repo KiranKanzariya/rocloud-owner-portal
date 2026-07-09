@@ -12,13 +12,13 @@
               <span class="status-delivered"><i class="ti ti-discount-2"></i>{{ 'Discount applied' | translate }}</span>
             }
           </div>
-          <p class="text-body text-ink-mid">{{ inv.customerName }} · {{ 'Due' | translate }} {{ inv.dueDate | date: 'mediumDate' }}</p>
-          <p class="text-caption text-ink-mid">{{ 'Generated' | translate }} {{ inv.createdAt | date: 'medium' }}</p>
+          <p class="text-body text-ink-mid">{{ inv.customerName }} · {{ 'Due' | translate }} {{ inv.dueDate | date: 'MMM d, y' }}</p>
+          <p class="text-caption text-ink-mid">{{ 'Generated' | translate }} {{ inv.createdAt | date: 'MMM d, y h:mm a' }}</p>
         </div>
       </div>
       <div class="flex gap-2">
         <button *appCan="'Invoices.Edit'" class="btn-secondary" [disabled]="sending()" (click)="send()">
-          @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-brand-whatsapp"></i> } {{ 'Send' | translate }}
+          @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-mail"></i> } {{ 'Email invoice' | translate }}
         </button>
         @if (inv.balance > 0) {
           <button *appCan="'Payments.Collect'" class="btn-primary" (click)="payOpen.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
@@ -51,7 +51,7 @@
           <h3 class="text-h3 mb-3">{{ 'Payment history' | translate }}</h3>
           @if (invoicePayments().length) {
             <table class="w-full text-body"><tbody>@for (p of invoicePayments(); track p.id) {
-              <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ p.paidAt | date: 'medium' }}</td><td class="py-2">{{ p.paymentMethod | translate }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr>
+              <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td><td class="py-2">{{ p.paymentMethod | translate }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr>
             }</tbody></table>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments recorded.' | translate }}</p> }
         </div>

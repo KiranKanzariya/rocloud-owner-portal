@@ -45,13 +45,31 @@ export interface Subscription {
 
 export interface SubscriptionInitiate {
   keyId: string;
-  subscriptionId: string | null;
+  orderId: string | null;
   planType: string;
   amount: number;
   currency: string;
   devMode: boolean;
   /** Net amount is ₹0 (100% discount / free months) — skip Razorpay and complete directly. */
   isFree: boolean;
+}
+
+/** A ROCloud subscription invoice row for the Billing history (guide §25). */
+export interface SubscriptionInvoice {
+  id: string;
+  invoiceNumber: string;
+  planType: string;
+  billingCycle: string;
+  periodStart: string;
+  periodEnd: string;
+  grossAmount: number;
+  discountAmount: number;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Void';
+  dueDate: string;
+  description: string | null;
+  paidAt: string | null;
+  hasPdf: boolean;
 }
 
 /** The tenant's own ROCloud subscription (guide §25). */
@@ -74,11 +92,53 @@ export class SubscriptionService {
       .pipe(map((r) => r.data!));
   }
 
-  completeUpgrade(planType: string, billingCycle: 'Monthly' | 'Yearly'): Observable<unknown> {
-    return this.http.post<ApiResponse<unknown>>(`${this.api}/subscription/upgrade-complete`, { planType, billingCycle });
+  completeUpgrade(planType: string, billingCycle: 'Monthly' | 'Yearly', orderId?: string | null): Observable<unknown> {
+    return this.http.post<ApiResponse<unknown>>(`${this.api}/subscription/upgrade-complete`, { planType, billingCycle, orderId });
+  }
+
+  invoices(): Observable<SubscriptionInvoice[]> {
+    return this.http
+      .get<ApiResponse<SubscriptionInvoice[]>>(`${this.api}/subscription/invoices`)
+      .pipe(map((r) => r.data ?? []));
+  }
+
+  invoice(id: string): Observable<SubscriptionInvoice> {
+    return this.http
+      .get<ApiResponse<SubscriptionInvoice>>(`${this.api}/subscription/invoices/${id}`)
+      .pipe(map((r) => r.data!));
+  }
+
+  /** On-demand renewal — creates (or returns the open) Pending invoice to pay, independent of the job. */
+  renew(): Observable<SubscriptionInvoice> {
+    return this.http
+      .post<ApiResponse<SubscriptionInvoice>>(`${this.api}/subscription/renew`, {})
+      .pipe(map((r) => r.data!));
+  }
+
+  payInvoiceInitiate(id: string): Observable<SubscriptionInitiate> {
+    return this.http
+      .post<ApiResponse<SubscriptionInitiate>>(`${this.api}/subscription/invoices/${id}/pay-initiate`, {})
+      .pipe(map((r) => r.data!));
+  }
+
+  payInvoiceComplete(id: string, orderId?: string | null): Observable<unknown> {
+    return this.http.post<ApiResponse<unknown>>(`${this.api}/subscription/invoices/${id}/pay-complete`, { orderId });
+  }
+
+  /** The authenticated PDF-bytes endpoint (used by roc-pdf-preview and the download helper). */
+  pdfUrl(id: string): string {
+    return `${this.api}/subscription/invoices/${id}/pdf`;
+  }
+
+  downloadPdf(id: string): Observable<Blob> {
+    return this.http.get(this.pdfUrl(id), { responseType: 'blob' });
   }
 
   cancel(): Observable<unknown> {
     return this.http.post<ApiResponse<unknown>>(`${this.api}/subscription/cancel`, {});
+  }
+
+  resume(): Observable<unknown> {
+    return this.http.post<ApiResponse<unknown>>(`${this.api}/subscription/resume`, {});
   }
 }

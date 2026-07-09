@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PermissionService, PlanType } from '../../../core/services/permission.service';
 import { LayoutService } from '../../../core/services/layout.service';
+import { ActivityAvailabilityService } from '../../../core/services/activity-availability.service';
 import { LogoComponent } from '../logo/logo.component';
 
 interface NavItem {
@@ -13,6 +14,8 @@ interface NavItem {
   plan?: PlanType;
   /** Show only to the tenant's Owner role (e.g. Activity log). */
   ownerOnly?: boolean;
+  /** Hide when the SuperAdmin has disabled the activity log. */
+  requiresAuditEnabled?: boolean;
 }
 
 interface NavSection {
@@ -29,6 +32,12 @@ interface NavSection {
 export class SidebarComponent {
   protected readonly perms = inject(PermissionService);
   protected readonly layout = inject(LayoutService);
+  private readonly activity = inject(ActivityAvailabilityService);
+
+  constructor() {
+    // Resolve whether the activity log is enabled so its menu item shows/hides accordingly.
+    this.activity.load().subscribe();
+  }
 
   // `label` / `heading` are i18n keys resolved by the translate pipe (see /assets/i18n).
   protected readonly sections: NavSection[] = [
@@ -38,6 +47,7 @@ export class SidebarComponent {
         { label: 'Dashboard', icon: 'ti-layout-dashboard', route: '/dashboard' },
         { label: 'Customers', icon: 'ti-users', route: '/customers', permission: 'Customers.View' },
         { label: 'Orders', icon: 'ti-clipboard-list', route: '/orders', permission: 'Orders.View' },
+        { label: 'Scheduled', icon: 'ti-calendar-event', route: '/scheduled', permission: 'Orders.View' },
         { label: 'Deliveries', icon: 'ti-truck', route: '/deliveries', permission: 'Deliveries.View' },
         { label: 'My route', icon: 'ti-route', route: '/my-route', permission: 'Deliveries.ViewOwn' },
         { label: 'Inventory', icon: 'ti-package', route: '/inventory', permission: 'Inventory.View' },
@@ -66,7 +76,7 @@ export class SidebarComponent {
         { label: 'Areas', icon: 'ti-map-pin', route: '/settings/areas', permission: 'Settings.View' },
         { label: 'Notifications', icon: 'ti-bell', route: '/settings/notifications', permission: 'Settings.View' },
         { label: 'Profile', icon: 'ti-user', route: '/settings/profile', permission: 'Settings.View' },
-        { label: 'Activity log', icon: 'ti-history', route: '/settings/activity', ownerOnly: true },
+        { label: 'Activity log', icon: 'ti-history', route: '/settings/activity', ownerOnly: true, requiresAuditEnabled: true },
         { label: 'Subscription', icon: 'ti-credit-card', route: '/settings/subscription' },
       ],
     },
@@ -76,7 +86,8 @@ export class SidebarComponent {
     return (
       (!item.ownerOnly || this.perms.isOwner()) &&
       (!item.permission || this.perms.can(item.permission)) &&
-      (!item.plan || this.perms.hasPlan(item.plan))
+      (!item.plan || this.perms.hasPlan(item.plan)) &&
+      (!item.requiresAuditEnabled || this.activity.enabled())
     );
   }
 

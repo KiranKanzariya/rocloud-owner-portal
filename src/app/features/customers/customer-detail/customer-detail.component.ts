@@ -8,6 +8,9 @@ import { OrderService } from '../../orders/order.service';
 import { OrderListItem } from '../../orders/order.models';
 import { InventoryService } from '../../inventory/inventory.service';
 import { InventoryMovement } from '../../inventory/inventory.models';
+import { ServiceRequestService } from '../../service-requests/service-request.service';
+import { ServiceRequestListItem } from '../../service-requests/service-request.models';
+import { ServiceDetailModalComponent } from '../../service-requests/service-detail-modal/service-detail-modal.component';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product';
 import { NavigationService } from '../../../core/services/navigation.service';
@@ -20,19 +23,21 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BottleSize } from '../../../core/models/bottle-size';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { istToday } from '../../../shared/util/ist-date.util';
 
 type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'payments' | 'service';
 
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
+  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, ServiceDetailModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
   templateUrl: './customer-detail.component.html',
 })
 export class CustomerDetailComponent {
   private readonly service = inject(CustomerService);
   private readonly orders = inject(OrderService);
   private readonly inventory = inject(InventoryService);
+  private readonly serviceRequests = inject(ServiceRequestService);
   private readonly productsApi = inject(ProductService);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
@@ -73,7 +78,7 @@ export class CustomerDetailComponent {
   protected readonly showOpeningForm = signal(false);
   protected readonly savingOpening = signal(false);
   protected readonly clearingOpening = signal(false);
-  protected openingCutover = new Date().toISOString().slice(0, 10);
+  protected openingCutover = istToday();
   protected openingJarQty: Record<string, number> = {}; // productId → qty held
   protected openingDues = 0;
   protected openingNote = '';
@@ -101,6 +106,18 @@ export class CustomerDetailComponent {
   protected readonly returnsLoading = signal(false);
   private returnsLoaded = false;
   protected readonly returnsTotalPages = computed(() => Math.max(1, Math.ceil(this.returnsTotal() / this.returnsPageSize)));
+
+  // Service requests (repair / maintenance / AMC tickets) for this customer — loaded lazily on the
+  // Service tab, newest first. Clicking a row opens the shared service-detail modal in place.
+  private readonly servicePageSize = 10;
+  protected readonly serviceRows = signal<ServiceRequestListItem[]>([]);
+  protected readonly serviceTotal = signal(0);
+  protected readonly servicePage = signal(1);
+  protected readonly serviceLoading = signal(false);
+  private serviceLoaded = false;
+  protected readonly serviceTotalPages = computed(() => Math.max(1, Math.ceil(this.serviceTotal() / this.servicePageSize)));
+  /** The service request opened in the detail modal, or null when closed. */
+  protected readonly serviceDetailId = signal<string | null>(null);
 
   protected readonly discountTypes: CustomerDiscountType[] = ['None', 'Percentage', 'Fixed'];
   protected discountType: CustomerDiscountType = 'None';
@@ -131,7 +148,7 @@ export class CustomerDetailComponent {
 
   /** Opens the opening-balance form, resetting it to empty per-product jar inputs. */
   openOpeningForm(): void {
-    this.openingCutover = new Date().toISOString().slice(0, 10);
+    this.openingCutover = istToday();
     this.openingJarQty = {};
     this.openingDues = 0;
     this.openingNote = '';
@@ -160,9 +177,9 @@ export class CustomerDetailComponent {
           this.toast.success(this.t.instant('Opening balance set.'));
           this.refreshBalances();
         },
-        error: () => {
+        error: (err) => {
           this.savingOpening.set(false);
-          this.toast.error(this.t.instant('Could not set the opening balance.'));
+          this.toast.apiError(err, this.t.instant('Could not set the opening balance.'));
         },
       });
   }
@@ -177,9 +194,9 @@ export class CustomerDetailComponent {
         this.toast.success(this.t.instant('Opening balance cleared.'));
         this.refreshBalances();
       },
-      error: () => {
+      error: (err) => {
         this.clearingOpening.set(false);
-        this.toast.error(this.t.instant('Could not clear the opening balance.'));
+        this.toast.apiError(err, this.t.instant('Could not clear the opening balance.'));
       },
     });
   }
@@ -267,7 +284,7 @@ export class CustomerDetailComponent {
         this.toast.success(this.t.instant('Subscription ended.'));
         this.load();
       },
-      error: () => this.toast.error(this.t.instant('Could not end the subscription.')),
+      error: (err) => this.toast.apiError(err, this.t.instant('Could not end the subscription.')),
     });
   }
 
@@ -315,9 +332,9 @@ export class CustomerDetailComponent {
             this.loadReturns();
           }
         },
-        error: () => {
+        error: (err) => {
           this.returning.set(false);
-          this.toast.error(this.t.instant('Could not record the return.'));
+          this.toast.apiError(err, this.t.instant('Could not record the return.'));
         },
       });
   }
@@ -332,6 +349,58 @@ export class CustomerDetailComponent {
     if (id === 'returns' && !this.returnsLoaded) {
       this.returnsLoaded = true;
       this.loadReturns();
+    }
+    if (id === 'service' && !this.serviceLoaded) {
+      this.serviceLoaded = true;
+      this.loadServices();
+    }
+  }
+
+  /** Loads this customer's service/AMC tickets (newest first). */
+  private loadServices(): void {
+    this.serviceLoading.set(true);
+    this.serviceRequests
+      .list({ customerId: this.id, page: this.servicePage(), pageSize: this.servicePageSize })
+      .subscribe({
+        next: (res) => {
+          this.serviceRows.set(res.items);
+          this.serviceTotal.set(res.totalCount);
+          this.serviceLoading.set(false);
+        },
+        error: () => this.serviceLoading.set(false),
+      });
+  }
+
+  servicesGoTo(page: number): void {
+    if (page < 1 || page > this.serviceTotalPages() || page === this.servicePage()) return;
+    this.servicePage.set(page);
+    this.loadServices();
+  }
+
+  openService(r: ServiceRequestListItem): void {
+    this.serviceDetailId.set(r.id);
+  }
+
+  /** After a status/assignment change in the modal, refresh this customer's ticket list. */
+  onServiceUpdated(): void {
+    this.loadServices();
+  }
+
+  serviceStatusClass(status: string): string {
+    switch (status) {
+      case 'Resolved': return 'status-delivered';
+      case 'InProgress': return 'status-in-transit';
+      case 'Open': return 'status-pending';
+      default: return 'status-active-info';
+    }
+  }
+
+  servicePriorityClass(priority: string): string {
+    switch (priority) {
+      case 'Urgent':
+      case 'High': return 'status-overdue';
+      case 'Medium': return 'status-pending';
+      default: return 'status-active-info';
     }
   }
 
@@ -438,9 +507,9 @@ export class CustomerDetailComponent {
         this.toast.success(this.t.instant(this.discountType === 'None' ? 'Discount cleared.' : 'Discount saved.'));
         this.load();
       },
-      error: () => {
+      error: (err) => {
         this.savingDiscount.set(false);
-        this.toast.error(this.t.instant('Could not save the discount.'));
+        this.toast.apiError(err, this.t.instant('Could not save the discount.'));
       },
     });
   }

@@ -68,9 +68,9 @@ export class ServiceDetailModalComponent {
         this.load(r.id);
         this.updated.emit();
       },
-      error: () => {
+      error: (err) => {
         this.busy.set(false);
-        this.toast.error(this.t.instant('Could not assign the technician.'));
+        this.toast.apiError(err, this.t.instant('Could not assign the technician.'));
       },
     });
   }
@@ -90,9 +90,9 @@ export class ServiceDetailModalComponent {
         this.load(r.id);
         this.updated.emit();
       },
-      error: () => {
+      error: (err) => {
         this.busy.set(false);
-        this.toast.error(this.t.instant('Could not update the status.'));
+        this.toast.apiError(err, this.t.instant('Could not update the status.'));
       },
     });
   }
