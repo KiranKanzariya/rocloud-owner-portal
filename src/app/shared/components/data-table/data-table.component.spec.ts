@@ -1,9 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { DataTableComponent, SortState } from './data-table.component';
 
 describe('DataTableComponent', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [DataTableComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [DataTableComponent],
+      providers: [provideTranslateService()],   // the template renders through TranslatePipe
+    }).compileComponents();
   });
 
   it('emits sortChange (toggling asc→desc) when a sortable header is clicked', async () => {

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 import { SidebarComponent } from './sidebar.component';
 import { PermissionService } from '../../../core/services/permission.service';
 
@@ -12,7 +13,7 @@ describe('SidebarComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SidebarComponent],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), provideTranslateService()],   // the template renders through TranslatePipe
     }).compileComponents();
   });
 

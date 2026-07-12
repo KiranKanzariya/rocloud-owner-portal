@@ -44,7 +44,7 @@ export class SubscriptionComponent {
   protected readonly upgradeOpen = signal(false);
   protected readonly payingId = signal<string | null>(null);
   protected readonly renewing = signal(false);
-  protected readonly canManage = this.perm.can('Settings.Manage');
+  protected readonly canManage = this.perm.isOwner();
 
   protected readonly isEnterprise = computed(() => this.subscription()?.planType === 'Enterprise');
 

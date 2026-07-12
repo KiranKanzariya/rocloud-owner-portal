@@ -1,21 +1,25 @@
 <div class="flex flex-col gap-6">
   <h1 class="text-h1">{{ 'Dashboard' | translate }}</h1>
 
-  <!-- Metric cards -->
+  @if (!hasAnyWidget()) {
+    <p class="text-body text-ink-mid">{{ 'Nothing to show here yet — use the menu to get to your work.' | translate }}</p>
+  }
+
+  <!-- Metric cards. Each is hidden unless its data is readable, matching the fetch guards. -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="metric-card">
+    <div class="metric-card" *appCan="'Deliveries.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-truck"></i> {{ "Today's deliveries" | translate }}</p>
       <p class="metric-value"><span [rocCountUp]="todaysDeliveries()"></span></p>
     </div>
-    <div class="metric-card">
+    <div class="metric-card" *appCan="'Inventory.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-package"></i> {{ 'Bottles out' | translate }}</p>
       <p class="metric-value"><span [rocCountUp]="bottlesOut()"></span></p>
     </div>
-    <div class="metric-card">
+    <div class="metric-card" *appCan="'Payments.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash"></i> {{ 'Collection today' | translate }}</p>
       <p class="metric-value">₹<span [rocCountUp]="collectionToday()" [currency]="true"></span></p>
     </div>
-    <div class="metric-card">
+    <div class="metric-card" *appCan="'Payments.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle"></i> {{ 'Outstanding dues' | translate }}</p>
       <p class="metric-value text-danger">₹<span [rocCountUp]="outstandingTotal()" [currency]="true"></span></p>
     </div>
@@ -23,7 +27,7 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <!-- Route progress -->
-    <div class="card lg:col-span-2">
+    <div class="card lg:col-span-2" *appCan="'Deliveries.View'">
       <h3 class="text-h3 mb-3">{{ 'Route progress' | translate }}</h3>
       @if (routeProgress().length) {
         <div class="flex flex-col gap-3">
@@ -45,7 +49,7 @@
     </div>
 
     <!-- Payment mode split -->
-    <div class="card">
+    <div class="card" *appCan="'Payments.View'">
       <h3 class="text-h3 mb-3">{{ 'Payment modes (today)' | translate }}</h3>
       <ul class="flex flex-col gap-2 text-body">
         <li class="flex items-center justify-between">
@@ -65,7 +69,7 @@
   </div>
 
   <!-- Recent activity -->
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-2" *appCan="'Orders.View'">
     <h3 class="text-h3">{{ 'Recent orders' | translate }}</h3>
     <roc-data-table
       [columns]="recentOrderColumns" [rows]="recentOrders()" [totalCount]="recentOrders().length" [pageSize]="50">

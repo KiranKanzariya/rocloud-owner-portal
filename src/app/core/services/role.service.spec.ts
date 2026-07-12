@@ -2,16 +2,26 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RoleService } from './role.service';
+import { PermissionService } from './permission.service';
 import { environment } from '../../../environments/environment';
+
+/** Builds an unsigned JWT (jwtDecode only reads the payload — no signature needed for tests). */
+function makeJwt(payload: Record<string, unknown>): string {
+  const b64 = (o: unknown) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${b64({ alg: 'none' })}.${b64(payload)}.`;
+}
 
 describe('RoleService', () => {
   let svc: RoleService;
   let http: HttpTestingController;
+  let perms: PermissionService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     svc = TestBed.inject(RoleService);
     http = TestBed.inject(HttpTestingController);
+    perms = TestBed.inject(PermissionService);
+    perms.loadFromToken(makeJwt({ permissions: 'Roles.View', plan_type: 'Enterprise' }));
   });
 
   afterEach(() => http.verify());
@@ -48,5 +58,22 @@ describe('RoleService', () => {
     expect(req.request.method).toBe('PUT');
     expect(req.request.body.permissions).toEqual(['Orders.View']);
     req.flush(null);
+  });
+
+  it('list() sends no request and yields [] without Roles.View — a 403 toast never fires', () => {
+    perms.loadFromToken(makeJwt({ permissions: 'Users.View', plan_type: 'Basic' }));
+
+    let result: unknown;
+    svc.list().subscribe((r) => (result = r));
+
+    http.expectNone(`${environment.apiUrl}/roles`);
+    expect(result).toEqual([]);
+  });
+
+  it('list() still calls the API for a legacy token holding only Roles.Manage', () => {
+    perms.loadFromToken(makeJwt({ permissions: 'Roles.Manage', plan_type: 'Basic' }));
+
+    svc.list().subscribe();
+    http.expectOne(`${environment.apiUrl}/roles`).flush([]);
   });
 });

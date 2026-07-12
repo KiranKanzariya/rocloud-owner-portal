@@ -37,7 +37,8 @@ export class CustomerFormComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200), Validators.pattern(/^[\p{L}\p{N}\s.\-,']+$/u)]],
-    mobile: ['', [Validators.required, Validators.pattern(/^\+91[0-9]{10}$/)]],
+    // Optional: an owner may not have a number for every customer (a shop, an old book entry).
+    mobile: ['', [Validators.pattern(/^\+91[0-9]{10}$/)]],
     alternateMobile: ['', [Validators.pattern(/^\+91[0-9]{10}$/)]],
     email: ['', [Validators.email, Validators.maxLength(200)]],
     addressLine: ['', [Validators.maxLength(500)]],
@@ -85,7 +86,7 @@ export class CustomerFormComponent {
     const body: CustomerUpsert = {
       areaId: this.areaId,
       name: v.name,
-      mobile: v.mobile,
+      mobile: v.mobile || null,
       alternateMobile: v.alternateMobile || null,
       email: v.email || null,
       addressLine: v.addressLine || null,

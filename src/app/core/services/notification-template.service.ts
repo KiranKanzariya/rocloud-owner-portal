@@ -23,7 +23,7 @@ export interface UpsertNotificationTemplate {
   body: string;
 }
 
-/** Per-tenant notification templates (guide §24). Requires Settings.View/Manage. */
+/** Per-tenant notification templates (guide §24). Requires Notifications.View/Manage. */
 @Injectable({ providedIn: 'root' })
 export class NotificationTemplateService {
   private readonly http = inject(HttpClient);

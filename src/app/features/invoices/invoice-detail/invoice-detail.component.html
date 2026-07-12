@@ -43,6 +43,9 @@
             @if (inv.discount > 0) { <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Discount' | translate }}</dt><dd class="font-mono">−₹{{ inv.discount | number: '1.0-2' }}</dd></div> }
             <div class="flex justify-between text-h4 border-t border-ink-light pt-1"><dt>{{ 'Total' | translate }}</dt><dd class="font-mono text-navy">₹{{ inv.totalAmount | number: '1.0-0' }}</dd></div>
             <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Paid' | translate }}</dt><dd class="font-mono text-teal">₹{{ inv.paidAmount | number: '1.0-0' }}</dd></div>
+            @if (inv.allocatedFromPool > 0) {
+              <div class="flex justify-between text-caption"><dt class="text-ink-mid">{{ 'From unallocated payments' | translate }}</dt><dd class="font-mono text-ink-mid">₹{{ inv.allocatedFromPool | number: '1.0-0' }}</dd></div>
+            }
             <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Balance' | translate }}</dt><dd class="font-mono" [class.text-danger]="inv.balance > 0">₹{{ inv.balance | number: '1.0-0' }}</dd></div>
           </dl>
         </div>
@@ -54,6 +57,9 @@
               <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td><td class="py-2">{{ p.paymentMethod | translate }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr>
             }</tbody></table>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments recorded.' | translate }}</p> }
+          @if (inv.allocatedFromPool > 0) {
+            <p class="text-caption text-ink-mid mt-2">{{ 'Settled by payments recorded on the customer page, oldest dues first.' | translate }}</p>
+          }
         </div>
       </div>
 

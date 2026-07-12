@@ -220,31 +220,36 @@ export const routes: Routes = [
       {
         path: 'settings/areas',
         canActivate: [permissionGuard],
-        data: { permission: 'Settings.View', title: 'Areas', icon: 'map-pin' },
+        data: { permission: 'Areas.View', title: 'Areas', icon: 'map-pin' },
         loadComponent: () => import('./features/settings/areas/areas.component').then((m) => m.AreasComponent),
       },
       {
         path: 'settings/notifications',
         canActivate: [permissionGuard],
-        data: { permission: 'Settings.View', title: 'Notifications', icon: 'bell' },
+        data: { permission: 'Notifications.View', title: 'Notifications', icon: 'bell' },
         loadComponent: () =>
           import('./features/settings/notifications/notifications.component').then((m) => m.NotificationsComponent),
       },
       {
         path: 'settings/profile',
         canActivate: [permissionGuard],
-        data: { permission: 'Settings.View', title: 'Profile', icon: 'user' },
+        data: { permission: 'BusinessProfile.View', title: 'Profile', icon: 'user' },
         loadComponent: () => import('./features/settings/profile/profile.component').then((m) => m.ProfileComponent),
       },
       {
+        // OWNER ONLY, matching [RequireOwner] on the API: changing the plan spends the owner's money,
+        // so it is not a permission any role can be granted. The paywall redirect in errorInterceptor
+        // honours the same check, so a non-owner is not bounced to /forbidden when the tenant is overdue.
         path: 'settings/subscription',
-        data: { title: 'Subscription', icon: 'credit-card' },
+        canActivate: [permissionGuard],
+        data: { ownerOnly: true, title: 'Subscription', icon: 'credit-card' },
         loadComponent: () =>
           import('./features/settings/subscription/subscription.component').then((m) => m.SubscriptionComponent),
       },
       {
         path: 'settings/subscription/invoices/:id',
-        data: { title: 'Invoice' },
+        canActivate: [permissionGuard],
+        data: { ownerOnly: true, title: 'Invoice' },
         loadComponent: () =>
           import('./features/settings/subscription/invoice-detail/subscription-invoice-detail.component').then(
             (m) => m.SubscriptionInvoiceDetailComponent,

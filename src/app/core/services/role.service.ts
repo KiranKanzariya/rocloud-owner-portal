@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { guarded } from '../http/guarded';
+import { PermissionService } from './permission.service';
 
 export interface Role {
   id: string;
@@ -18,22 +20,27 @@ export interface Permission {
   code: string;
 }
 
+/** Reads accept Roles.Manage as well, matching the API while pre-Roles.View tokens roll over. */
+const READ_ROLES = ['Roles.View', 'Roles.Manage'];
+
 /**
  * Roles + permissions (guide §24). NOTE: the RolesController returns RAW payloads (not the
  * {success,data} ApiResponse envelope) for GET/POST — so these methods do NOT unwrap `.data`.
- * All endpoints require Roles.Manage; creating a custom role also requires the Enterprise plan.
+ * Reads require Roles.View; writes require Roles.Manage, and creating a custom role also
+ * requires the Enterprise plan.
  */
 @Injectable({ providedIn: 'root' })
 export class RoleService {
   private readonly http = inject(HttpClient);
+  private readonly perms = inject(PermissionService);
   private readonly base = `${environment.apiUrl}/roles`;
 
   list(): Observable<Role[]> {
-    return this.http.get<Role[]>(this.base);
+    return guarded(this.perms, READ_ROLES, () => this.http.get<Role[]>(this.base), []);
   }
 
   permissions(): Observable<Permission[]> {
-    return this.http.get<Permission[]>(`${this.base}/permissions`);
+    return guarded(this.perms, READ_ROLES, () => this.http.get<Permission[]>(`${this.base}/permissions`), []);
   }
 
   create(name: string, permissions: string[]): Observable<{ id: string }> {

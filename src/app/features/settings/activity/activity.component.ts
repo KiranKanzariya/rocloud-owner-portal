@@ -9,7 +9,7 @@ import { ColumnCellDirective } from '../../../shared/components/data-table/colum
 
 /**
  * Activity log (Settings → Activity): a read-only viewer over the append-only audit trail — who did
- * what, when, and whether it succeeded. Backed by GET /api/audit-logs (Settings.Manage).
+ * what, when, and whether it succeeded. Backed by GET /api/audit-logs (Owner only).
  */
 @Component({
   selector: 'app-activity',

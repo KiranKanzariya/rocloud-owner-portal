@@ -84,26 +84,43 @@
         @if (step() === 2) {
           <h2 class="text-h2 mb-1">{{ 'Choose a plan' | translate }}</h2>
           <p class="text-body text-ink-mid mb-5">{{ "You won't be charged during the trial." | translate }}</p>
-          <div class="flex flex-col gap-3">
-            @for (p of plans; track p.type) {
-              <button type="button" (click)="selectPlan(p.type)"
-                      class="text-left border rounded-lg p-3.5 transition-colors"
-                      [class.border-navy]="form.controls.planType.value === p.type"
-                      [class.bg-foam]="form.controls.planType.value === p.type"
-                      [class.border-ink-light]="form.controls.planType.value !== p.type">
-                <div class="flex items-center justify-between">
-                  <span class="text-h4">{{ p.type }}</span>
-                  <span class="text-h3 text-navy">{{ p.price }}<span class="text-caption text-ink-mid">{{ '/mo' | translate }}</span></span>
-                </div>
-                <p class="text-caption text-ink-mid">{{ p.blurb | translate }}</p>
-                <p class="text-caption text-ink-mid mt-1">
-                  @for (f of p.features; track f; let last = $last) {
-                    <span>{{ f | translate }}</span>@if (!last) {<span> · </span>}
-                  }
-                </p>
-              </button>
+          @switch (plansStatus()) {
+            @case ('loading') {
+              <div class="flex justify-center py-8"><i class="ti ti-loader-2 animate-spin text-h2 text-ink-mid"></i></div>
             }
-          </div>
+            @case ('error') {
+              <div class="text-center py-6">
+                <p class="text-body text-ink-mid mb-3">{{ 'Could not load plans.' | translate }}</p>
+                <button type="button" class="btn-secondary" (click)="loadPlans()">{{ 'Try again' | translate }}</button>
+              </div>
+            }
+            @case ('ready') {
+              <div class="flex flex-col gap-3">
+                @for (p of plans(); track p.id) {
+                  <button type="button" (click)="selectPlan(p.planType)"
+                          class="text-left border rounded-lg p-3.5 transition-colors"
+                          [class.border-navy]="form.controls.planType.value === p.planType"
+                          [class.bg-foam]="form.controls.planType.value === p.planType"
+                          [class.border-ink-light]="form.controls.planType.value !== p.planType">
+                    <div class="flex items-center justify-between">
+                      <span class="text-h4">{{ p.name }}
+                        @if (p.planType === 'Pro') { <span class="status-active-info text-micro ml-1">{{ 'Popular' | translate }}</span> }
+                      </span>
+                      <span class="text-h3 text-navy">₹{{ p.monthlyPrice | number: '1.0-0' }}<span class="text-caption text-ink-mid">{{ '/mo' | translate }}</span></span>
+                    </div>
+                    <p class="text-caption text-ink-mid mt-1">
+                      <span>{{ (p.maxCustomers === 0 ? 'Unlimited customers' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</span>
+                      <span> · </span>
+                      <span>{{ (p.maxUsers === 0 ? 'Unlimited team members' : '{{count}} team members') | translate: { count: p.maxUsers } }}</span>
+                      <span> · </span>
+                      <span>{{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</span>
+                      @if (p.customRolesEnabled) { <span> · </span><span>{{ 'Custom roles' | translate }}</span> }
+                    </p>
+                  </button>
+                }
+              </div>
+            }
+          }
         }
 
         <!-- Step 3: credentials -->

@@ -46,7 +46,7 @@ export class AreasComponent {
   onPage(p: number): void { this.page.set(p); }
   protected readonly modalOpen = signal(false);
   protected readonly editingId = signal<string | null>(null);
-  protected readonly canManage = this.perm.can('Settings.Manage');
+  protected readonly canManage = this.perm.can('Areas.Manage');
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],

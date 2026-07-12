@@ -20,7 +20,7 @@ export interface AreaUpsert {
   isActive?: boolean;
 }
 
-/** Delivery areas / zones (guide §24). Reads need Settings.View; writes need Settings.Manage. */
+/** Delivery areas / zones (guide §24). Reads need Areas.View; writes need Areas.Manage. */
 @Injectable({ providedIn: 'root' })
 export class AreaService {
   private readonly http = inject(HttpClient);

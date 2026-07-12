@@ -200,7 +200,7 @@
 
     <!-- Tabs -->
     <div class="border-b border-ink-light flex gap-1">
-      @for (t of tabs; track t.id) {
+      @for (t of tabs(); track t.id) {
         <button class="px-3 py-2 text-body border-b-2 -mb-px transition-colors"
                 [class.border-navy]="tab() === t.id" [class.text-navy]="tab() === t.id"
                 [class.border-transparent]="tab() !== t.id" [class.text-ink-mid]="tab() !== t.id"

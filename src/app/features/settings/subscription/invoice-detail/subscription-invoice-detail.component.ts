@@ -32,7 +32,7 @@ export class SubscriptionInvoiceDetailComponent {
   protected readonly invoice = signal<SubscriptionInvoice | null>(null);
   protected readonly loading = signal(true);
   protected readonly paying = signal(false);
-  protected readonly canManage = this.perm.can('Settings.Manage');
+  protected readonly canManage = this.perm.isOwner();
   protected readonly businessName = this.perm.businessName;
 
   private readonly id = this.route.snapshot.paramMap.get('id')!;

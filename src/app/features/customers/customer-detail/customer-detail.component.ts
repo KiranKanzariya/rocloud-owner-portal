@@ -20,6 +20,7 @@ import { CanDirective } from '../../../shared/directives/can.directive';
 import { AnimateOnChangeDirective } from '../../../shared/directives/animate-on-change.directive';
 import { PulseOnChangeDirective } from '../../../shared/directives/pulse-on-change.directive';
 import { ToastService } from '../../../core/services/toast.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BottleSize } from '../../../core/models/bottle-size';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
@@ -39,6 +40,7 @@ export class CustomerDetailComponent {
   private readonly inventory = inject(InventoryService);
   private readonly serviceRequests = inject(ServiceRequestService);
   private readonly productsApi = inject(ProductService);
+  private readonly perms = inject(PermissionService);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
@@ -123,14 +125,23 @@ export class CustomerDetailComponent {
   protected discountType: CustomerDiscountType = 'None';
   protected discountValue = 0;
 
-  protected readonly tabs: { id: Tab; label: string }[] = [
+  /**
+   * Overview / subscriptions / payments render from the customer payload this page already loaded,
+   * so Customers.View covers them. The other three fetch from their own module's API, which a role
+   * like Technician or Accountant cannot read — hide the tab rather than open it onto an empty list.
+   */
+  private static readonly ALL_TABS: { id: Tab; label: string; permission?: string }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'subscriptions', label: 'Subscriptions' },
-    { id: 'orders', label: 'Order history' },
-    { id: 'returns', label: 'Return history' },
+    { id: 'orders', label: 'Order history', permission: 'Orders.View' },
+    { id: 'returns', label: 'Return history', permission: 'Inventory.View' },
     { id: 'payments', label: 'Payment history' },
-    { id: 'service', label: 'Service requests' },
+    { id: 'service', label: 'Service requests', permission: 'AMC.View' },
   ];
+
+  protected readonly tabs = computed(() =>
+    CustomerDetailComponent.ALL_TABS.filter((t) => !t.permission || this.perms.can(t.permission)),
+  );
 
   private readonly id = this.route.snapshot.paramMap.get('id')!;
 
@@ -341,6 +352,7 @@ export class CustomerDetailComponent {
 
   /** Switches tab; history lists are fetched on first open of their tab (lazy). */
   selectTab(id: Tab): void {
+    if (!this.tabs().some((t) => t.id === id)) return;   // a hidden tab must never trigger its fetch
     this.tab.set(id);
     if (id === 'orders' && !this.ordersLoaded) {
       this.ordersLoaded = true;

@@ -38,7 +38,7 @@ export class NotificationsComponent {
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly modalOpen = signal(false);
-  protected readonly canManage = this.perm.can('Settings.Manage');
+  protected readonly canManage = this.perm.can('Notifications.Manage');
 
   // WhatsApp is future scope (v1 is email-only), so hide WhatsApp templates for everyone.
   // Each customer-facing template still has an Email variant, which remains visible.

@@ -127,6 +127,8 @@
   "Password reset. Please sign in.": "পাসওয়ার্ড রিসেট হয়েছে। অনুগ্রহ করে সাইন ইন করুন।",
   "Payment": "পেমেন্ট",
   "Payment history": "পেমেন্ট ইতিহাস",
+  "From unallocated payments": "অবরাদ্দ পেমেন্ট থেকে",
+  "Settled by payments recorded on the customer page, oldest dues first.": "গ্রাহক পেজে নথিভুক্ত পেমেন্ট থেকে পরিশোধিত — সবচেয়ে পুরনো বকেয়া আগে।",
   "Payment modes (today)": "পেমেন্ট পদ্ধতি (আজ)",
   "Payment preference": "পেমেন্ট পছন্দ",
   "Payments": "পেমেন্ট",
@@ -190,5 +192,6 @@
   "You won't be charged during the trial.": "ট্রায়ালের সময় আপনার কাছ থেকে চার্জ নেওয়া হবে না।",
   "You'll be the administrator of {{name}}.": "আপনি {{name}} এর প্রশাসক হবেন।",
   "Your name": "আপনার নাম",
-  "Your portal is ready 🎉": "আপনার পোর্টাল প্রস্তুত 🎉"
+  "Your portal is ready 🎉": "আপনার পোর্টাল প্রস্তুত 🎉",
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "তাদের নম্বর না থাকলে খালি রাখুন। রিমাইন্ডার ইমেলে পাঠানো হবে।"
 }

@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -8,27 +9,22 @@ import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
+import { Plan, SubscriptionService } from '../../../core/services/subscription.service';
 import { TokenService } from '../../../core/services/token.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
 import { MobileInputComponent } from '../../../shared/components/mobile-input/mobile-input.component';
 
-interface PlanCard {
-  type: string;
-  price: string;
-  blurb: string;
-  features: string[];
-}
-
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, LogoComponent, GoogleSigninButtonModule, MobileInputComponent],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, DecimalPipe, LogoComponent, GoogleSigninButtonModule, MobileInputComponent],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionService);
   private readonly token = inject(TokenService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -47,11 +43,9 @@ export class RegisterComponent {
   /** Live availability of the typed subdomain. */
   protected readonly subdomainStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
 
-  protected readonly plans: PlanCard[] = [
-    { type: 'Basic', price: '₹999', blurb: 'For small RO businesses', features: ['200 customers', '3 users', '1 delivery boy'] },
-    { type: 'Pro', price: '₹2,499', blurb: 'Most popular', features: ['1,000 customers', '10 users', 'WhatsApp + Reports'] },
-    { type: 'Enterprise', price: '₹5,999', blurb: 'For large operations', features: ['Unlimited', 'Custom roles', 'Multi-branch'] },
-  ];
+  /** The live plan catalogue from GET /api/plans (anonymous) — never hardcode prices or limits here. */
+  protected readonly plans = signal<Plan[]>([]);
+  protected readonly plansStatus = signal<'loading' | 'ready' | 'error'>('loading');
 
   protected readonly form = this.fb.nonNullable.group({
     businessName: ['', [Validators.required, Validators.minLength(2)]],
@@ -86,7 +80,24 @@ export class RegisterComponent {
     this.form.controls.planType.setValue(type);
   }
 
+  loadPlans(): void {
+    this.plansStatus.set('loading');
+    this.subscription.plans().subscribe({
+      next: (plans) => {
+        this.plans.set(plans);
+        this.plansStatus.set('ready');
+        // The form defaults to Pro; fall back to the cheapest active plan if Pro was deactivated.
+        if (plans.length && !plans.some((p) => p.planType === this.form.controls.planType.value)) {
+          this.form.controls.planType.setValue(plans[0].planType);
+        }
+      },
+      error: () => this.plansStatus.set('error'),
+    });
+  }
+
   constructor() {
+    this.loadPlans();
+
     // GIS (@abacritt v2) signs in via the <asl-google-signin-button>; capture the profile here so the
     // wizard can finish passwordless. The owner's email is taken authoritatively from the token server-side.
     this.social.authState.pipe(takeUntilDestroyed()).subscribe((user) => {

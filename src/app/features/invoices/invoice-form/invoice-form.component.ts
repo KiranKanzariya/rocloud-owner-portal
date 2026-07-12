@@ -53,7 +53,11 @@ export class InvoiceFormComponent {
   }
 
   constructor() {
-    this.tenantSettings.get().subscribe((s) => this.gst.set({ enabled: s.gstEnabled, percent: s.gstPercent }));
+    // Only the GST config, so an Accountant (Invoices.Create without BusinessProfile.View) still sees the
+    // notice — and nobody pulls the owner's contact details just to render one line.
+    this.tenantSettings.billing().subscribe((s) => {
+      if (s) this.gst.set({ enabled: s.gstEnabled, percent: s.gstPercent });
+    });
 
     this.customerSearch.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())

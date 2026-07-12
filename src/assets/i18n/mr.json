@@ -127,6 +127,8 @@
   "Password reset. Please sign in.": "पासवर्ड रीसेट झाला. कृपया साइन इन करा.",
   "Payment": "पेमेंट",
   "Payment history": "पेमेंट इतिहास",
+  "From unallocated payments": "वाटप न केलेल्या पेमेंटमधून",
+  "Settled by payments recorded on the customer page, oldest dues first.": "ग्राहक पेजवर नोंदवलेल्या पेमेंटमधून भरले — सर्वात जुनी थकबाकी आधी.",
   "Payment modes (today)": "पेमेंट पद्धती (आज)",
   "Payment preference": "पेमेंट प्राधान्य",
   "Payments": "पेमेंट",
@@ -190,5 +192,6 @@
   "You won't be charged during the trial.": "ट्रायल दरम्यान तुमच्याकडून शुल्क आकारले जाणार नाही.",
   "You'll be the administrator of {{name}}.": "तुम्ही {{name}} चे प्रशासक असाल.",
   "Your name": "तुमचे नाव",
-  "Your portal is ready 🎉": "तुमचे पोर्टल तयार आहे 🎉"
+  "Your portal is ready 🎉": "तुमचे पोर्टल तयार आहे 🎉",
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "त्यांचा नंबर नसल्यास रिकामे ठेवा. स्मरणपत्रे ईमेलने पाठवली जातील."
 }

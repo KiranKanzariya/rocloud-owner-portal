@@ -37,6 +37,8 @@ export interface InvoiceDetail {
   totalAmount: number;
   paidAmount: number;
   balance: number;
+  /** Part of paidAmount that came from payments recorded against the customer, not this invoice. */
+  allocatedFromPool: number;
   status: string;
   gstNumber: string | null;
   notes: string | null;

@@ -127,6 +127,8 @@
   "Password reset. Please sign in.": "கடவுச்சொல் மீட்டமைக்கப்பட்டது. உள்நுழையவும்.",
   "Payment": "பணம்",
   "Payment history": "கட்டண வரலாறு",
+  "From unallocated payments": "ஒதுக்கப்படாத கட்டணங்களிலிருந்து",
+  "Settled by payments recorded on the customer page, oldest dues first.": "வாடிக்கையாளர் பக்கத்தில் பதிவு செய்யப்பட்ட கட்டணங்களால் தீர்க்கப்பட்டது — பழைய நிலுவை முதலில்.",
   "Payment modes (today)": "பணம் செலுத்தும் முறைகள் (இன்று)",
   "Payment preference": "கட்டண விருப்பம்",
   "Payments": "கட்டணங்கள்",
@@ -190,5 +192,6 @@
   "You won't be charged during the trial.": "சோதனையின் போது உங்களிடம் கட்டணம் வசூலிக்கப்படாது.",
   "You'll be the administrator of {{name}}.": "நீங்கள் {{name}} இன் நிர்வாகியாக இருப்பீர்கள்.",
   "Your name": "உங்கள் பெயர்",
-  "Your portal is ready 🎉": "உங்கள் போர்ட்டல் தயாராக உள்ளது 🎉"
+  "Your portal is ready 🎉": "உங்கள் போர்ட்டல் தயாராக உள்ளது 🎉",
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "அவர்களின் எண் இல்லையெனில் காலியாக விடவும். நினைவூட்டல்கள் மின்னஞ்சலில் அனுப்பப்படும்."
 }

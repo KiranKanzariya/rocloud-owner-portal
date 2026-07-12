@@ -73,11 +73,12 @@ export class SidebarComponent {
         { label: 'Users', icon: 'ti-user-cog', route: '/settings/users', permission: 'Users.View' },
         { label: 'Roles', icon: 'ti-shield', route: '/settings/roles', permission: 'Roles.Manage' },
         { label: 'Products', icon: 'ti-bottle', route: '/settings/products', permission: 'Inventory.Manage' },
-        { label: 'Areas', icon: 'ti-map-pin', route: '/settings/areas', permission: 'Settings.View' },
-        { label: 'Notifications', icon: 'ti-bell', route: '/settings/notifications', permission: 'Settings.View' },
-        { label: 'Profile', icon: 'ti-user', route: '/settings/profile', permission: 'Settings.View' },
+        { label: 'Areas', icon: 'ti-map-pin', route: '/settings/areas', permission: 'Areas.View' },
+        { label: 'Notifications', icon: 'ti-bell', route: '/settings/notifications', permission: 'Notifications.View' },
+        { label: 'Profile', icon: 'ti-user', route: '/settings/profile', permission: 'BusinessProfile.View' },
         { label: 'Activity log', icon: 'ti-history', route: '/settings/activity', ownerOnly: true, requiresAuditEnabled: true },
-        { label: 'Subscription', icon: 'ti-credit-card', route: '/settings/subscription' },
+        // Owner-only, like the Activity log: paying for the plan is not a permission a role can hold.
+        { label: 'Subscription', icon: 'ti-credit-card', route: '/settings/subscription', ownerOnly: true },
       ],
     },
   ];

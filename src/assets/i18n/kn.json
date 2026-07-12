@@ -127,6 +127,8 @@
   "Password reset. Please sign in.": "ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಸೈನ್ ಇನ್ ಮಾಡಿ.",
   "Payment": "ಪಾವತಿ",
   "Payment history": "ಪಾವತಿ ಇತಿಹಾಸ",
+  "From unallocated payments": "ಹಂಚಿಕೆಯಾಗದ ಪಾವತಿಗಳಿಂದ",
+  "Settled by payments recorded on the customer page, oldest dues first.": "ಗ್ರಾಹಕ ಪುಟದಲ್ಲಿ ದಾಖಲಿಸಿದ ಪಾವತಿಗಳಿಂದ ಇತ್ಯರ್ಥ — ಹಳೆಯ ಬಾಕಿ ಮೊದಲು.",
   "Payment modes (today)": "ಪಾವತಿ ವಿಧಾನಗಳು (ಇಂದು)",
   "Payment preference": "ಪಾವತಿ ಆದ್ಯತೆ",
   "Payments": "ಪಾವತಿಗಳು",
@@ -190,5 +192,6 @@
   "You won't be charged during the trial.": "ಪ್ರಯೋಗದ ಸಮಯದಲ್ಲಿ ನಿಮ್ಮಿಂದ ಶುಲ್ಕ ವಿಧಿಸಲಾಗುವುದಿಲ್ಲ.",
   "You'll be the administrator of {{name}}.": "ನೀವು {{name}} ನ ನಿರ್ವಾಹಕರಾಗಿರುತ್ತೀರಿ.",
   "Your name": "ನಿಮ್ಮ ಹೆಸರು",
-  "Your portal is ready 🎉": "ನಿಮ್ಮ ಪೋರ್ಟಲ್ ಸಿದ್ಧವಾಗಿದೆ 🎉"
+  "Your portal is ready 🎉": "ನಿಮ್ಮ ಪೋರ್ಟಲ್ ಸಿದ್ಧವಾಗಿದೆ 🎉",
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "ಅವರ ಸಂಖ್ಯೆ ಇಲ್ಲದಿದ್ದರೆ ಖಾಲಿ ಬಿಡಿ. ಜ್ಞಾಪನೆಗಳನ್ನು ಇಮೇಲ್‌ನಲ್ಲಿ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
 }

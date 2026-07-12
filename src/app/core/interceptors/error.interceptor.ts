@@ -5,6 +5,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
 import { ToastService } from '../services/toast.service';
+import { PermissionService } from '../services/permission.service';
 
 /**
  * Centralised HTTP error handling (guide §18):
@@ -12,7 +13,7 @@ import { ToastService } from '../services/toast.service';
  *  - 402 PAYMENT_REQUIRED (overdue past grace) and 401 TENANT_SUSPENDED → send the owner to the
  *    subscription page, which stays reachable so they can pay to restore access (guide §25).
  *  - 401 TENANT_CANCELLED → log out.
- *  - 403 → toast.
+ *  - 403 on a write → toast; on a read → developer log (see below).
  * Requests to /auth/* are exempt from the refresh dance (login/refresh handle their own 401s).
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
@@ -20,10 +21,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(TokenService);
   const router = inject(Router);
   const toast = inject(ToastService);
+  const perms = inject(PermissionService);
 
   const isAuthEndpoint = req.url.includes('/auth/');
+  const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase());
   const code = (err: HttpErrorResponse): string | undefined => err.error?.code;
+
+  // The subscription page is Owner-only. Sending anyone else there (a delivery boy on an overdue
+  // tenant) would land them on /forbidden, which explains nothing — leave them where they are with
+  // the toast, which already says what is wrong. They cannot pay in any case.
   const goToSubscription = (): void => {
+    if (!perms.isOwner()) return;
     if (!router.url.startsWith('/settings/subscription')) void router.navigate(['/settings/subscription']);
   };
 
@@ -36,7 +44,23 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         goToSubscription();
         return throwError(() => err);
       }
-      if (err.status === 403) toast.error('You do not have permission to do that.');
+      // Plan gating (RequirePlan) sits on reads too — ReportsController gates every GET on Pro — so
+      // it must be answered before the read/write split below, or a Basic tenant's Reports page
+      // would fail in silence. Show the real "requires the X plan" message, not "no permission".
+      if (err.status === 403 && code(err) === 'PLAN_UPGRADE_REQUIRED') {
+        toast.error(err.error?.detail ?? err.error?.error ?? 'This feature requires a higher plan.');
+        return throwError(() => err);
+      }
+
+      // A 403 on a write is the user's own action being refused — they need to be told why nothing
+      // happened. A 403 on a read cannot happen through legitimate use (services check the JWT's
+      // permissions before calling, and no GET is gated behind a write permission), so it means a
+      // page asked for something it had no right to. That is a defect for us, not a scolding for
+      // the user: surface it in the console instead of a toast.
+      if (err.status === 403) {
+        if (isMutation) toast.error('You do not have permission to do that.');
+        else console.error('[perm] read rejected — unguarded request:', req.method, req.url, code(err));
+      }
 
       // Overdue past grace — renewal page is still reachable; guide the owner there to pay.
       if (err.status === 402) {

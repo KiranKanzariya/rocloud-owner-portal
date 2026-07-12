@@ -39,7 +39,8 @@
     </span>
     <div class="min-w-0">
       <p class="text-caption text-white truncate">{{ perms.name() || ('User' | translate) }}</p>
-      <p class="text-micro text-white/50">{{ 'Owner' | translate }}</p>
+      <!-- Custom roles (Enterprise) have no translation key, so translate falls back to the raw name. -->
+      <p class="text-micro text-white/50">{{ perms.roleName() ? (perms.roleName() | translate) : ('User' | translate) }}</p>
     </div>
   </div>
 </aside>

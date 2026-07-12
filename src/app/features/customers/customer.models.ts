@@ -160,7 +160,7 @@ export interface CustomerFilter {
 export interface CustomerUpsert {
   areaId?: string | null;
   name: string;
-  mobile: string;
+  mobile?: string | null;
   alternateMobile?: string | null;
   email?: string | null;
   addressLine?: string | null;

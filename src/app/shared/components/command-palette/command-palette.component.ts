@@ -25,7 +25,7 @@ const COMMANDS: Command[] = [
   { label: 'AMC / Service', icon: 'tool', route: '/service-requests', permission: 'AMC.View' },
   { label: 'Users', icon: 'user-cog', route: '/settings/users', permission: 'Users.View' },
   { label: 'Subscription', icon: 'credit-card', route: '/settings/subscription' },
-  { label: 'Profile', icon: 'user', route: '/settings/profile', permission: 'Settings.View' },
+  { label: 'Profile', icon: 'user', route: '/settings/profile', permission: 'BusinessProfile.View' },
 ];
 
 /**

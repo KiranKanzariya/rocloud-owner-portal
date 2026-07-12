@@ -28,7 +28,7 @@ export class ProfileComponent {
   protected readonly languages = LANGUAGES;
   protected readonly settings = signal<TenantSettings | null>(null);
   protected readonly saving = signal(false);
-  protected readonly canManage = this.perm.can('Settings.Manage');
+  protected readonly canManage = this.perm.can('BusinessProfile.Manage');
   /** Primary-colour white-labelling is an Enterprise feature (guide §24/§25). */
   protected readonly isEnterprise = this.perm.hasPlan('Enterprise');
 

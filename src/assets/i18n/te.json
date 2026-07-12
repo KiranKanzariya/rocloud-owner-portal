@@ -127,6 +127,8 @@
   "Password reset. Please sign in.": "పాస్‌వర్డ్ రీసెట్ చేయబడింది. దయచేసి సైన్ ఇన్ చేయండి.",
   "Payment": "చెల్లింపు",
   "Payment history": "చెల్లింపు చరిత్ర",
+  "From unallocated payments": "కేటాయించని చెల్లింపుల నుండి",
+  "Settled by payments recorded on the customer page, oldest dues first.": "కస్టమర్ పేజీలో నమోదు చేసిన చెల్లింపులతో తీర్చబడింది — పాత బకాయిలు ముందు.",
   "Payment modes (today)": "చెల్లింపు పద్ధతులు (నేడు)",
   "Payment preference": "చెల్లింపు ప్రాధాన్యత",
   "Payments": "చెల్లింపులు",
@@ -190,5 +192,6 @@
   "You won't be charged during the trial.": "ట్రయల్ సమయంలో మీ నుండి ఛార్జ్ చేయబడదు.",
   "You'll be the administrator of {{name}}.": "మీరు {{name}} యొక్క నిర్వాహకులుగా ఉంటారు.",
   "Your name": "మీ పేరు",
-  "Your portal is ready 🎉": "మీ పోర్టల్ సిద్ధంగా ఉంది 🎉"
+  "Your portal is ready 🎉": "మీ పోర్టల్ సిద్ధంగా ఉంది 🎉",
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "వారి నంబర్ లేకపోతే ఖాళీగా వదిలేయండి. రిమైండర్లు ఇమెయిల్‌లో పంపబడతాయి."
 }

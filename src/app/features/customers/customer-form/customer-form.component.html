@@ -15,10 +15,12 @@
         }
       </label>
       <label class="flex flex-col gap-1">
-        <span class="text-caption font-medium">{{ 'Mobile' | translate }} <span class="text-danger">*</span></span>
+        <span class="text-caption font-medium">{{ 'Mobile' | translate }} <span class="text-ink-mid font-normal">({{ 'Optional' | translate }})</span></span>
         <roc-mobile-input formControlName="mobile" />
         @if (form.controls.mobile.touched && form.controls.mobile.invalid) {
           <span class="text-micro text-danger">{{ 'Enter a 10-digit mobile number.' | translate }}</span>
+        } @else {
+          <span class="text-micro text-ink-mid">{{ 'Leave blank if you do not have their number. Reminders will be emailed instead.' | translate }}</span>
         }
       </label>
       <label class="flex flex-col gap-1">
