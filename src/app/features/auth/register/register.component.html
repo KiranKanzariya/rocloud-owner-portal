@@ -160,6 +160,18 @@
               </label>
             </div>
           }
+
+          <!-- Consent. Sits OUTSIDE the two branches above because it applies to both the password
+               and the Google sign-up path; submit() enforces it for both (see the component). -->
+          <label class="flex items-start gap-2.5 mt-5 cursor-pointer">
+            <input type="checkbox" class="mt-0.5 rounded border-ink-light text-navy focus:ring-navy"
+                   [checked]="acceptTerms()" (change)="acceptTerms.set($any($event.target).checked)" />
+            <span class="text-caption text-ink-mid"
+                  [innerHTML]="'I agree to the {{terms}} and the {{privacy}}.' | translate: {
+                    terms: link(LEGAL.terms, 'Terms & Conditions' | translate),
+                    privacy: link(LEGAL.privacy, 'Privacy Policy' | translate)
+                  }"></span>
+          </label>
         }
 
         <!-- Nav -->
@@ -173,7 +185,7 @@
           @if (step() < 3) {
             <button type="button" class="btn-primary" (click)="next()">{{ 'Continue' | translate }}</button>
           } @else {
-            <button type="submit" class="btn-primary" [disabled]="loading()">
+            <button type="submit" class="btn-primary" [disabled]="loading() || !acceptTerms()">
               @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Creating…' | translate }} } @else { {{ 'Create account' | translate }} }
             </button>
           }

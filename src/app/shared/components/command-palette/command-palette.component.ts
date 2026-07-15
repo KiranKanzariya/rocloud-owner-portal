@@ -3,12 +3,15 @@ import { Router } from '@angular/router';
 import { PermissionService } from '../../../core/services/permission.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { TranslatePipe } from '@ngx-translate/core';
+import { FeatureName, isFeatureEnabled } from '../../../core/feature-flags';
 
 interface Command {
   label: string;
   icon: string;
   route: string;
   permission?: string;
+  /** Hide unless this feature flag is on (a deferred module). */
+  feature?: FeatureName;
 }
 
 const COMMANDS: Command[] = [
@@ -22,7 +25,7 @@ const COMMANDS: Command[] = [
   { label: 'Invoices', icon: 'file-invoice', route: '/invoices', permission: 'Invoices.View' },
   { label: 'Payments', icon: 'cash', route: '/payments', permission: 'Payments.View' },
   { label: 'Reports', icon: 'chart-bar', route: '/reports', permission: 'Reports.View' },
-  { label: 'AMC / Service', icon: 'tool', route: '/service-requests', permission: 'AMC.View' },
+  { label: 'AMC / Service', icon: 'tool', route: '/service-requests', permission: 'AMC.View', feature: 'amcService' },
   { label: 'Users', icon: 'user-cog', route: '/settings/users', permission: 'Users.View' },
   { label: 'Subscription', icon: 'credit-card', route: '/settings/subscription' },
   { label: 'Profile', icon: 'user', route: '/settings/profile', permission: 'BusinessProfile.View' },
@@ -47,7 +50,9 @@ export class CommandPaletteComponent {
   protected readonly query = signal('');
   protected readonly activeIndex = signal(0);
 
-  private readonly available = COMMANDS.filter((c) => !c.permission || this.perm.can(c.permission));
+  private readonly available = COMMANDS.filter(
+    (c) => (!c.feature || isFeatureEnabled(c.feature)) && (!c.permission || this.perm.can(c.permission)),
+  );
 
   protected readonly results = computed(() => {
     const q = this.query().trim().toLowerCase();

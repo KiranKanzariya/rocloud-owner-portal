@@ -66,7 +66,7 @@ export class CustomerListComponent {
     this.search.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((term) => {
-        this.filter = { ...this.filter, search: term || undefined, page: 1 };
+        this.filter = { ...this.filter, search: term.trim() || undefined, page: 1 };
         this.load();
       });
     this.load();
@@ -95,7 +95,9 @@ export class CustomerListComponent {
   }
 
   onSort(s: SortState): void {
-    this.filter = { ...this.filter, sortBy: s.sortBy, sortDir: s.sortDir };
+    // Reset to page 1: a new sort should show the top of the results, not leave you mid-list on
+    // whatever page you were on (matches the Users grid).
+    this.filter = { ...this.filter, sortBy: s.sortBy, sortDir: s.sortDir, page: 1 };
     this.load();
   }
 

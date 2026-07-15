@@ -5,6 +5,7 @@ import { PermissionService, PlanType } from '../../../core/services/permission.s
 import { LayoutService } from '../../../core/services/layout.service';
 import { ActivityAvailabilityService } from '../../../core/services/activity-availability.service';
 import { LogoComponent } from '../logo/logo.component';
+import { FeatureName, isFeatureEnabled } from '../../../core/feature-flags';
 
 interface NavItem {
   label: string;
@@ -16,6 +17,8 @@ interface NavItem {
   ownerOnly?: boolean;
   /** Hide when the SuperAdmin has disabled the activity log. */
   requiresAuditEnabled?: boolean;
+  /** Hide unless this feature flag is on (e.g. a module deferred to a future release). */
+  feature?: FeatureName;
 }
 
 interface NavSection {
@@ -64,7 +67,8 @@ export class SidebarComponent {
     {
       heading: 'Service',
       items: [
-        { label: 'AMC / Service', icon: 'ti-tool', route: '/service-requests', permission: 'AMC.View' },
+        // Deferred to a future release — hidden by the `amcService` flag (empty section auto-hides).
+        { label: 'AMC / Service', icon: 'ti-tool', route: '/service-requests', permission: 'AMC.View', feature: 'amcService' },
       ],
     },
     {
@@ -85,6 +89,7 @@ export class SidebarComponent {
 
   canShow(item: NavItem): boolean {
     return (
+      (!item.feature || isFeatureEnabled(item.feature)) &&
       (!item.ownerOnly || this.perms.isOwner()) &&
       (!item.permission || this.perms.can(item.permission)) &&
       (!item.plan || this.perms.hasPlan(item.plan)) &&

@@ -11,6 +11,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, ColumnDef, SortState } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
 import { sortAndPage } from '../../../shared/components/data-table/client-table';
+import { isFeatureEnabled } from '../../../core/feature-flags';
 
 /** Customer-facing templates the tenant can customise, with their placeholder tokens. */
 const TEMPLATE_CODES = [
@@ -42,8 +43,11 @@ export class NotificationsComponent {
 
   // WhatsApp is future scope (v1 is email-only), so hide WhatsApp templates for everyone.
   // Each customer-facing template still has an Email variant, which remains visible.
+  // The AMC/Service reminder is hidden too while that module is deferred (feature flag `amcService`).
   protected readonly visible = computed(() =>
-    this.templates().filter((x) => x.channel !== 'WhatsApp'),
+    this.templates().filter(
+      (x) => x.channel !== 'WhatsApp' && (isFeatureEnabled('amcService') || x.templateCode !== 'amc_reminder'),
+    ),
   );
 
   // Client-side sort + paginate for the shared data table.

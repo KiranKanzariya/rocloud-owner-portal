@@ -13,15 +13,23 @@
     <!-- Defense-in-depth upgrade banner (route also plan-gates this page) -->
     <roc-upgrade-banner feature="Reports" plan="Pro" [description]="'Charts, exports, and business insights.' | translate" />
   } @else {
-    <!-- Date range -->
-    <div class="card flex flex-wrap items-center gap-3">
-      <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
-        <input type="date" [value]="range().from" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('from', $any($event.target).value)" />
-      </label>
-      <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
-        <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
-      </label>
-    </div>
+    <!-- Only the date control this report actually reads: a range, a single snapshot date, or none. -->
+    @if (dateMode() !== 'none') {
+      <div class="card flex flex-wrap items-center gap-3">
+        @if (dateMode() === 'range') {
+          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
+            <input type="date" [value]="range().from" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('from', $any($event.target).value)" />
+          </label>
+          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
+            <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
+          </label>
+        } @else {
+          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ singleDateLabel() | translate }}
+            <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
+          </label>
+        }
+      </div>
+    }
 
     <!-- Tabs -->
     <div class="flex flex-wrap gap-1 border-b border-ink-light">

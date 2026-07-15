@@ -69,7 +69,6 @@ export interface SubscriptionInvoice {
   dueDate: string;
   description: string | null;
   paidAt: string | null;
-  hasPdf: boolean;
 }
 
 /** The tenant's own ROCloud subscription (guide §25). */

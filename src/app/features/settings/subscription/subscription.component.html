@@ -114,8 +114,9 @@
         </div>
       } @else {
         <roc-data-table
-          [columns]="invoiceColumns" [rows]="invoices()" [totalCount]="invoices().length"
-          [page]="1" [pageSize]="100" (rowClick)="openInvoice($any($event))">
+          [columns]="invoiceColumns" [rows]="invoiceRows()" [totalCount]="invoices().length"
+          [page]="invoicePage()" [pageSize]="invoicePageSize"
+          (pageChange)="onInvoicePage($event)" (rowClick)="openInvoice($any($event))">
 
           <ng-template appColumnCell="invoiceNumber" let-row><span class="font-mono">{{ row.invoiceNumber }}</span></ng-template>
           <ng-template appColumnCell="description" let-row>{{ row.description || row.planType + ' plan' }}</ng-template>
@@ -125,9 +126,7 @@
 
           <ng-template appColumnCell="actions" let-row>
             <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-              @if (row.hasPdf) {
-                <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
-              }
+              <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
               @if (row.status === 'Pending' && canManage) {
                 <button class="p-1.5 rounded hover:bg-shell text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate">
                   @if (payingId() === row.id) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
@@ -146,12 +145,26 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-h4">{{ 'Cancel subscription' | translate }}</h3>
-            <p class="text-caption text-ink-mid">{{ "You'll keep access until the end of the current billing period." | translate }}</p>
+            <p class="text-caption text-ink-mid">
+              {{ "You'll keep access until the end of the current billing period." | translate }}
+              <a [href]="LEGAL.cancellation" target="_blank" rel="noopener" class="text-navy-light hover:underline">{{ 'Read the Cancellation Policy' | translate }}</a>
+            </p>
           </div>
           <button class="btn-secondary text-danger" (click)="cancel()">{{ 'Cancel subscription' | translate }}</button>
         </div>
       </div>
     }
+
+    <!-- Billing policies, reachable from the screen where money actually changes hands. -->
+    <p class="text-caption text-ink-mid text-center">
+      <a [href]="LEGAL.refunds" target="_blank" rel="noopener" class="hover:underline">{{ 'Refund Policy' | translate }}</a>
+      <span class="mx-1.5 text-ink-light">·</span>
+      <a [href]="LEGAL.cancellation" target="_blank" rel="noopener" class="hover:underline">{{ 'Cancellation Policy' | translate }}</a>
+      <span class="mx-1.5 text-ink-light">·</span>
+      <a [href]="LEGAL.terms" target="_blank" rel="noopener" class="hover:underline">{{ 'Terms & Conditions' | translate }}</a>
+      <span class="mx-1.5 text-ink-light">·</span>
+      <a [href]="LEGAL.contact" target="_blank" rel="noopener" class="hover:underline">{{ 'Contact us' | translate }}</a>
+    </p>
   } @else {
     <div class="card text-center text-ink-mid py-8">{{ 'Could not load your subscription.' | translate }} <button class="text-teal hover:underline" (click)="load()">{{ 'Retry' | translate }}</button></div>
   }

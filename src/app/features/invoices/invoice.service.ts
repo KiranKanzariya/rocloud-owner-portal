@@ -30,7 +30,7 @@ export class InvoiceService {
   /** Sends the invoice. `emailed` is false when the customer has no email on file (nothing went out). */
   send(id: string): Observable<{ emailed: boolean }> {
     return this.http
-      .post<ApiResponse<{ id: string; pdfUrl: string; emailed: boolean }>>(`${this.base}/${id}/send`, {})
+      .post<ApiResponse<{ id: string; emailed: boolean }>>(`${this.base}/${id}/send`, {})
       .pipe(map((r) => ({ emailed: r.data?.emailed ?? false })));
   }
 

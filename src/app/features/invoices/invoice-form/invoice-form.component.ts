@@ -120,7 +120,9 @@ export class InvoiceFormComponent {
       .subscribe({
         next: (res) => {
           this.toast.success(this.t.instant('Invoice generated.'));
-          this.router.navigate(['/invoices', res.id]);
+          // replaceUrl: drop the generate form from history, else Back returns to it and generates
+          // a second invoice for the same period.
+          this.router.navigate(['/invoices', res.id], { replaceUrl: true });
         },
         error: (err: HttpErrorResponse) => {
           this.saving.set(false);

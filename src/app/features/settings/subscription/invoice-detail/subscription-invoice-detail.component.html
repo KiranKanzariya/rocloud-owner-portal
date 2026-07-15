@@ -85,9 +85,7 @@
       </p>
       </div>
 
-      @if (inv.hasPdf) {
-        <roc-pdf-preview [url]="pdfUrl" [fileName]="inv.invoiceNumber + '.pdf'" />
-      }
+      <roc-pdf-preview [url]="pdfUrl" [fileName]="inv.invoiceNumber + '.pdf'" />
     </div>
   } @else {
     <div class="card text-center text-ink-mid py-8">

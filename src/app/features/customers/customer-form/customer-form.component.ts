@@ -103,7 +103,10 @@ export class CustomerFormComponent {
     req.subscribe({
       next: (res) => {
         this.toast.success(this.t.instant(id ? 'Customer updated.' : 'Customer created.'));
-        this.router.navigate(['/customers', id ?? res.id]);
+        // replaceUrl: drop the form from history. Otherwise Back from the detail page returns to the
+        // still-filled Add form, and saving it again creates a DUPLICATE customer. Now Back goes to
+        // wherever the form was opened from (the list, or the customer being edited).
+        this.router.navigate(['/customers', id ?? res.id], { replaceUrl: true });
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);

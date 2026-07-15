@@ -18,7 +18,7 @@
   "Area": "ಪ್ರದೇಶ",
   "Areas": "ಪ್ರದೇಶಗಳು",
   "Avg monthly spend": "ಸರಾಸರಿ ಮಾಸಿಕ ಖರ್ಚು",
-  "Back": "ಹಿಂದೆ",
+  "Back": "ಹಿಂತಿರುಗಿದವು",
   "Back to sign in": "ಸೈನ್ ಇನ್‌ಗೆ ಹಿಂತಿರುಗಿ",
   "Balance": "ಬಾಕಿ",
   "Both": "ಎರಡೂ",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "ನೀವು {{name}} ನ ನಿರ್ವಾಹಕರಾಗಿರುತ್ತೀರಿ.",
   "Your name": "ನಿಮ್ಮ ಹೆಸರು",
   "Your portal is ready 🎉": "ನಿಮ್ಮ ಪೋರ್ಟಲ್ ಸಿದ್ಧವಾಗಿದೆ 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "ಅವರ ಸಂಖ್ಯೆ ಇಲ್ಲದಿದ್ದರೆ ಖಾಲಿ ಬಿಡಿ. ಜ್ಞಾಪನೆಗಳನ್ನು ಇಮೇಲ್‌ನಲ್ಲಿ ಕಳುಹಿಸಲಾಗುತ್ತದೆ."
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "ಅವರ ಸಂಖ್ಯೆ ಇಲ್ಲದಿದ್ದರೆ ಖಾಲಿ ಬಿಡಿ. ಜ್ಞಾಪನೆಗಳನ್ನು ಇಮೇಲ್‌ನಲ್ಲಿ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.",
+  "Jars by product": "ಉತ್ಪನ್ನವಾರು ಜಾಡಿಗಳು",
+  "Out": "ಹೋದವು",
+  "other": "ಇತರೆ",
+  "Other empties returned": "ಇತರ ಖಾಲಿಗಳು ಹಿಂತಿರುಗಿದವು",
+  "Filter by customer…": "ಗ್ರಾಹಕರ ಪ್ರಕಾರ ಫಿಲ್ಟರ್ ಮಾಡಿ…",
+  "Clear filter": "ಫಿಲ್ಟರ್ ತೆರವುಗೊಳಿಸಿ"
 }

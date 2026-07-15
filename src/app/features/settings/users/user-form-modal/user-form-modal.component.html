@@ -30,7 +30,7 @@
           <span class="text-caption font-medium">{{ 'Role' | translate }}</span>
           <select formControlName="roleId" class="rounded-md border-ink-light py-1.5">
             <option value="">{{ 'Select a role…' | translate }}</option>
-            @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
+            @for (r of selectableRoles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
           </select>
           @if (!roles().length) { <span class="text-caption text-ink-mid">{{ 'No roles loaded (requires Roles.Manage).' | translate }}</span> }
         </label>

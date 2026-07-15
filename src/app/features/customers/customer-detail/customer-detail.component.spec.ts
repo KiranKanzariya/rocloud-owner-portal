@@ -49,23 +49,23 @@ describe('CustomerDetailComponent — permission-gated tabs', () => {
     return comp['tabs']().map((t) => t.id);
   };
 
-  it('a Manager sees every tab', () => {
+  // The Service requests tab is deferred to a future release (feature flag `amcService` off), so it
+  // never appears in v1 regardless of the AMC.View permission.
+  it('a Manager sees every v1 tab (Service requests is feature-flagged off)', () => {
     expect(tabIdsFor('Customers.View,Orders.View,Inventory.View,AMC.View')).toEqual([
       'overview',
       'subscriptions',
       'orders',
       'returns',
       'payments',
-      'service',
     ]);
   });
 
-  it('a Technician loses Order history and Return history, keeps Service requests', () => {
+  it('a Technician loses Order/Return history, and Service requests stays hidden in v1', () => {
     expect(tabIdsFor('Customers.View,AMC.View,AMC.Update')).toEqual([
       'overview',
       'subscriptions',
       'payments',
-      'service',
     ]);
   });
 

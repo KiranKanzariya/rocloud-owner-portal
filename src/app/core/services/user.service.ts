@@ -20,8 +20,12 @@ export interface UserListItem {
 
 export interface UserFilter {
   roleId?: string;
+  /** Filter by role NAME (e.g. 'Technician') — role ids are per-tenant, names are not. */
+  roleName?: string;
   isActive?: boolean;
   search?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
   page: number;
   pageSize: number;
 }
@@ -60,20 +64,24 @@ export class UserService {
   list(filter: UserFilter): Observable<PagedResult<UserListItem>> {
     let params = new HttpParams().set('page', filter.page).set('pageSize', filter.pageSize);
     if (filter.roleId) params = params.set('roleId', filter.roleId);
+    if (filter.roleName) params = params.set('roleName', filter.roleName);
     if (filter.isActive !== undefined) params = params.set('isActive', filter.isActive);
     if (filter.search) params = params.set('search', filter.search);
+    if (filter.sortBy) params = params.set('sortBy', filter.sortBy);
+    if (filter.sortDir) params = params.set('sortDir', filter.sortDir);
     return this.http
       .get<ApiResponse<PagedResult<UserListItem>>>(this.base, { params })
       .pipe(map((r) => r.data!));
   }
 
   /**
-   * Active users in the Technician role. The API filters by role id, not name, so we fetch
-   * active users and narrow client-side. Degrades to [] if the caller lacks Users.View.
+   * Active users in the Technician role, filtered by the API. Fetching the first 100 active users and
+   * narrowing here returned an EMPTY dropdown for any workspace whose first 100 users happened to
+   * contain no technician. Degrades to [] if the caller lacks Users.View.
    */
   technicians(): Observable<UserListItem[]> {
-    return this.list({ isActive: true, page: 1, pageSize: 100 }).pipe(
-      map((r) => r.items.filter((u) => u.roleName === 'Technician')),
+    return this.list({ isActive: true, roleName: 'Technician', page: 1, pageSize: 100 }).pipe(
+      map((r) => r.items),
       catchError(() => of([])),
     );
   }

@@ -755,5 +755,17 @@
   "How often it repeats": "How often it repeats",
   "Rate per unit (₹)": "Rate per unit (₹)",
   "When the subscription starts": "When the subscription starts",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "Leave blank if you do not have their number. Reminders will be emailed instead."
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "Leave blank if you do not have their number. Reminders will be emailed instead.",
+  "Terms & Conditions": "Terms & Conditions",
+  "Privacy Policy": "Privacy Policy",
+  "Refund Policy": "Refund Policy",
+  "Cancellation Policy": "Cancellation Policy",
+  "Read the Cancellation Policy": "Read the Cancellation Policy",
+  "I agree to the {{terms}} and the {{privacy}}.": "I agree to the {{terms}} and the {{privacy}}.",
+  "Please accept the Terms & Conditions and Privacy Policy to continue.": "Please accept the Terms & Conditions and Privacy Policy to continue.",
+  "Jars by product": "Jars by product",
+  "Out": "Out",
+  "other": "other",
+  "Filter by customer…": "Filter by customer…",
+  "Clear filter": "Clear filter"
 }

@@ -102,7 +102,7 @@
   "Available": "उपलब्ध",
   "Avg monthly spend": "औसत मासिक खर्च",
   "Avg order": "औसत ऑर्डर",
-  "Back": "पीछे",
+  "Back": "वापस",
   "Back to sign in": "साइन इन पर वापस जाएं",
   "Balance": "शेष",
   "BankTransfer": "बैंक ट्रांसफर",
@@ -747,5 +747,17 @@
   "How often it repeats": "कितनी बार दोहराता है",
   "Rate per unit (₹)": "प्रति इकाई दर (₹)",
   "When the subscription starts": "सब्सक्रिप्शन कब शुरू होता है",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "अगर उनका नंबर नहीं है तो खाली छोड़ें। रिमाइंडर ईमेल से भेजे जाएंगे।"
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "अगर उनका नंबर नहीं है तो खाली छोड़ें। रिमाइंडर ईमेल से भेजे जाएंगे।",
+  "Terms & Conditions": "नियम और शर्तें",
+  "Privacy Policy": "गोपनीयता नीति",
+  "Refund Policy": "रिफंड नीति",
+  "Cancellation Policy": "रद्दीकरण नीति",
+  "Read the Cancellation Policy": "रद्दीकरण नीति पढ़ें",
+  "I agree to the {{terms}} and the {{privacy}}.": "मैं {{terms}} और {{privacy}} से सहमत हूँ।",
+  "Please accept the Terms & Conditions and Privacy Policy to continue.": "जारी रखने के लिए कृपया नियम और शर्तें तथा गोपनीयता नीति स्वीकार करें।",
+  "Jars by product": "उत्पादवार जार",
+  "Out": "गए",
+  "other": "अन्य",
+  "Filter by customer…": "ग्राहक से फ़िल्टर करें…",
+  "Clear filter": "फ़िल्टर हटाएं"
 }

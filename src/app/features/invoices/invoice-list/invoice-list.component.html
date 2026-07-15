@@ -11,6 +11,28 @@
       <option value="">{{ 'All statuses' | translate }}</option>
       @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
     </select>
+    <!-- Customer filter: search + pick, or clear the current selection. -->
+    <div class="relative">
+      @if (selectedCustomer(); as c) {
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-foam text-navy px-3 py-1 text-caption">
+          <i class="ti ti-user"></i> {{ c.name }}
+          <button class="hover:text-danger" (click)="clearCustomer()" [attr.aria-label]="'Clear filter' | translate"><i class="ti ti-x"></i></button>
+        </span>
+      } @else {
+        <input [formControl]="customerSearch" type="search" [placeholder]="'Filter by customer…' | translate"
+               class="rounded-md border-ink-light text-body py-1.5 min-w-[200px]" />
+        @if (customerResults().length) {
+          <ul class="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
+            @for (c of customerResults(); track c.id) {
+              <li><button type="button" class="w-full text-left px-3 py-2 hover:bg-shell text-body" (click)="selectCustomer(c)">
+                <span class="text-ink">{{ c.name }}</span>
+                <span class="text-caption text-ink-mid font-mono ml-1">{{ c.mobile | mobile }}</span>
+              </button></li>
+            }
+          </ul>
+        }
+      }
+    </div>
   </div>
 
   <roc-data-table

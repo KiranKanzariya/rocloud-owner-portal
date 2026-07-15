@@ -1,4 +1,4 @@
-import { Component, inject, input, output, effect, signal } from '@angular/core';
+import { Component, computed, inject, input, output, effect, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UserService, UserListItem } from '../../../../core/services/user.service';
@@ -6,6 +6,7 @@ import { Role } from '../../../../core/services/role.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobileInputComponent } from '../../../../shared/components/mobile-input/mobile-input.component';
+import { isFeatureEnabled } from '../../../../core/feature-flags';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -34,6 +35,15 @@ export class UserFormModalComponent {
 
   protected readonly languages = LANGUAGES;
   protected readonly saving = signal(false);
+
+  // Technician is an AMC/Service-only role, deferred with that module (feature flag `amcService`).
+  // Hide it when creating; still show it for a user who already has it, so their role displays.
+  protected readonly selectableRoles = computed(() => {
+    const all = this.roles();
+    if (isFeatureEnabled('amcService')) return all;
+    const currentRoleId = this.editUser()?.roleId;
+    return all.filter((r) => r.name !== 'Technician' || r.id === currentRoleId);
+  });
   /** On create, send a portal invite email instead of a temp password. */
   protected readonly sendInvite = signal(true);
 

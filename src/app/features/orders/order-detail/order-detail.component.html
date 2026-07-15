@@ -65,6 +65,34 @@
             <div><span class="text-caption text-ink-mid">{{ 'Collected' | translate }}</span><div class="font-mono">₹{{ (d.collectedAmount ?? 0) | number: '1.0-0' }} <span class="text-caption text-ink-mid">{{ d.paymentMethod | translate }}</span></div></div>
           }
         </div>
+        <!-- Which jar went out and came back, per product — the aggregate above hides the mix. -->
+        @if (d.status === 'Delivered' && d.items.length) {
+          <div class="mt-3 border-t border-ink-light pt-3">
+            <span class="text-caption text-ink-mid">{{ 'Jars by product' | translate }}</span>
+            <div class="mt-1 flex flex-col gap-1">
+              @for (it of d.items; track it.productName) {
+                <div class="flex items-center justify-between text-caption border-b border-ink-light/60 py-1">
+                  <span>{{ it.productName }}</span>
+                  <span class="text-ink-mid">{{ 'Out' | translate }} {{ it.jarsDelivered }} · {{ 'Back' | translate }} {{ it.jarsReturned }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+        <!-- Empties of another product the customer also handed back on this run. -->
+        @if (d.status === 'Delivered' && d.otherReturns.length) {
+          <div class="mt-3 border-t border-ink-light pt-3">
+            <span class="text-caption text-ink-mid">{{ 'Other empties returned' | translate }}</span>
+            <div class="mt-1 flex flex-col gap-1">
+              @for (o of d.otherReturns; track o.productName) {
+                <div class="flex items-center justify-between text-caption border-b border-ink-light/60 py-1">
+                  <span><span class="text-micro text-amber font-medium mr-1">{{ 'Other' | translate }}</span>{{ o.productName }} <span class="text-micro text-ink-mid">({{ o.bottleSize }})</span></span>
+                  <span class="text-ink-mid">{{ 'Back' | translate }} {{ o.quantity }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       } @else { <p class="text-body text-ink-mid">{{ 'No delivery linked.' | translate }}</p> }
     </div>
   </div>

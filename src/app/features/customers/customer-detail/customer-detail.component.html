@@ -27,7 +27,9 @@
       <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus"></i> {{ 'New order' | translate }}</button>
       <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
       <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices'])"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
-      <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
+      @if (amcEnabled) {
+        <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
+      }
     </div>
 
     <!-- Stats -->
@@ -291,7 +293,7 @@
                 <th class="py-2">{{ 'Date' | translate }}</th>
                 <th class="py-2">{{ 'Mode' | translate }}</th>
                 <th class="py-2">{{ 'Delivery boy' | translate }}</th>
-                <th class="py-2 text-center">{{ 'Items' | translate }}</th>
+                <th class="py-2">{{ 'Items' | translate }}</th>
                 <th class="py-2 text-right">{{ 'Amount' | translate }}</th>
                 <th class="py-2">{{ 'Payment' | translate }}</th>
                 <th class="py-2">{{ 'Status' | translate }}</th>
@@ -303,7 +305,28 @@
                     <td class="py-2 font-mono" [title]="o.createdAt | date: 'MMM d, y h:mm a'">{{ o.orderDate | date: 'MMM d, y' }} <span class="text-ink-mid">{{ o.createdAt | date: 'shortTime' }}</span></td>
                     <td class="py-2">{{ o.deliveryMode }}</td>
                     <td class="py-2">{{ o.deliveryBoyName || '—' }}</td>
-                    <td class="py-2 text-center">{{ o.itemCount }}</td>
+                    <td class="py-2">
+                      @if (o.status === 'Delivered' && (o.deliveredLines.length || o.otherReturns.length)) {
+                        <!-- Delivered: jars out/back per product, so the owner can track bottles from the list -->
+                        <div class="flex flex-col gap-0.5">
+                          @for (it of o.deliveredLines; track it.productName) {
+                            <span class="text-micro"><span class="text-ink">{{ it.productName }}</span>&nbsp;<span class="text-ink-mid">{{ 'Out' | translate }} {{ it.jarsDelivered }} · {{ 'Back' | translate }} {{ it.jarsReturned }}</span></span>
+                          }
+                          @for (o2 of o.otherReturns; track o2.productName) {
+                            <span class="text-micro"><span class="text-amber font-medium">{{ 'Other' | translate }}</span>&nbsp;<span class="text-ink">{{ o2.productName }}</span>&nbsp;<span class="text-ink-mid">{{ 'Back' | translate }} {{ o2.quantity }}</span></span>
+                          }
+                        </div>
+                      } @else if (o.lines.length) {
+                        <!-- Not yet delivered: what was ordered, per product -->
+                        <div class="flex flex-col gap-0.5">
+                          @for (it of o.lines; track it.productName) {
+                            <span class="text-micro"><span class="text-ink">{{ it.productName }}</span>&nbsp;<span class="text-ink-mid">×{{ it.quantity }}</span></span>
+                          }
+                        </div>
+                      } @else {
+                        {{ o.itemCount }}
+                      }
+                    </td>
                     <td class="py-2 text-right font-mono">₹{{ o.totalAmount | number: '1.0-0' }}</td>
                     <td class="py-2">@if (o.status === 'Delivered') { <span [class]="paymentClass(o.paymentStatus)">{{ o.paymentStatus | translate }}</span> } @else { <span class="text-micro text-ink-mid">—</span> }</td>
                     <td class="py-2"><span [class]="orderStatusClass(o.status)">{{ o.status }}</span></td>

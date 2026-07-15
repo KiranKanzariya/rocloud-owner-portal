@@ -25,6 +25,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BottleSize } from '../../../core/models/bottle-size';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { istToday } from '../../../shared/util/ist-date.util';
+import { FeatureName, isFeatureEnabled } from '../../../core/feature-flags';
 
 type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'payments' | 'service';
 
@@ -130,18 +131,24 @@ export class CustomerDetailComponent {
    * so Customers.View covers them. The other three fetch from their own module's API, which a role
    * like Technician or Accountant cannot read — hide the tab rather than open it onto an empty list.
    */
-  private static readonly ALL_TABS: { id: Tab; label: string; permission?: string }[] = [
+  private static readonly ALL_TABS: { id: Tab; label: string; permission?: string; feature?: FeatureName }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'subscriptions', label: 'Subscriptions' },
     { id: 'orders', label: 'Order history', permission: 'Orders.View' },
     { id: 'returns', label: 'Return history', permission: 'Inventory.View' },
     { id: 'payments', label: 'Payment history' },
-    { id: 'service', label: 'Service requests', permission: 'AMC.View' },
+    // AMC / Service is deferred to a future release — the tab is hidden by the `amcService` flag.
+    { id: 'service', label: 'Service requests', permission: 'AMC.View', feature: 'amcService' },
   ];
 
   protected readonly tabs = computed(() =>
-    CustomerDetailComponent.ALL_TABS.filter((t) => !t.permission || this.perms.can(t.permission)),
+    CustomerDetailComponent.ALL_TABS.filter(
+      (t) => (!t.feature || isFeatureEnabled(t.feature)) && (!t.permission || this.perms.can(t.permission)),
+    ),
   );
+
+  /** For the template to gate the "Log complaint" quick action. */
+  protected readonly amcEnabled = isFeatureEnabled('amcService');
 
   private readonly id = this.route.snapshot.paramMap.get('id')!;
 

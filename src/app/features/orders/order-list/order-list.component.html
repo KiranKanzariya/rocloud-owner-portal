@@ -34,6 +34,24 @@
     <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'To' | translate }}
       <input type="date" class="rounded-md border-ink-light text-body py-1" (change)="setDate('toDate', $any($event.target).value)" />
     </label>
+    <!-- Customer filter: search + pick. The active selection shows as the chip above (shared with the
+         "View all orders" deep-link), so the box only appears when nothing is selected. -->
+    @if (!customerFilterName()) {
+      <div class="relative">
+        <input [formControl]="customerSearch" type="search" [placeholder]="'Filter by customer…' | translate"
+               class="rounded-md border-ink-light text-body py-1.5 min-w-[200px]" />
+        @if (customerResults().length) {
+          <ul class="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
+            @for (c of customerResults(); track c.id) {
+              <li><button type="button" class="w-full text-left px-3 py-2 hover:bg-shell text-body" (click)="selectCustomer(c)">
+                <span class="text-ink">{{ c.name }}</span>
+                <span class="text-caption text-ink-mid font-mono ml-1">{{ c.mobile | mobile }}</span>
+              </button></li>
+            }
+          </ul>
+        }
+      </div>
+    }
   </div>
 
   <roc-data-table
@@ -50,6 +68,29 @@
         <span class="font-medium text-ink">{{ row.customerName }}</span>
         <span class="text-caption text-ink-mid font-mono">{{ row.customerMobile | mobile }}</span>
       </div>
+    </ng-template>
+
+    <ng-template appColumnCell="itemCount" let-row>
+      @if (row.status === 'Delivered' && row.deliveredLines?.length) {
+        <!-- Delivered: jars out/back per product, so bottles owed read straight from the list -->
+        <div class="flex flex-col gap-0.5">
+          @for (it of row.deliveredLines; track it.productName) {
+            <span class="text-micro"><span class="text-ink">{{ it.productName }}</span>&nbsp;<span class="text-ink-mid">{{ 'Out' | translate }} {{ it.jarsDelivered }} · {{ 'Back' | translate }} {{ it.jarsReturned }}</span></span>
+          }
+          @for (o of row.otherReturns; track o.productName) {
+            <span class="text-micro"><span class="text-amber font-medium">{{ 'Other' | translate }}</span>&nbsp;<span class="text-ink">{{ o.productName }}</span>&nbsp;<span class="text-ink-mid">{{ 'Back' | translate }} {{ o.quantity }}</span></span>
+          }
+        </div>
+      } @else if (row.lines?.length) {
+        <!-- Not yet delivered: what was ordered, per product -->
+        <div class="flex flex-col gap-0.5">
+          @for (it of row.lines; track it.productName) {
+            <span class="text-micro"><span class="text-ink">{{ it.productName }}</span>&nbsp;<span class="text-ink-mid">×{{ it.quantity }}</span></span>
+          }
+        </div>
+      } @else {
+        {{ row.itemCount }}
+      }
     </ng-template>
 
     <ng-template appColumnCell="deliveryBoyName" let-row>{{ row.deliveryBoyName || '—' }}</ng-template>

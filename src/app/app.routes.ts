@@ -4,6 +4,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { planGuard } from './core/guards/plan.guard';
 import { activityEnabledGuard } from './core/guards/activity-enabled.guard';
+import { featureGuard } from './core/guards/feature.guard';
 
 export const routes: Routes = [
   // ── Public auth screens ──────────────────────────────────────────────
@@ -189,11 +190,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/reports/reports.component').then((m) => m.ReportsComponent),
       },
 
-      // Service
+      // Service — AMC / Service is deferred to a future release (feature flag `amcService`). The
+      // featureGuard blocks the URL in v1; flip the flag to bring the module back.
       {
         path: 'service-requests',
-        canActivate: [permissionGuard],
-        data: { permission: 'AMC.View', title: 'AMC / Service', icon: 'tool' },
+        canActivate: [featureGuard, permissionGuard],
+        data: { feature: 'amcService', permission: 'AMC.View', title: 'AMC / Service', icon: 'tool' },
         loadComponent: () =>
           import('./features/service-requests/service-requests.component').then((m) => m.ServiceRequestsComponent),
       },

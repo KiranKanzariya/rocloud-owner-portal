@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { LEGAL } from '../../../../core/legal-links';
 import { SubscriptionService, Plan } from '../../../../core/services/subscription.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -21,6 +22,8 @@ export class UpgradeModalComponent {
   private readonly perm = inject(PermissionService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
+
+  protected readonly LEGAL = LEGAL;
 
   readonly open = input(false);
   readonly plans = input<Plan[]>([]);

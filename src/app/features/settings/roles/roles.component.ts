@@ -5,6 +5,7 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CanPlanDirective } from '../../../shared/directives/can.directive';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { isFeatureEnabled } from '../../../core/feature-flags';
 
 interface PermGroup {
   module: string;
@@ -38,12 +39,19 @@ export class RolesComponent {
   protected readonly groups = computed<PermGroup[]>(() => {
     const byModule = new Map<string, Permission[]>();
     for (const p of this.allPermissions()) {
+      // AMC / Service is deferred (feature flag `amcService`): don't offer its permissions to assign.
+      if (!isFeatureEnabled('amcService') && p.module === 'AMC') continue;
       const list = byModule.get(p.module) ?? [];
       list.push(p);
       byModule.set(p.module, list);
     }
     return [...byModule.entries()].map(([module, permissions]) => ({ module, permissions }));
   });
+
+  /** Technician is an AMC/Service-only role, hidden while that module is deferred (flag `amcService`). */
+  protected readonly visibleRoles = computed(() =>
+    isFeatureEnabled('amcService') ? this.roles() : this.roles().filter((r) => r.name !== 'Technician'),
+  );
 
   protected readonly selected = computed(() => this.roles().find((r) => r.id === this.selectedId()) ?? null);
   protected readonly editable = computed(() => this.selected()?.isCustom === true);
@@ -56,7 +64,8 @@ export class RolesComponent {
   load(): void {
     this.service.list().subscribe((r) => {
       this.roles.set(r);
-      if (!this.selectedId() && r.length) this.select(r[0]);
+      const visible = this.visibleRoles();
+      if (!this.selectedId() && visible.length) this.select(visible[0]);
       else {
         const cur = r.find((x) => x.id === this.selectedId());
         if (cur) this.draft.set(new Set(cur.permissions));

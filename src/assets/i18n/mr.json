@@ -18,7 +18,7 @@
   "Area": "क्षेत्र",
   "Areas": "क्षेत्रे",
   "Avg monthly spend": "सरासरी मासिक खर्च",
-  "Back": "मागे",
+  "Back": "परत",
   "Back to sign in": "साइन इन वर परत जा",
   "Balance": "शिल्लक",
   "Both": "दोन्ही",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "तुम्ही {{name}} चे प्रशासक असाल.",
   "Your name": "तुमचे नाव",
   "Your portal is ready 🎉": "तुमचे पोर्टल तयार आहे 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "त्यांचा नंबर नसल्यास रिकामे ठेवा. स्मरणपत्रे ईमेलने पाठवली जातील."
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "त्यांचा नंबर नसल्यास रिकामे ठेवा. स्मरणपत्रे ईमेलने पाठवली जातील.",
+  "Jars by product": "उत्पादनानुसार जार",
+  "Out": "गेले",
+  "other": "इतर",
+  "Other empties returned": "इतर रिकामे परत",
+  "Filter by customer…": "ग्राहकानुसार फिल्टर करा…",
+  "Clear filter": "फिल्टर साफ करा"
 }

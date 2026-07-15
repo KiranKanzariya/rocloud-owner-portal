@@ -57,9 +57,9 @@ export class InvoiceDetailComponent {
     this.service.get(this.id).subscribe((inv) => {
       this.invoice.set(inv);
       this.payForm.controls.amount.setValue(inv.balance);
-      this.payments
-        .forCustomer(inv.customerId)
-        .subscribe((all) => this.invoicePayments.set(all.filter((p) => p.invoiceId === inv.id)));
+      // Ask for THIS invoice's payments. Fetching the customer's first 100 and filtering here showed
+      // no receipts at all on an older invoice once the customer had 100 newer payments.
+      this.payments.forInvoice(inv.id).subscribe((ps) => this.invoicePayments.set(ps));
     });
   }
 

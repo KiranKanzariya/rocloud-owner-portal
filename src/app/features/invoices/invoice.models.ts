@@ -42,7 +42,6 @@ export interface InvoiceDetail {
   status: string;
   gstNumber: string | null;
   notes: string | null;
-  pdfUrl: string | null;
   createdAt: string;
   lineItems: InvoiceLineItem[];
 }

@@ -22,12 +22,29 @@ export interface DeliveryListItem {
   longitude: number | null;
   notes: string | null;
   items: DeliveryLine[];
+  /** Per-product out/back for a completed stop; empty until delivered. */
+  deliveredLines: DeliveredLine[];
+  /** Off-order empties returned on this stop (product not on the order). */
+  otherReturns: DeliveredOtherReturn[];
+}
+
+/** An off-order empty returned on a delivery card: product name + how many. */
+export interface DeliveredOtherReturn {
+  productName: string;
+  quantity: number;
 }
 
 /** An ordered line on a delivery card: product name + ordered jar quantity. */
 export interface DeliveryLine {
   productName: string;
   quantity: number;
+}
+
+/** A completed line on a delivery card: product name + jars out / back. */
+export interface DeliveredLine {
+  productName: string;
+  jarsDelivered: number;
+  jarsReturned: number;
 }
 
 /** A product's total jars still to be delivered across the board's outstanding stops. */

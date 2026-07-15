@@ -35,7 +35,6 @@ export class DeliveryDetailModalComponent {
   protected readonly paymentMethods = ['Cash', 'UPI', 'Card', 'Online', 'BankTransfer'];
   protected readonly choice = signal<Choice | null>(null);
   protected readonly saving = signal(false);
-  protected readonly file = signal<File | null>(null);
   /** Read-only summary of an already-Delivered stop; null while loading or when editing. */
   protected readonly detail = signal<DeliveryDetail | null>(null);
   /** False = show the read-only summary (completed stop); true = show the editable status form. */
@@ -73,7 +72,6 @@ export class DeliveryDetailModalComponent {
       const d = this.delivery();
       this.loadSeq++; // invalidate any in-flight item load for the previous delivery
       this.choice.set(null);
-      this.file.set(null);
       this.lines.clear();
       this.otherLines.clear();
       this.detail.set(null);
@@ -206,11 +204,6 @@ export class DeliveryDetailModalComponent {
     );
   }
 
-  onFile(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.file.set(input.files?.[0] ?? null);
-  }
-
   submit(): void {
     const d = this.delivery();
     const choice = this.choice();
@@ -243,19 +236,7 @@ export class DeliveryDetailModalComponent {
     }
 
     this.saving.set(true);
-    const proof = this.file();
-    if (choice === 'Delivered' && proof) {
-      // Upload the proof first, then attach its stored path to the status update.
-      this.service.uploadProof(d.id, proof).subscribe({
-        next: (res) => this.patch(d.id, { ...dto, proofImageUrl: res.proofImageUrl }),
-        error: () => {
-          this.saving.set(false);
-          this.toast.error(this.t.instant('Proof upload failed (must be a JPG/PNG/WebP under 5 MB).'));
-        },
-      });
-    } else {
-      this.patch(d.id, dto);
-    }
+    this.patch(d.id, dto);
   }
 
   private patch(id: string, dto: UpdateDeliveryStatus): void {

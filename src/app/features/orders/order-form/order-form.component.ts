@@ -130,7 +130,8 @@ export class OrderFormComponent {
     this.orders.get(id).subscribe((o) => {
       if (o.status !== 'Pending' && o.status !== 'Confirmed') {
         this.toast.error(this.t.instant('This order can no longer be edited.'));
-        this.router.navigate(['/orders', id]);
+        // replaceUrl: the edit route isn't valid for this order, so it shouldn't sit in history.
+        this.router.navigate(['/orders', id], { replaceUrl: true });
         return;
       }
       this.selectedCustomer.set({ id: o.customerId, name: o.customerName, mobile: o.customerMobile });
@@ -231,7 +232,7 @@ export class OrderFormComponent {
       this.orders.update(editId, { orderDate, orderType, notes, items, deliveryMode }).subscribe({
         next: () => {
           this.toast.success(this.t.instant('Order updated.'));
-          this.router.navigate(['/orders', editId]);
+          this.router.navigate(['/orders', editId], { replaceUrl: true });
         },
         error: (err) => {
           this.saving.set(false);
@@ -247,7 +248,8 @@ export class OrderFormComponent {
       next: () => {
         this.toast.success(this.t.instant(advance ? 'Advance order booked.' : 'Order created.'));
         // An advance order isn't on today's board yet — send the owner to the scheduled view instead.
-        this.router.navigate([advance ? '/scheduled' : '/deliveries']);
+        // replaceUrl: drop the form from history so Back doesn't return to it and re-create the order.
+        this.router.navigate([advance ? '/scheduled' : '/deliveries'], { replaceUrl: true });
       },
       error: (err) => {
         this.saving.set(false);

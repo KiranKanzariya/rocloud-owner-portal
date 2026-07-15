@@ -1,5 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { UserService, UserListItem } from '../../../core/services/user.service';
 import { RoleService, Role } from '../../../core/services/role.service';
 import { PermissionService } from '../../../core/services/permission.service';
@@ -10,12 +13,11 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { DataTableComponent, ColumnDef, SortState } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
-import { sortAndPage } from '../../../shared/components/data-table/client-table';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [DatePipe, CanDirective, UserFormModalComponent, TranslatePipe, MobilePipe, DataTableComponent, ColumnCellDirective],
+  imports: [DatePipe, ReactiveFormsModule, CanDirective, UserFormModalComponent, TranslatePipe, MobilePipe, DataTableComponent, ColumnCellDirective],
   templateUrl: './users.component.html',
 })
 export class UsersComponent {
@@ -25,11 +27,15 @@ export class UsersComponent {
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
-  protected readonly all = signal<UserListItem[]>([]);
+  protected readonly rows = signal<UserListItem[]>([]);
+  protected readonly totalCount = signal(0);
   protected readonly roles = signal<Role[]>([]);
   protected readonly loading = signal(false);
+  protected readonly search = new FormControl('', { nonNullable: true });
 
-  // Client-side sort + paginate for the shared data table.
+  // Server-side search + sort + paging. This page used to fetch ONE page of 100 and then sort and
+  // paginate it in the browser, so a team of more than 100 lost everyone past #100 — unreachable by
+  // paging, invisible to sorting, and miscounted in the footer.
   protected readonly columns: ColumnDef[] = [
     { key: 'name', header: 'Name', sortable: true },
     { key: 'mobile', header: 'Mobile' },
@@ -43,16 +49,28 @@ export class UsersComponent {
   protected readonly sortDir = signal<'asc' | 'desc'>('asc');
   protected readonly page = signal(1);
   protected readonly pageSize = 25;
-  protected readonly rows = computed(() => sortAndPage(this.all(), this.sortBy(), this.sortDir(), this.page(), this.pageSize));
-  protected readonly totalCount = computed(() => this.all().length);
 
-  onSort(s: SortState): void { this.sortBy.set(s.sortBy); this.sortDir.set(s.sortDir as 'asc' | 'desc'); this.page.set(1); }
-  onPage(p: number): void { this.page.set(p); }
+  onSort(s: SortState): void {
+    this.sortBy.set(s.sortBy);
+    this.sortDir.set(s.sortDir as 'asc' | 'desc');
+    this.page.set(1);
+    this.load();
+  }
+  onPage(p: number): void {
+    this.page.set(p);
+    this.load();
+  }
   protected readonly modalOpen = signal(false);
   protected readonly editing = signal<UserListItem | null>(null);
   protected readonly canManage = this.perm.can('Users.Manage');
 
   constructor() {
+    this.search.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => {
+        this.page.set(1);   // otherwise a search from page 3 lands on an empty page 3 of the results
+        this.load();
+      });
     this.load();
     // Roles power the Add/Edit role dropdown. Needs Roles.Manage — degrade to [] otherwise.
     this.rolesSvc.list().subscribe({ next: (r) => this.roles.set(r), error: () => this.roles.set([]) });
@@ -60,13 +78,22 @@ export class UsersComponent {
 
   load(): void {
     this.loading.set(true);
-    this.users.list({ page: 1, pageSize: 100 }).subscribe({
-      next: (res) => {
-        this.all.set(res.items);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    this.users
+      .list({
+        page: this.page(),
+        pageSize: this.pageSize,
+        search: this.search.value.trim() || undefined,
+        sortBy: this.sortBy(),
+        sortDir: this.sortDir(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.rows.set(res.items);
+          this.totalCount.set(res.totalCount);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
   }
 
   add(): void {

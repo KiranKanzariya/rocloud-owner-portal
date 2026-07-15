@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
+import { LEGAL } from '../../../core/legal-links';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { LogoComponent } from '../../../shared/components/logo/logo.component';
@@ -22,6 +23,8 @@ export class LoginComponent {
   private readonly t = inject(TranslateService);
 
   protected readonly loading = signal(false);
+
+  protected readonly LEGAL = LEGAL;
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

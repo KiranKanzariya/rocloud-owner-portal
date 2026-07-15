@@ -63,6 +63,21 @@
                   }
                 </div>
               }
+              <!-- Per-product out/back once delivered, so the total above shows which jar was which -->
+              @if (d.status === 'Delivered' && (d.deliveredLines?.length || d.otherReturns?.length)) {
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  @for (it of d.deliveredLines; track it.productName) {
+                    <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                      {{ it.productName }} <span class="text-ink font-medium">{{ it.jarsDelivered }}/{{ it.jarsReturned }}</span>
+                    </span>
+                  }
+                  @for (o of d.otherReturns; track o.productName) {
+                    <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                      <span class="text-amber font-medium">{{ 'Other' | translate }}</span> {{ o.productName }} <span class="text-ink font-medium">+{{ o.quantity }}</span>
+                    </span>
+                  }
+                </div>
+              }
               @if (d.status === 'Failed' && d.notes) {
                 <span class="text-caption text-danger"><i class="ti ti-alert-triangle"></i> {{ d.notes }}</span>
               }
@@ -100,6 +115,20 @@
             <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
             @if (d.status === 'Delivered') {
               <span class="text-caption text-ink-mid">{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}@if (d.collectedAmount) { <span class="font-mono text-teal"> · ₹{{ d.collectedAmount | number: '1.0-0' }}</span> }</span>
+              @if (d.deliveredLines?.length || d.otherReturns?.length) {
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  @for (it of d.deliveredLines; track it.productName) {
+                    <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                      {{ it.productName }} <span class="text-ink font-medium">{{ it.jarsDelivered }}/{{ it.jarsReturned }}</span>
+                    </span>
+                  }
+                  @for (o of d.otherReturns; track o.productName) {
+                    <span class="text-micro bg-shell text-ink-mid rounded px-1.5 py-0.5">
+                      <span class="text-amber font-medium">{{ 'Other' | translate }}</span> {{ o.productName }} <span class="text-ink font-medium">+{{ o.quantity }}</span>
+                    </span>
+                  }
+                </div>
+              }
             } @else if (d.items?.length) {
               <div class="flex flex-wrap gap-1 pt-0.5">
                 @for (it of d.items; track it.productName) {

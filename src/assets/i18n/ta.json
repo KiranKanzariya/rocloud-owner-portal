@@ -18,7 +18,7 @@
   "Area": "பகுதி",
   "Areas": "பகுதிகள்",
   "Avg monthly spend": "சராசரி மாதச் செலவு",
-  "Back": "பின்",
+  "Back": "திரும்பியது",
   "Back to sign in": "உள்நுழைவுக்குத் திரும்பு",
   "Balance": "இருப்பு",
   "Both": "இரண்டும்",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "நீங்கள் {{name}} இன் நிர்வாகியாக இருப்பீர்கள்.",
   "Your name": "உங்கள் பெயர்",
   "Your portal is ready 🎉": "உங்கள் போர்ட்டல் தயாராக உள்ளது 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "அவர்களின் எண் இல்லையெனில் காலியாக விடவும். நினைவூட்டல்கள் மின்னஞ்சலில் அனுப்பப்படும்."
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "அவர்களின் எண் இல்லையெனில் காலியாக விடவும். நினைவூட்டல்கள் மின்னஞ்சலில் அனுப்பப்படும்.",
+  "Jars by product": "தயாரிப்பு வாரியாக ஜார்",
+  "Out": "சென்றது",
+  "other": "மற்றவை",
+  "Other empties returned": "மற்ற காலிகள் திரும்பியது",
+  "Filter by customer…": "வாடிக்கையாளர் வாரியாக வடிகட்டு…",
+  "Clear filter": "வடிப்பானை அழி"
 }

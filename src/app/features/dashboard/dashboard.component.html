@@ -10,6 +10,17 @@
     <div class="metric-card" *appCan="'Deliveries.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-truck"></i> {{ "Today's deliveries" | translate }}</p>
       <p class="metric-value"><span [rocCountUp]="todaysDeliveries()"></span></p>
+      @if (deliveryProductTotals().length) {
+        <!-- Per-product breakdown of today's load, so the owner knows how many of each to prepare. -->
+        <div class="mt-2 flex flex-col gap-0.5">
+          @for (p of deliveryProductTotals(); track p.productName) {
+            <div class="flex items-center justify-between text-caption">
+              <span class="text-ink-mid">{{ p.productName }}</span>
+              <span class="font-medium text-ink font-mono">{{ p.quantity }}</span>
+            </div>
+          }
+        </div>
+      }
     </div>
     <div class="metric-card" *appCan="'Inventory.View'">
       <p class="metric-label flex items-center gap-1.5"><i class="ti ti-package"></i> {{ 'Bottles out' | translate }}</p>

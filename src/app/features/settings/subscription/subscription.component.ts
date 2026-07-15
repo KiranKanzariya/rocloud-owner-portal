@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { LEGAL } from '../../../core/legal-links';
 import { SubscriptionService, Subscription, Plan, Usage, SubscriptionInvoice } from '../../../core/services/subscription.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -11,6 +12,7 @@ import { UpgradeModalComponent } from './upgrade-modal/upgrade-modal.component';
 import { SkeletonComponent } from '../../../shared/components/skeleton/skeleton.component';
 import { DataTableComponent, ColumnDef } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
+import { sortAndPage } from '../../../shared/components/data-table/client-table';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface UsageRow {
@@ -37,6 +39,8 @@ export class SubscriptionComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  protected readonly LEGAL = LEGAL;
+
   protected readonly subscription = signal<Subscription | null>(null);
   protected readonly plans = signal<Plan[]>([]);
   protected readonly invoices = signal<SubscriptionInvoice[]>([]);
@@ -59,6 +63,18 @@ export class SubscriptionComponent {
 
   /** True when there's already an open invoice — the Billing history "Pay now" handles that case. */
   protected readonly hasPendingInvoice = computed(() => this.invoices().some((i) => i.status === 'Pending'));
+
+  // Billing history is fully loaded, so it pages in the browser. The footer used to hardcode page 1
+  // with no (pageChange) handler: past 100 invoices the Next button rendered enabled and did nothing.
+  protected readonly invoicePage = signal(1);
+  protected readonly invoicePageSize = 25;
+  /** Empty sortBy keeps the API's ordering (newest first) and only slices the page. */
+  protected readonly invoiceRows = computed(() =>
+    sortAndPage(this.invoices(), '', 'desc', this.invoicePage(), this.invoicePageSize),
+  );
+  onInvoicePage(p: number): void {
+    this.invoicePage.set(p);
+  }
 
   /**
    * Show "Renew now" (the fallback for a missed expiry job) when the owner can manage billing, there's

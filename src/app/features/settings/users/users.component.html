@@ -4,6 +4,12 @@
     <button *appCan="'Users.Manage'" class="btn-primary" (click)="add()"><i class="ti ti-user-plus"></i> {{ 'Add user' | translate }}</button>
   </div>
 
+  <div class="relative max-w-sm">
+    <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+    <input [formControl]="search" type="search" [placeholder]="'Search name, email or mobile…' | translate"
+           class="w-full rounded-md border border-ink-light py-1.5 pl-9 pr-3" />
+  </div>
+
   <roc-data-table
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="page()" [pageSize]="pageSize" [sortBy]="sortBy()" [sortDir]="sortDir()"

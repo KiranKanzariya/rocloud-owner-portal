@@ -140,6 +140,29 @@ export class ReportsComponent {
     this.load();
   }
 
+  /**
+   * Which date control this tab actually honours. A From/To range used to be shown on every tab, but
+   * delivery-efficiency and outstanding-dues are point-in-time snapshots (they read a single date) and
+   * bottle-tracking is a live snapshot that takes no date at all — so From was silently ignored on
+   * half the reports. Show only the control the report really uses.
+   */
+  protected readonly dateMode = computed<'range' | 'single' | 'none'>(() => {
+    switch (this.activeTab()) {
+      case 'delivery-efficiency':
+      case 'outstanding-dues':
+        return 'single';
+      case 'bottle-tracking':
+        return 'none';
+      default:
+        return 'range';
+    }
+  });
+
+  /** The two snapshot reports mean different things by their single date. */
+  protected readonly singleDateLabel = computed(() =>
+    this.activeTab() === 'outstanding-dues' ? 'As of' : 'Date',
+  );
+
   selectTab(tab: ReportTab): void {
     this.activeTab.set(tab);
     this.load();

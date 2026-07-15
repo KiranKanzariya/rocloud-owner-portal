@@ -6,6 +6,7 @@ import { AuditLog } from './activity.models';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DataTableComponent, ColumnDef } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
+import { isFeatureEnabled } from '../../../core/feature-flags';
 
 /**
  * Activity log (Settings → Activity): a read-only viewer over the append-only audit trail — who did
@@ -40,7 +41,7 @@ export class ActivityComponent {
   /** The row opened in the detail panel, or null when closed. */
   protected readonly selected = signal<AuditLog | null>(null);
 
-  // Filters
+  // Filters — what is TYPED in the form. Nothing reads these except applyFilters().
   protected module = '';
   protected result = '';
   protected search = '';
@@ -48,10 +49,19 @@ export class ActivityComponent {
   protected toDate = '';
   protected readonly exporting = signal(false);
 
+  /**
+   * What was last APPLIED — the only thing requests are built from. Requests used to read the live
+   * form fields, so clicking Next after editing a dropdown (without pressing Apply) shipped a
+   * brand-new filter at the OLD page number, landing the user on an empty page.
+   */
+  private applied = { module: '', result: '', search: '', fromDate: '', toDate: '' };
+
   /** Modules that appear in the trail (URL first segment) — drives the filter dropdown. */
   protected readonly modules = [
     'customers', 'orders', 'invoices', 'payments', 'deliveries', 'inventory',
-    'service-requests', 'users', 'roles', 'products', 'areas', 'auth',
+    // 'service-requests' only while the AMC/Service module is enabled (deferred in v1).
+    ...(isFeatureEnabled('amcService') ? ['service-requests'] : []),
+    'users', 'roles', 'products', 'areas', 'auth',
   ];
 
   constructor() {
@@ -73,17 +83,26 @@ export class ActivityComponent {
   }
 
   applyFilters(): void {
+    this.applied = {
+      module: this.module,
+      result: this.result,
+      search: this.search.trim(),
+      fromDate: this.fromDate,
+      toDate: this.toDate,
+    };
     this.page.set(1);
     this.load();
   }
 
+  /** Built from the APPLIED snapshot, never the live form — so paging cannot ship un-applied edits. */
   private currentFilter() {
+    const a = this.applied;
     return {
-      module: this.module || undefined,
-      result: this.result || undefined,
-      search: this.search.trim() || undefined,
-      fromDate: this.fromDate || undefined,
-      toDate: this.toDate || undefined,
+      module: a.module || undefined,
+      result: a.result || undefined,
+      search: a.search || undefined,
+      fromDate: a.fromDate || undefined,
+      toDate: a.toDate || undefined,
       page: this.page(),
       pageSize: this.pageSize,
     };

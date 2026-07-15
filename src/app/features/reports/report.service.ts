@@ -66,8 +66,24 @@ export class ReportService {
       .pipe(map((res) => res.data ?? []));
   }
 
-  /** Builds the export download URL with the right params for the active report/range. */
+  /**
+   * Builds the export download URL with the params THIS report actually reads.
+   *
+   * It used to always send from/to. But the export endpoint reads `date` for delivery-efficiency and
+   * `asOf` for outstanding-dues — both of which then fell back to TODAY, so the downloaded file was a
+   * different day from the one on screen. Bottle-tracking is a live snapshot and takes no date at all.
+   */
   exportUrl(report: ReportTab, format: 'csv' | 'xlsx', r: DateRange): string {
-    return `${this.base}/${report}/export?format=${format}&from=${r.from}&to=${r.to}`;
+    const base = `${this.base}/${report}/export?format=${format}`;
+    switch (report) {
+      case 'delivery-efficiency':
+        return `${base}&date=${r.to}`;
+      case 'outstanding-dues':
+        return `${base}&asOf=${r.to}`;
+      case 'bottle-tracking':
+        return base;
+      default:
+        return `${base}&from=${r.from}&to=${r.to}`;
+    }
   }
 }

@@ -16,22 +16,28 @@ describe('UserService', () => {
 
   afterEach(() => http.verify());
 
-  it('technicians() filters active users to the Technician role', () => {
+  it('technicians() asks the API for the Technician role, rather than narrowing a page here', () => {
+    // Narrowing client-side used to mean a workspace whose first 100 active users held no technician
+    // got an empty dropdown. The role filter must reach the server.
     let techs: { name: string }[] | undefined;
     svc.technicians().subscribe((t) => (techs = t));
+
     const req = http.expectOne((r) => r.url === `${environment.apiUrl}/users`);
     expect(req.request.params.get('isActive')).toBe('true');
+    expect(req.request.params.get('roleName')).toBe('Technician');
+
     req.flush({
       success: true,
       data: {
         items: [
           { id: 'u1', name: 'Ravi', roleName: 'Technician' },
-          { id: 'u2', name: 'Sita', roleName: 'Manager' },
+          { id: 'u3', name: 'Amit', roleName: 'Technician' },
         ],
         totalCount: 2, page: 1, pageSize: 100, totalPages: 1,
       },
     });
-    expect(techs?.length).toBe(1);
+
+    expect(techs?.length).toBe(2);
     expect(techs?.[0].name).toBe('Ravi');
   });
 

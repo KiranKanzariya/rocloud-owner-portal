@@ -18,7 +18,7 @@
   "Area": "ਖੇਤਰ",
   "Areas": "ਖੇਤਰ",
   "Avg monthly spend": "ਔਸਤ ਮਾਸਿਕ ਖਰਚ",
-  "Back": "ਪਿੱਛੇ",
+  "Back": "ਵਾਪਸ",
   "Back to sign in": "ਸਾਈਨ ਇਨ 'ਤੇ ਵਾਪਸ ਜਾਓ",
   "Balance": "ਬਕਾਇਆ",
   "Both": "ਦੋਵੇਂ",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "ਤੁਸੀਂ {{name}} ਦੇ ਪ੍ਰਸ਼ਾਸਕ ਹੋਵੋਗੇ.",
   "Your name": "ਤੁਹਾਡਾ ਨਾਮ",
   "Your portal is ready 🎉": "ਤੁਹਾਡਾ ਪੋਰਟਲ ਤਿਆਰ ਹੈ 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "ਜੇ ਉਹਨਾਂ ਦਾ ਨੰਬਰ ਨਹੀਂ ਹੈ ਤਾਂ ਖਾਲੀ ਛੱਡੋ। ਰਿਮਾਈਂਡਰ ਈਮੇਲ ਰਾਹੀਂ ਭੇਜੇ ਜਾਣਗੇ।"
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "ਜੇ ਉਹਨਾਂ ਦਾ ਨੰਬਰ ਨਹੀਂ ਹੈ ਤਾਂ ਖਾਲੀ ਛੱਡੋ। ਰਿਮਾਈਂਡਰ ਈਮੇਲ ਰਾਹੀਂ ਭੇਜੇ ਜਾਣਗੇ।",
+  "Jars by product": "ਉਤਪਾਦ ਅਨੁਸਾਰ ਜਾਰ",
+  "Out": "ਗਏ",
+  "other": "ਹੋਰ",
+  "Other empties returned": "ਹੋਰ ਖਾਲੀ ਵਾਪਸ",
+  "Filter by customer…": "ਗਾਹਕ ਅਨੁਸਾਰ ਫਿਲਟਰ ਕਰੋ…",
+  "Clear filter": "ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ"
 }

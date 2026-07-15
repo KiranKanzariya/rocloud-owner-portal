@@ -72,6 +72,14 @@
         {{ "Don't have an account?" | translate }}
         <a routerLink="/register" class="text-navy-light font-medium hover:underline">{{ 'Start free trial' | translate }}</a>
       </p>
+
+      <p class="text-caption text-ink-mid text-center mt-5">
+        <a [href]="LEGAL.terms" target="_blank" rel="noopener" class="hover:underline">{{ 'Terms & Conditions' | translate }}</a>
+        <span class="mx-1.5 text-ink-light">·</span>
+        <a [href]="LEGAL.privacy" target="_blank" rel="noopener" class="hover:underline">{{ 'Privacy Policy' | translate }}</a>
+        <span class="mx-1.5 text-ink-light">·</span>
+        <a [href]="LEGAL.contact" target="_blank" rel="noopener" class="hover:underline">{{ 'Contact us' | translate }}</a>
+      </p>
     </div>
   </div>
 </div>

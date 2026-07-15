@@ -9,13 +9,20 @@ export interface DeliverySummaryRow {
   completedPercentage: number;
 }
 
-export interface PaymentListItem {
-  id: string;
-  customerName: string;
-  amount: number;
-  paymentMethod: string;
-  status: string;
-  paidAt: string;
+/** Per-product jar total for the day's deliveries (GET /deliveries/product-totals). */
+export interface DeliveryProductTotal {
+  productName: string;
+  bottleSize: string;
+  quantity: number;
+}
+
+/** Today's collection totals, summed by the API (GET /payments/summary). */
+export interface PaymentSummary {
+  collected: number;
+  count: number;
+  cash: number;
+  upi: number;
+  other: number;
 }
 
 export interface OutstandingDue {

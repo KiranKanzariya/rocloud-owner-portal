@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { NotificationService, AppNotification } from '../../../core/services/notification.service';
 import { LanguageSwitcherComponent } from '../language-switcher/language-switcher.component';
+import { isFeatureEnabled } from '../../../core/feature-flags';
 
 /** Maps a notification type to its translatable label ({{count}} interpolation) and icon. */
 const NOTIF_META: Record<string, { key: string; icon: string }> = {
@@ -106,11 +107,21 @@ export class TopbarComponent {
     this.loadNotifications();
   }
 
+  /** AMC/Service notification types to drop while that module is deferred (feature flag `amcService`). */
+  private static readonly AMC_NOTIF_TYPES = ['AmcDue', 'ServiceOpen'];
+
   private loadNotifications(): void {
     this.notifications.feed().subscribe({
       next: (f) => {
-        this.notifs.set(f.items);
-        this.unread.set(f.unreadCount);
+        // Suppress AMC/service notifications in v1 — the module is hidden, so its alerts would dead-end.
+        if (isFeatureEnabled('amcService')) {
+          this.notifs.set(f.items);
+          this.unread.set(f.unreadCount);
+          return;
+        }
+        const items = f.items.filter((n) => !TopbarComponent.AMC_NOTIF_TYPES.includes(n.type));
+        this.notifs.set(items);
+        this.unread.set(items.filter((n) => !n.isRead).length);
       },
       error: () => {
         // Feed is best-effort — a failure shouldn't break the top bar.

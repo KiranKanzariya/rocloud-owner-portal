@@ -7,11 +7,12 @@ import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PagedResult } from '../../core/models/api-response';
 import {
+  DeliveryProductTotal,
   DeliverySummaryRow,
   InventorySummary,
   OrderListItem,
   OutstandingDue,
-  PaymentListItem,
+  PaymentSummary,
 } from '../../core/models/dashboard.models';
 import { DataTableComponent, ColumnDef } from '../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../shared/components/data-table/column-cell.directive';
@@ -66,7 +67,10 @@ export class DashboardComponent {
 
   // Raw data signals
   protected readonly routeProgress = signal<DeliverySummaryRow[]>([]);
-  protected readonly payments = signal<PaymentListItem[]>([]);
+  /** Today's deliveries broken down by product (jars per product). */
+  protected readonly deliveryProductTotals = signal<DeliveryProductTotal[]>([]);
+  /** Today's collection, summed by the API — not a reduce over a fetched page of payments. */
+  protected readonly paymentSummary = signal<PaymentSummary | null>(null);
   protected readonly dues = signal<OutstandingDue[]>([]);
   protected readonly recentOrders = signal<OrderListItem[]>([]);
   protected readonly inventory = signal<InventorySummary[]>([]);
@@ -78,25 +82,14 @@ export class DashboardComponent {
   protected readonly bottlesOut = computed(() =>
     this.inventory().reduce((sum, i) => sum + (i.issuedStock ?? 0), 0),
   );
-  protected readonly completedPayments = computed(() =>
-    this.payments().filter((p) => p.status === 'Completed'),
-  );
-  protected readonly collectionToday = computed(() =>
-    this.completedPayments().reduce((sum, p) => sum + p.amount, 0),
-  );
+  protected readonly collectionToday = computed(() => this.paymentSummary()?.collected ?? 0);
   protected readonly outstandingTotal = computed(() =>
     this.dues().reduce((sum, d) => sum + d.outstandingAmount, 0),
   );
 
   protected readonly paymentSplit = computed(() => {
-    const by = (m: string) =>
-      this.completedPayments()
-        .filter((p) => p.paymentMethod === m)
-        .reduce((s, p) => s + p.amount, 0);
-    const cash = by('Cash');
-    const upi = by('UPI');
-    const other = this.collectionToday() - cash - upi;
-    return { cash, upi, other };
+    const s = this.paymentSummary();
+    return { cash: s?.cash ?? 0, upi: s?.upi ?? 0, other: s?.other ?? 0 };
   });
 
   // The dashboard is the landing page for every role, so each widget's fetch is gated on the
@@ -104,14 +97,27 @@ export class DashboardComponent {
   // five, on every login. The permission must match the controller's [RequirePermission].
   constructor() {
     this.load('Deliveries.View', `/deliveries/summary?date=${this.today}`, this.routeProgress);
-    this.loadPaged<PaymentListItem>(
+    this.load('Deliveries.View', `/deliveries/product-totals?date=${this.today}`, this.deliveryProductTotals);
+    this.loadOne<PaymentSummary>(
       'Payments.View',
-      `/payments?fromDate=${this.today}&toDate=${this.today}&pageSize=500`,
-      this.payments,
+      `/payments/summary?fromDate=${this.today}&toDate=${this.today}`,
+      this.paymentSummary,
     );
     this.load('Payments.View', `/payments/outstanding`, this.dues);
     this.loadPaged<OrderListItem>('Orders.View', `/orders?pageSize=10`, this.recentOrders);
     this.load('Inventory.View', `/inventory`, this.inventory);
+  }
+
+  /** GET an ApiResponse<T> (a single object, e.g. the collection summary) when the user may. */
+  private loadOne<T>(permission: string, path: string, target: { set: (v: T) => void }): void {
+    guarded<T | null>(
+      this.perms,
+      permission,
+      () => this.unwrap<T>(this.http.get<ApiResponse<T>>(`${this.api}${path}`)),
+      null,
+    ).subscribe((v) => {
+      if (v) target.set(v);
+    });
   }
 
   /** GET an ApiResponse<T[]> when the user may; otherwise no request is made at all. */

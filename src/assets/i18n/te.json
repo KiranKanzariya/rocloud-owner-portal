@@ -18,7 +18,7 @@
   "Area": "ప్రాంతం",
   "Areas": "ప్రాంతాలు",
   "Avg monthly spend": "సగటు నెలవారీ ఖర్చు",
-  "Back": "వెనుకకు",
+  "Back": "తిరిగివచ్చినవి",
   "Back to sign in": "సైన్ ఇన్‌కు తిరిగి వెళ్లు",
   "Balance": "బ్యాలెన్స్",
   "Both": "రెండూ",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "మీరు {{name}} యొక్క నిర్వాహకులుగా ఉంటారు.",
   "Your name": "మీ పేరు",
   "Your portal is ready 🎉": "మీ పోర్టల్ సిద్ధంగా ఉంది 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "వారి నంబర్ లేకపోతే ఖాళీగా వదిలేయండి. రిమైండర్లు ఇమెయిల్‌లో పంపబడతాయి."
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "వారి నంబర్ లేకపోతే ఖాళీగా వదిలేయండి. రిమైండర్లు ఇమెయిల్‌లో పంపబడతాయి.",
+  "Jars by product": "ఉత్పత్తి వారీగా జాడీలు",
+  "Out": "పంపినవి",
+  "other": "ఇతర",
+  "Other empties returned": "ఇతర ఖాళీలు తిరిగివచ్చాయి",
+  "Filter by customer…": "కస్టమర్ ద్వారా ఫిల్టర్ చేయండి…",
+  "Clear filter": "ఫిల్టర్ క్లియర్ చేయి"
 }

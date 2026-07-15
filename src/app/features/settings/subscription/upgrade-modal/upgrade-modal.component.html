@@ -66,6 +66,14 @@
       <p class="text-caption text-ink-mid mt-4 text-center">
         {{ 'Secured by Razorpay. Plan changes take effect immediately.' | translate }}
       </p>
+      <!-- The policies must be reachable at the point of payment, not only from the website. -->
+      <p class="text-caption text-ink-mid mt-1.5 text-center">
+        <a [href]="LEGAL.refunds" target="_blank" rel="noopener" class="hover:underline">{{ 'Refund Policy' | translate }}</a>
+        <span class="mx-1.5 text-ink-light">·</span>
+        <a [href]="LEGAL.cancellation" target="_blank" rel="noopener" class="hover:underline">{{ 'Cancellation Policy' | translate }}</a>
+        <span class="mx-1.5 text-ink-light">·</span>
+        <a [href]="LEGAL.terms" target="_blank" rel="noopener" class="hover:underline">{{ 'Terms & Conditions' | translate }}</a>
+      </p>
     </div>
   </div>
 }

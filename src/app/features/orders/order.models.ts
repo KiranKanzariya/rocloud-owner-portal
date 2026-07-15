@@ -14,6 +14,28 @@ export interface OrderListItem {
   amountPaid: number;
   paymentStatus: string;
   createdAt: string;
+  /** Ordered lines (product + qty). */
+  lines: OrderLineSummary[];
+  /** Per-product jars out/back once delivered; empty otherwise. */
+  deliveredLines: OrderDeliveredLine[];
+  /** Off-order empties returned on the delivery (product not on the order). */
+  otherReturns: OrderDeliveredOtherReturn[];
+}
+
+export interface OrderLineSummary {
+  productName: string;
+  quantity: number;
+}
+
+export interface OrderDeliveredLine {
+  productName: string;
+  jarsDelivered: number;
+  jarsReturned: number;
+}
+
+export interface OrderDeliveredOtherReturn {
+  productName: string;
+  quantity: number;
 }
 
 export interface OrderItem {
@@ -23,6 +45,13 @@ export interface OrderItem {
   quantity: number;
   unitRate: number;
   totalAmount: number;
+}
+
+export interface OrderDeliveryItem {
+  productName: string;
+  bottleSize: string;
+  jarsDelivered: number;
+  jarsReturned: number;
 }
 
 export interface OrderDelivery {
@@ -35,6 +64,16 @@ export interface OrderDelivery {
   collectedAmount: number | null;
   paymentMethod: string | null;
   proofImageUrl: string | null;
+  /** Per-product out/back; empty for older single-count deliveries. */
+  items: OrderDeliveryItem[];
+  /** Off-order empties returned (product not on the order). */
+  otherReturns: OrderDeliveryOtherReturn[];
+}
+
+export interface OrderDeliveryOtherReturn {
+  productName: string;
+  bottleSize: string;
+  quantity: number;
 }
 
 export interface OrderDetail {

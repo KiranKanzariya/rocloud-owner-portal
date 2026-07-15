@@ -68,6 +68,9 @@ describe('DashboardComponent — permission-gated widgets', () => {
 
     TestBed.inject(DashboardComponent);
 
-    expect(urlsRequested().length).toBe(5);
+    const urls = urlsRequested();
+    // route summary + product-totals + payment summary + outstanding + orders + inventory
+    expect(urls.length).toBe(6);
+    expect(urls.some((u) => u.includes('/deliveries/product-totals'))).toBe(true);
   });
 });

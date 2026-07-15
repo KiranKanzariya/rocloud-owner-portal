@@ -18,7 +18,7 @@
   "Area": "এলাকা",
   "Areas": "এলাকা",
   "Avg monthly spend": "গড় মাসিক খরচ",
-  "Back": "পিছনে",
+  "Back": "ফেরত",
   "Back to sign in": "সাইন ইনে ফিরে যান",
   "Balance": "ব্যালেন্স",
   "Both": "উভয়",
@@ -193,5 +193,11 @@
   "You'll be the administrator of {{name}}.": "আপনি {{name}} এর প্রশাসক হবেন।",
   "Your name": "আপনার নাম",
   "Your portal is ready 🎉": "আপনার পোর্টাল প্রস্তুত 🎉",
-  "Leave blank if you do not have their number. Reminders will be emailed instead.": "তাদের নম্বর না থাকলে খালি রাখুন। রিমাইন্ডার ইমেলে পাঠানো হবে।"
+  "Leave blank if you do not have their number. Reminders will be emailed instead.": "তাদের নম্বর না থাকলে খালি রাখুন। রিমাইন্ডার ইমেলে পাঠানো হবে।",
+  "Jars by product": "পণ্য অনুযায়ী জার",
+  "Out": "গেছে",
+  "other": "অন্যান্য",
+  "Other empties returned": "অন্যান্য খালি ফেরত",
+  "Filter by customer…": "গ্রাহক অনুযায়ী ফিল্টার করুন…",
+  "Clear filter": "ফিল্টার সাফ করুন"
 }

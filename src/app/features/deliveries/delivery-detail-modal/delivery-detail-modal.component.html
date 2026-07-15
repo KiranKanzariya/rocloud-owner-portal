@@ -112,10 +112,7 @@
                 @for (m of paymentMethods; track m) { <option [value]="m">{{ m | translate }}</option> }
               </select></label>
           </div>
-          <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Proof photo' | translate }}</span>
-            <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onFile($event)" class="text-caption" />
-            @if (file()) { <span class="text-micro text-teal">{{ '{{name}} selected' | translate: { name: file()!.name } }}</span> }
-          </label>
+          <!-- Proof photo is future scope — the upload API stays, the v1 UI does not offer it. -->
         </form>
       }
 
@@ -167,7 +164,7 @@
                 <span class="text-micro text-ink-mid">{{ 'Other empties returned' | translate }}</span>
                 @for (o of det.otherReturns; track o.productName) {
                   <div class="flex items-center justify-between text-caption py-0.5">
-                    <span class="truncate">{{ o.productName }} <span class="text-micro text-ink-mid">({{ o.bottleSize }})</span></span>
+                    <span class="truncate"><span class="text-micro text-amber font-medium mr-1">{{ 'Other' | translate }}</span>{{ o.productName }} <span class="text-micro text-ink-mid">({{ o.bottleSize }})</span></span>
                     <span class="text-ink-mid whitespace-nowrap">{{ 'Returned' | translate }} {{ o.quantity }}</span>
                   </div>
                 }
@@ -183,11 +180,6 @@
               <div class="text-caption"><span class="text-micro text-ink-mid block">{{ 'Notes' | translate }}</span>{{ det.notes }}</div>
             }
 
-            @if (det.proofImageUrl) {
-              <a [href]="det.proofImageUrl" target="_blank" rel="noopener" class="text-caption text-navy hover:underline inline-flex items-center gap-1 w-fit">
-                <i class="ti ti-photo"></i> {{ 'View proof photo' | translate }}
-              </a>
-            }
             }
           </div>
 

@@ -31,12 +31,22 @@ export interface PaymentListItem {
 
 export interface PaymentFilter {
   customerId?: string;
+  invoiceId?: string;
   paymentMethod?: string;
   status?: string;
   fromDate?: string;
   toDate?: string;
   page: number;
   pageSize: number;
+}
+
+/** Collection totals for a window, summed by the API (never by reducing a fetched page). */
+export interface PaymentSummary {
+  collected: number;
+  count: number;
+  cash: number;
+  upi: number;
+  other: number;
 }
 
 /** A customer with overdue unpaid invoices (matches API OutstandingDueDto). */
@@ -59,6 +69,7 @@ export class PaymentService {
   list(filter: PaymentFilter): Observable<PagedResult<PaymentListItem>> {
     let params = new HttpParams().set('page', filter.page).set('pageSize', filter.pageSize);
     if (filter.customerId) params = params.set('customerId', filter.customerId);
+    if (filter.invoiceId) params = params.set('invoiceId', filter.invoiceId);
     if (filter.paymentMethod) params = params.set('paymentMethod', filter.paymentMethod);
     if (filter.status) params = params.set('status', filter.status);
     if (filter.fromDate) params = params.set('fromDate', filter.fromDate);
@@ -80,7 +91,32 @@ export class PaymentService {
     return this.http.post<ApiResponse<{ id: string }>>(this.base, body).pipe(map((r) => r.data!));
   }
 
-  /** Payments for a customer (used to show an invoice's payment history). */
+  /**
+   * Collection totals for a window. Summed by the API over every matching payment — the money tiles
+   * must never be a reduction over one fetched page (the list endpoint caps pageSize at 100).
+   */
+  summary(fromDate?: string, toDate?: string): Observable<PaymentSummary> {
+    let params = new HttpParams();
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+    return this.http
+      .get<ApiResponse<PaymentSummary>>(`${this.base}/summary`, { params })
+      .pipe(map((r) => r.data!));
+  }
+
+  /**
+   * Payments recorded against ONE invoice. Asking the server for the invoice's own payments — rather
+   * than fetching the customer's first 100 and filtering here — is what stops an older invoice of a
+   * busy customer showing zero receipts.
+   */
+  forInvoice(invoiceId: string): Observable<PaymentListItem[]> {
+    const params = new HttpParams().set('invoiceId', invoiceId).set('pageSize', 100);
+    return this.http
+      .get<ApiResponse<PagedResult<PaymentListItem>>>(this.base, { params })
+      .pipe(map((r) => r.data?.items ?? []));
+  }
+
+  /** Payments for a customer (their payment history). */
   forCustomer(customerId: string): Observable<PaymentListItem[]> {
     const params = new HttpParams().set('customerId', customerId).set('pageSize', 100);
     return this.http

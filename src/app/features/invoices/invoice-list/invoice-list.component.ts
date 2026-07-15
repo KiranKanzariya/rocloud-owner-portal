@@ -2,20 +2,26 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { InvoiceService } from '../invoice.service';
 import { InvoiceFilter, InvoiceListItem } from '../invoice.models';
+import { CustomerService } from '../../customers/customer.service';
+import { CustomerListItem } from '../../customers/customer.models';
 import { DataTableComponent, ColumnDef } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 
 const STATUSES = ['Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled'];
 
 @Component({
   selector: 'app-invoice-list',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, DataTableComponent, ColumnCellDirective, CanDirective, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, DataTableComponent, ColumnCellDirective, CanDirective, TranslatePipe, MobilePipe],
   templateUrl: './invoice-list.component.html',
 })
 export class InvoiceListComponent {
@@ -24,6 +30,7 @@ export class InvoiceListComponent {
   protected readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
+  private readonly customers = inject(CustomerService);
 
   protected readonly statuses = STATUSES;
   protected readonly rows = signal<InvoiceListItem[]>([]);
@@ -43,7 +50,23 @@ export class InvoiceListComponent {
 
   protected filter: InvoiceFilter = { page: 1, pageSize: 25 };
 
+  // Customer filter: a debounced search over the customers list, with a small results dropdown.
+  protected readonly customerSearch = new FormControl('', { nonNullable: true });
+  protected readonly customerResults = signal<CustomerListItem[]>([]);
+  protected readonly selectedCustomer = signal<CustomerListItem | null>(null);
+
   constructor() {
+    this.customerSearch.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((term) => {
+        // Once a customer is picked the box shows their name; don't re-search until it's cleared.
+        if (this.selectedCustomer() || !term.trim()) {
+          this.customerResults.set([]);
+          return;
+        }
+        this.customers.list({ search: term.trim(), page: 1, pageSize: 6 })
+          .subscribe((r) => this.customerResults.set(r.items));
+      });
     this.load();
   }
 
@@ -61,6 +84,22 @@ export class InvoiceListComponent {
 
   setStatus(status: string): void {
     this.filter = { ...this.filter, status: status || undefined, page: 1 };
+    this.load();
+  }
+
+  selectCustomer(c: CustomerListItem): void {
+    this.selectedCustomer.set(c);
+    this.customerResults.set([]);
+    this.customerSearch.setValue(c.name, { emitEvent: false });
+    this.filter = { ...this.filter, customerId: c.id, page: 1 };
+    this.load();
+  }
+
+  clearCustomer(): void {
+    this.selectedCustomer.set(null);
+    this.customerResults.set([]);
+    this.customerSearch.setValue('', { emitEvent: false });
+    this.filter = { ...this.filter, customerId: undefined, page: 1 };
     this.load();
   }
 

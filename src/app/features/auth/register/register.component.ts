@@ -8,6 +8,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
+import { LEGAL } from '../../../core/legal-links';
 import { AuthService } from '../../../core/services/auth.service';
 import { Plan, SubscriptionService } from '../../../core/services/subscription.service';
 import { TokenService } from '../../../core/services/token.service';
@@ -46,6 +47,15 @@ export class RegisterComponent {
   /** The live plan catalogue from GET /api/plans (anonymous) — never hardcode prices or limits here. */
   protected readonly plans = signal<Plan[]>([]);
   protected readonly plansStatus = signal<'loading' | 'ready' | 'error'>('loading');
+
+  /**
+   * Acceptance of the Terms & Privacy Policy. Deliberately a signal and NOT a form control: the
+   * whole form is spread into the register payload via getRawValue(), and consent is not a field
+   * the API accepts. It is enforced in submit() — see the note there.
+   */
+  protected readonly acceptTerms = signal(false);
+
+  protected readonly LEGAL = LEGAL;
 
   protected readonly form = this.fb.nonNullable.group({
     businessName: ['', [Validators.required, Validators.minLength(2)]],
@@ -127,7 +137,19 @@ export class RegisterComponent {
     this.googleProfile.set(null);
   }
 
+  /** Wraps a policy link for the consent sentence below — one sentence, so hi/gu can reorder it. */
+  protected link(href: string, text: string): string {
+    return `<a href="${href}" target="_blank" rel="noopener" class="text-navy-light hover:underline">${text}</a>`;
+  }
+
   submit(): void {
+    // Consent is checked FIRST, before the Google branch. submitGoogle() intentionally skips the
+    // form.invalid check (email/password/ownerName are empty in the passwordless flow), so a
+    // Validators.requiredTrue control would not block a Google sign-up at all. Keep this here.
+    if (!this.acceptTerms()) {
+      this.toast.error(this.t.instant('Please accept the Terms & Conditions and Privacy Policy to continue.'));
+      return;
+    }
     if (this.googleProfile()) {
       this.submitGoogle();
       return;
