@@ -12,6 +12,7 @@ export interface ProductUpsert {
   bottleSize: string;
   defaultRate: number;
   unit?: string | null;
+  hsn?: string | null;
   isActive: boolean;
 }
 

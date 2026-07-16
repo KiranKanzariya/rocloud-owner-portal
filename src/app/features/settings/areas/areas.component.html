@@ -20,8 +20,8 @@
     <ng-template appColumnCell="actions" let-row>
       @if (canManage) {
         <div class="flex items-center justify-end gap-1">
-          <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
-          <button class="p-1.5 rounded hover:bg-shell text-danger" (click)="remove(row)" [title]="'Delete' | translate"><i class="ti ti-trash"></i></button>
+          <button class="btn-icon" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+          <button class="btn-icon text-danger" (click)="remove(row)" [title]="'Delete' | translate"><i class="ti ti-trash"></i></button>
         </div>
       }
     </ng-template>
@@ -33,7 +33,7 @@
     <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ (editingId() ? 'Edit area' : 'Add area') | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
       </div>
       <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-3">
         <label class="flex flex-col gap-1">

@@ -25,9 +25,9 @@
     <ng-template appColumnCell="actions" let-row>
       @if (canManage) {
         <div class="flex items-center justify-end gap-1">
-          <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+          <button class="btn-icon" (click)="openEdit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
           @if (row.isCustom) {
-            <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="resetToDefault(row)" [title]="'Reset to default' | translate"><i class="ti ti-rotate-2"></i></button>
+            <button class="btn-icon" (click)="resetToDefault(row)" [title]="'Reset to default' | translate"><i class="ti ti-rotate-2"></i></button>
           }
         </div>
       }
@@ -40,7 +40,7 @@
     <div class="card w-full max-w-lg max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-1">
         <h3 class="text-h3">{{ label(ed.templateCode) | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
       </div>
       <div class="flex items-center gap-2 mb-3 text-caption">
         <span class="status-active-info">{{ ed.channel }}</span>

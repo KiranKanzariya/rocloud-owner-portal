@@ -16,7 +16,7 @@
           </p>
           @if (d.addressLine) { <p class="text-caption text-ink-mid">{{ d.addressLine }}</p> }
         </div>
-        <button class="text-ink-mid hover:text-danger" (click)="closed.emit()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="closed.emit()"><i class="ti ti-x"></i></button>
       </div>
 
       @if (notYetDue()) {
@@ -76,8 +76,8 @@
             <div [formGroup]="$any(line)" class="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
               <span class="text-caption truncate">{{ line.value.productName }}
                 <span class="text-micro text-ink-mid">×{{ line.value.ordered }}@if (line.value.held !== null) { · {{ 'holds' | translate }} {{ line.value.held }}}</span></span>
-              <input type="number" formControlName="delivered" min="0" class="w-16 rounded-md border-ink-light py-1 text-center" />
-              <input type="number" formControlName="returned" min="0" class="w-16 rounded-md border-ink-light py-1 text-center" />
+              <input type="number" formControlName="delivered" min="0" class="w-16 rounded-md border-ink-light py-1.5 text-center" />
+              <input type="number" formControlName="returned" min="0" class="w-16 rounded-md border-ink-light py-1.5 text-center" />
             </div>
           }
           @if (!lines.controls.length) {
@@ -97,7 +97,7 @@
                 <span class="text-caption truncate">{{ line.value.productName }}
                   <span class="text-micro text-ink-mid">({{ line.value.bottleSize }}) · {{ 'holds' | translate }} {{ line.value.held }}</span></span>
                 <input type="number" formControlName="returned" min="0" [max]="line.value.held"
-                       class="w-16 rounded-md border-ink-light py-1 text-center" />
+                       class="w-16 rounded-md border-ink-light py-1.5 text-center" />
               </div>
             }
           </div>

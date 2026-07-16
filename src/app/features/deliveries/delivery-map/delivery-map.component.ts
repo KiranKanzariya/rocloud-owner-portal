@@ -11,7 +11,7 @@ import { NavigationService } from '../../../core/services/navigation.service';
   template: `
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-2">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
         <h1 class="text-h1">Route map</h1>
       </div>
       <div class="card flex flex-col items-center justify-center text-center gap-3 py-24">

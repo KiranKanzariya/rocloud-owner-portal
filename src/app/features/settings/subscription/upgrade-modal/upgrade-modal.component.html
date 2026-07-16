@@ -3,14 +3,14 @@
     <div class="card w-full max-w-4xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-h2">{{ 'Choose your plan' | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
       </div>
 
       <!-- Billing toggle -->
       <div class="flex items-center justify-center gap-2 mb-5">
-        <button class="px-3 py-1.5 rounded-md text-body" [class.bg-navy]="billing() === 'Monthly'"
+        <button class="seg" [class.bg-navy]="billing() === 'Monthly'"
           [class.text-white]="billing() === 'Monthly'" [class.bg-shell]="billing() !== 'Monthly'" (click)="billing.set('Monthly')">{{ 'Monthly' | translate }}</button>
-        <button class="px-3 py-1.5 rounded-md text-body" [class.bg-navy]="billing() === 'Yearly'"
+        <button class="seg" [class.bg-navy]="billing() === 'Yearly'"
           [class.text-white]="billing() === 'Yearly'" [class.bg-shell]="billing() !== 'Yearly'" (click)="billing.set('Yearly')">
           {{ 'Yearly' | translate }} <span class="text-caption opacity-80">{{ '(2 months free)' | translate }}</span>
         </button>

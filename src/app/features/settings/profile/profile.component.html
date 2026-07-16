@@ -94,6 +94,9 @@
           <div class="flex items-center gap-2">
             <input type="color" formControlName="primaryColor" class="h-9 w-14 rounded border-ink-light" />
             <input formControlName="primaryColor" class="rounded-md border-ink-light py-1.5 font-mono w-32" />
+            <button type="button" class="text-caption text-navy-light hover:underline" (click)="resetBrandColor()">
+              {{ 'Reset to default' | translate }}
+            </button>
           </div>
         } @else {
           <p class="text-caption text-ink-mid">{{ 'White-label branding is available on the Enterprise plan.' | translate }}</p>

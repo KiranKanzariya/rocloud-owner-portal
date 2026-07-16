@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-2">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
         <div>
           <div class="flex items-center gap-2">
             <a [routerLink]="['/customers', o.customerId]" class="text-h1 hover:underline">{{ o.customerName }}</a>

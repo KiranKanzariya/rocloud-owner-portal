@@ -26,10 +26,10 @@
     <ng-template appColumnCell="isActive" let-row><span [class]="row.isActive ? 'status-delivered' : 'status-active-info'">{{ (row.isActive ? 'Active' : 'Inactive') | translate }}</span></ng-template>
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" *appCan="'Users.Manage'">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="edit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="resetPassword(row)" [title]="'Reset password' | translate"><i class="ti ti-key"></i></button>
+        <button class="btn-icon" (click)="edit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
+        <button class="btn-icon" (click)="resetPassword(row)" [title]="'Reset password' | translate"><i class="ti ti-key"></i></button>
         @if (row.isActive) {
-          <button class="p-1.5 rounded hover:bg-shell text-danger" (click)="deactivate(row)" [title]="'Deactivate' | translate"><i class="ti ti-user-off"></i></button>
+          <button class="btn-icon text-danger" (click)="deactivate(row)" [title]="'Deactivate' | translate"><i class="ti ti-user-off"></i></button>
         }
       </div>
     </ng-template>

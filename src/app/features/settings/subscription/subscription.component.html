@@ -126,13 +126,13 @@
 
           <ng-template appColumnCell="actions" let-row>
             <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-              <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
+              <button class="btn-icon" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
               @if (row.status === 'Pending' && canManage) {
-                <button class="p-1.5 rounded hover:bg-shell text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate">
+                <button class="btn-icon text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate">
                   @if (payingId() === row.id) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
                 </button>
               }
-              <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openInvoice(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
+              <button class="btn-icon" (click)="openInvoice(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
             </div>
           </ng-template>
         </roc-data-table>

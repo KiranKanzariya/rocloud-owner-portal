@@ -11,7 +11,7 @@
     <div class="card lg:col-span-1 flex flex-col gap-1 h-fit">
       @for (r of visibleRoles(); track r.id) {
         <button
-          class="text-left px-3 py-2 rounded-md flex items-center justify-between transition-colors"
+          class="seg w-full text-left flex items-center justify-between"
           [class.bg-navy]="selectedId() === r.id" [class.text-white]="selectedId() === r.id"
           [class.hover:bg-shell]="selectedId() !== r.id"
           (click)="select(r)">
@@ -72,7 +72,7 @@
     <div class="card w-full max-w-2xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ 'Create custom role' | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="createOpen.set(false)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="createOpen.set(false)"><i class="ti ti-x"></i></button>
       </div>
       <label class="flex flex-col gap-1 mb-4">
         <span class="text-caption font-medium">{{ 'Role name' | translate }}</span>

@@ -61,7 +61,7 @@
     <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[85vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-ink-light px-5 py-3">
         <h3 class="text-h3">{{ 'Activity detail' | translate }}</h3>
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="selected.set(null)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon" (click)="selected.set(null)"><i class="ti ti-x"></i></button>
       </div>
 
       <div class="p-5 flex flex-col gap-4">

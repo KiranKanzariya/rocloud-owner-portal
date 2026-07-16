@@ -20,8 +20,8 @@
     <ng-template appColumnCell="actions" let-row>
       @if (canManage) {
         <div class="flex items-center justify-end gap-1">
-          <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="openEdit(row)" [title]="'Edit rate' | translate"><i class="ti ti-pencil"></i></button>
-          <button class="p-1.5 rounded hover:bg-shell" [class.text-danger]="row.isActive" [class.text-teal]="!row.isActive"
+          <button class="btn-icon" (click)="openEdit(row)" [title]="'Edit rate' | translate"><i class="ti ti-pencil"></i></button>
+          <button class="btn-icon" [class.text-danger]="row.isActive" [class.text-teal]="!row.isActive"
             (click)="toggleActive(row)" [title]="(row.isActive ? 'Deactivate' : 'Activate') | translate">
             <i class="ti" [class.ti-toggle-right]="row.isActive" [class.ti-toggle-left]="!row.isActive"></i>
           </button>
@@ -36,7 +36,7 @@
     <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ (editingId() ? 'Edit product' : 'Add product') | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
       </div>
       <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-3">
         <label class="flex flex-col gap-1">
@@ -55,6 +55,11 @@
             <input type="number" formControlName="defaultRate" class="rounded-md border-ink-light py-1.5" step="0.5" />
           </label>
         </div>
+        <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'HSN / SAC code' | translate }} <span class="text-ink-mid font-normal">({{ 'Optional' | translate }})</span></span>
+          <input formControlName="hsn" inputmode="numeric" maxlength="8" class="rounded-md border-ink-light py-1.5" placeholder="2201" />
+          <span class="text-micro text-ink-mid">{{ 'Shown on GST tax invoices. Blank → 2201 (packaged water).' | translate }}</span>
+        </label>
         <label class="flex items-center gap-2 text-body">
           <input type="checkbox" formControlName="isActive" class="rounded border-ink-light" /> {{ 'Active' | translate }}
         </label>

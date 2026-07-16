@@ -12,6 +12,26 @@
 
   /* Selection colour matches brand */
   ::selection { background: #B5D4F4; color: #0C447C; }
+
+  /* ─── Form controls — single source of truth ──────────────────────────────
+     @tailwindcss/forms wraps its base selectors in :where() (zero specificity)
+     and ships a generic blue-600 focus ring + 0 radius + 16px text. These rules
+     override all of that so every input/select/textarea shares one look:
+     8px radius, 13px body text, consistent height, and a brand-navy focus. */
+  input:where(:not([type]),[type='text'],[type='email'],[type='url'],[type='password'],[type='number'],
+              [type='date'],[type='datetime-local'],[type='month'],[type='search'],
+              [type='tel'],[type='time'],[type='week']),
+  select, textarea {
+    @apply rounded-md border border-ink-light text-body py-1.5;
+  }
+  input:where(:not([type]),[type='text'],[type='email'],[type='url'],[type='password'],[type='number'],
+              [type='date'],[type='datetime-local'],[type='month'],[type='search'],
+              [type='tel'],[type='time'],[type='week']):focus,
+  select:focus, textarea:focus,
+  [type='checkbox']:focus, [type='radio']:focus {
+    @apply border-navy ring-navy;
+  }
+  [type='checkbox'], [type='radio'] { @apply rounded text-navy; }
 }
 
 @layer components {
@@ -28,41 +48,62 @@
   /* Status badges — items-center keeps any leading icon vertically aligned with the label */
   .status-delivered, .status-paid, .status-active {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-           bg-teal-light text-[#085041] text-[11px] font-medium;
+           bg-teal-light text-[#085041] text-micro font-medium;
   }
   .status-pending, .status-due, .status-trial {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-           bg-amber-light text-[#633806] text-[11px] font-medium;
+           bg-amber-light text-[#633806] text-micro font-medium;
   }
   .status-overdue, .status-failed {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-           bg-danger-light text-[#791F1F] text-[11px] font-medium;
+           bg-danger-light text-[#791F1F] text-micro font-medium;
   }
   .status-in-transit, .status-active-info {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
-           bg-foam text-navy text-[11px] font-medium;
+           bg-foam text-navy text-micro font-medium;
   }
 
   /* Buttons — `transition active:scale` adds a subtle press feedback (item 4) */
   .btn-primary {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
            bg-navy text-white text-sm font-medium font-display
            hover:bg-navy-mid transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
   .btn-secondary {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
            border border-ink-light bg-transparent text-ink text-sm font-medium
            hover:bg-shell transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
   .btn-danger {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
            bg-danger text-white text-sm font-medium font-display
            hover:bg-[#A32D2D] transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
 
+  /* Small variant — pair with .btn-primary/.btn-secondary/.btn-danger for a compact button.
+     Defined after the base buttons so its padding wins; replaces ad-hoc `py-1` / `py-1 px-2`. */
+  .btn-sm { @apply px-2.5 py-1; }
+
+  /* Icon-only button — one size + radius for every row-action or modal-close glyph.
+     Add .btn-icon-danger for a destructive glyph (neutral by default, danger on hover);
+     add `text-teal` etc. for a positive-action glyph. */
+  .btn-icon {
+    @apply inline-flex items-center justify-center p-1.5 rounded-md
+           text-ink-mid hover:bg-shell transition;
+  }
+  .btn-icon-danger { @apply hover:text-danger; }
+
   /* Card */
   .card {
     @apply bg-white border border-ink-light rounded-lg p-4;
+  }
+
+  /* Segmented control / tab toggle — one size for every screen's pill toggles.
+     Shape + type only; active state stays caller-driven via the existing
+     `[class.bg-navy] [class.text-white]` bindings (and optional inactive
+     `[class.hover:bg-shell]`), so it never fights the active background. */
+  .seg {
+    @apply px-3 py-1.5 rounded-md text-body font-medium transition-colors;
   }
 
   /* Metric card */

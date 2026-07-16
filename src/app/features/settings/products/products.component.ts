@@ -54,6 +54,7 @@ export class ProductsComponent {
     name: ['', [Validators.required, Validators.maxLength(200)]],
     bottleSize: ['20L', Validators.required],
     defaultRate: [0, [Validators.required, Validators.min(0)]],
+    hsn: ['', [Validators.maxLength(8)]],
     isActive: [true],
   });
 
@@ -74,19 +75,19 @@ export class ProductsComponent {
 
   openCreate(): void {
     this.editingId.set(null);
-    this.form.reset({ name: '', bottleSize: '20L', defaultRate: 0, isActive: true });
+    this.form.reset({ name: '', bottleSize: '20L', defaultRate: 0, hsn: '', isActive: true });
     this.modalOpen.set(true);
   }
 
   openEdit(p: Product): void {
     this.editingId.set(p.id);
-    this.form.reset({ name: p.name, bottleSize: p.bottleSize, defaultRate: p.defaultRate, isActive: p.isActive });
+    this.form.reset({ name: p.name, bottleSize: p.bottleSize, defaultRate: p.defaultRate, hsn: p.hsn ?? '', isActive: p.isActive });
     this.modalOpen.set(true);
   }
 
   toggleActive(p: Product): void {
     this.service
-      .update(p.id, { name: p.name, bottleSize: p.bottleSize, defaultRate: p.defaultRate, isActive: !p.isActive })
+      .update(p.id, { name: p.name, bottleSize: p.bottleSize, defaultRate: p.defaultRate, hsn: p.hsn ?? null, isActive: !p.isActive })
       .subscribe({
         next: () => {
           this.toast.success(this.t.instant(p.isActive ? '{{name}} deactivated.' : '{{name}} activated.', { name: p.name }));
@@ -103,7 +104,7 @@ export class ProductsComponent {
     }
     this.saving.set(true);
     const v = this.form.getRawValue();
-    const body = { name: v.name, bottleSize: v.bottleSize, defaultRate: v.defaultRate, isActive: v.isActive };
+    const body = { name: v.name, bottleSize: v.bottleSize, defaultRate: v.defaultRate, hsn: v.hsn?.trim() || null, isActive: v.isActive };
     const id = this.editingId();
     const req = id ? this.service.update(id, body) : this.service.create(body);
     req.subscribe({

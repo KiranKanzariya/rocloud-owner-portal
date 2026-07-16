@@ -8,7 +8,7 @@ import { ToastService } from '../../../core/services/toast.service';
     <div class="fixed top-4 right-4 z-50 flex flex-col gap-2">
       @for (t of toast.toasts(); track t.id) {
         <div
-          class="flex items-center gap-2 px-3.5 py-2 rounded-md shadow-md text-sm font-medium max-w-sm animate-slide-in-right"
+          class="flex items-center gap-2 px-3.5 py-2 rounded-md shadow-md text-body font-medium max-w-sm animate-slide-in-right"
           [class.bg-teal-light]="t.type === 'success'"
           [class.text-teal]="t.type === 'success'"
           [class.bg-danger-light]="t.type === 'error'"

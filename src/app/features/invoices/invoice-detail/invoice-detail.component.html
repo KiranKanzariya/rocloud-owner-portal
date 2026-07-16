@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-2">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-h1 font-mono">{{ inv.invoiceNumber }}</h1>
@@ -17,6 +17,9 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <button class="btn-secondary" [disabled]="!pdf.ready()" (click)="pdf.download()">
+          <i class="ti ti-download"></i> {{ 'Download' | translate }}
+        </button>
         <button *appCan="'Invoices.Edit'" class="btn-secondary" [disabled]="sending()" (click)="send()">
           @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-mail"></i> } {{ 'Email invoice' | translate }}
         </button>
@@ -32,9 +35,9 @@
         <div class="card">
           <h3 class="text-h3 mb-3">{{ 'Items' | translate }}</h3>
           <table class="w-full text-body">
-            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
+            <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2 text-right">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
             <tbody>@for (li of inv.lineItems; track li.productName) {
-              <tr class="border-b border-ink-light/60"><td class="py-2">{{ li.productName }} <span class="text-caption text-ink-mid">({{ li.bottleSize }})</span></td><td class="py-2">{{ li.quantity }}</td><td class="py-2 text-right font-mono">₹{{ li.rate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ li.amount | number: '1.0-0' }}</td></tr>
+              <tr class="border-b border-ink-light/60"><td class="py-2">{{ li.productName }} <span class="text-caption text-ink-mid">({{ li.bottleSize }})</span></td><td class="py-2 text-right font-mono">{{ li.quantity }}</td><td class="py-2 text-right font-mono">₹{{ li.rate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ li.amount | number: '1.0-0' }}</td></tr>
             }</tbody>
           </table>
           <dl class="flex flex-col gap-1 mt-3 text-body">
@@ -63,8 +66,8 @@
         </div>
       </div>
 
-      <!-- PDF preview -->
-      <roc-pdf-preview [url]="pdfUrl()" [fileName]="inv.invoiceNumber + '.pdf'" />
+      <!-- PDF preview (Download lives in the page header via the #pdf ref) -->
+      <roc-pdf-preview #pdf [url]="pdfUrl()" [fileName]="inv.invoiceNumber + '.pdf'" [hideDownload]="true" />
     </div>
   </div>
 
@@ -73,7 +76,7 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="payOpen.set(false)">
       <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-3"><h3 class="text-h3">{{ 'Record payment' | translate }}</h3>
-          <button class="text-ink-mid hover:text-danger" (click)="payOpen.set(false)"><i class="ti ti-x"></i></button></div>
+          <button class="btn-icon btn-icon-danger" (click)="payOpen.set(false)"><i class="ti ti-x"></i></button></div>
         <form [formGroup]="payForm" (ngSubmit)="recordPayment()" class="flex flex-col gap-3">
           <div class="grid grid-cols-2 gap-3">
             <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Amount (₹)' | translate }}</span>

@@ -29,10 +29,10 @@
       @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
     </select>
     <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'From' | translate }}
-      <input type="date" class="rounded-md border-ink-light text-body py-1" (change)="setDate('fromDate', $any($event.target).value)" />
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('fromDate', $any($event.target).value)" />
     </label>
     <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'To' | translate }}
-      <input type="date" class="rounded-md border-ink-light text-body py-1" (change)="setDate('toDate', $any($event.target).value)" />
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('toDate', $any($event.target).value)" />
     </label>
     <!-- Customer filter: search + pick. The active selection shows as the chip above (shared with the
          "View all orders" deep-link), so the box only appears when nothing is selected. -->

@@ -48,9 +48,9 @@
 
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="downloadPdf(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
-        <button *appCan="'Invoices.Edit'" class="p-1.5 rounded hover:bg-shell text-teal" (click)="send(row)" [title]="'Email invoice' | translate"><i class="ti ti-mail"></i></button>
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="open(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
+        <button class="btn-icon" (click)="downloadPdf(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
+        <button *appCan="'Invoices.Edit'" class="btn-icon text-teal" (click)="send(row)" [title]="'Email invoice' | translate"><i class="ti ti-mail"></i></button>
+        <button class="btn-icon" (click)="open(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
       </div>
     </ng-template>
   </roc-data-table>

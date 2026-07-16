@@ -11,10 +11,10 @@
 
   <!-- Tabs -->
   <div class="flex gap-1 rounded-md border border-ink-light p-1 w-fit text-caption">
-    <button type="button" class="px-4 py-1.5 rounded transition-colors"
+    <button type="button" class="seg"
             [class.bg-navy]="tab() === 'upcoming'" [class.text-white]="tab() === 'upcoming'"
             (click)="setTab('upcoming')"><i class="ti ti-calendar-event"></i> {{ 'Upcoming' | translate }}</button>
-    <button type="button" class="px-4 py-1.5 rounded transition-colors"
+    <button type="button" class="seg"
             [class.bg-navy]="tab() === 'plan'" [class.text-white]="tab() === 'plan'"
             (click)="setTab('plan')"><i class="ti ti-clipboard-check"></i> {{ 'Production plan' | translate }}</button>
   </div>

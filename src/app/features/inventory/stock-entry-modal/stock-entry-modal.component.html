@@ -3,7 +3,7 @@
     <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ 'Stock entry' | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
@@ -31,7 +31,7 @@
           @if (selectedCustomer(); as c) {
             <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
               <span class="text-body">{{ c.name }} · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
-              <button type="button" class="text-ink-mid hover:text-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+              <button type="button" class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
             </div>
           } @else {
             <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer…' | translate" class="rounded-md border-ink-light py-1.5" />

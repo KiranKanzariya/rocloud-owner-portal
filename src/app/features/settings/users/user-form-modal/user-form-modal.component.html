@@ -3,7 +3,7 @@
     <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ (isEdit() ? 'Edit team member' : 'Add team member') | translate }}</h3>
-        <button class="text-ink-mid hover:text-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">

@@ -33,7 +33,7 @@
         <label class="flex flex-col gap-1">
           <span class="text-caption font-medium">{{ 'Email' | translate }}</span>
           <input type="email" formControlName="email" autocomplete="email"
-                 class="rounded-md border-ink-light focus:border-navy-light focus:ring-navy-light"
+                 class="rounded-md border-ink-light"
                  placeholder="you@business.com" />
           @if (form.controls.email.touched && form.controls.email.invalid) {
             <span class="text-micro text-danger">{{ 'Enter a valid email.' | translate }}</span>
@@ -43,7 +43,7 @@
         <label class="flex flex-col gap-1">
           <span class="text-caption font-medium">{{ 'Password' | translate }}</span>
           <input type="password" formControlName="password" autocomplete="current-password"
-                 class="rounded-md border-ink-light focus:border-navy-light focus:ring-navy-light"
+                 class="rounded-md border-ink-light"
                  placeholder="••••••••" />
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <span class="text-micro text-danger">{{ 'Password must be at least 8 characters.' | translate }}</span>

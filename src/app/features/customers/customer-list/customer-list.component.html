@@ -17,15 +17,15 @@
     <div class="relative flex-1 min-w-[200px]">
       <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
       <input [formControl]="search" type="search" [placeholder]="'Search name, mobile or code…' | translate"
-             class="w-full pl-9 pr-3 py-1.5 text-body rounded-md border-ink-light focus:border-navy-light focus:ring-navy-light" />
+             class="w-full pl-9 pr-3 py-1.5 text-body rounded-md border-ink-light" />
     </div>
 
     <!-- Delivery mode pills -->
     <div class="flex items-center gap-1 rounded-md border border-ink-light p-0.5">
-      <button class="px-2.5 py-1 text-caption rounded" [class.bg-navy]="!filter.deliveryMode" [class.text-white]="!filter.deliveryMode"
+      <button class="seg" [class.bg-navy]="!filter.deliveryMode" [class.text-white]="!filter.deliveryMode"
               (click)="setDeliveryMode(undefined)">{{ 'All' | translate }}</button>
       @for (m of deliveryModes; track m.value) {
-        <button class="px-2.5 py-1 text-caption rounded" [class.bg-navy]="filter.deliveryMode === m.value"
+        <button class="seg" [class.bg-navy]="filter.deliveryMode === m.value"
                 [class.text-white]="filter.deliveryMode === m.value" (click)="setDeliveryMode(m.value)">{{ m.label | translate }}</button>
       }
     </div>
@@ -79,9 +79,9 @@
 
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="open(row)" title="View"><i class="ti ti-eye"></i></button>
-        <button *appCan="'Customers.Edit'" class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="edit(row)" title="Edit"><i class="ti ti-edit"></i></button>
-        <button *appCan="'Customers.Delete'" class="p-1.5 rounded hover:bg-shell text-danger" (click)="deleteTarget.set(row)" title="Delete"><i class="ti ti-trash"></i></button>
+        <button class="btn-icon" (click)="open(row)" title="View"><i class="ti ti-eye"></i></button>
+        <button *appCan="'Customers.Edit'" class="btn-icon" (click)="edit(row)" title="Edit"><i class="ti ti-edit"></i></button>
+        <button *appCan="'Customers.Delete'" class="btn-icon text-danger" (click)="deleteTarget.set(row)" title="Delete"><i class="ti ti-trash"></i></button>
       </div>
     </ng-template>
   </roc-data-table>

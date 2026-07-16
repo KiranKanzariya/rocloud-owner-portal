@@ -12,6 +12,9 @@ const LANGUAGES = [
   { code: 'gu', label: 'ગુજરાતી (Gujarati)' },
 ];
 
+/** App-default brand colour — matches the invoice PDF's navy fallback. */
+const DEFAULT_BRAND_COLOR = '#0C447C';
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -42,7 +45,7 @@ export class ProfileComponent {
     state: [''],
     pincode: [''],
     logoUrl: [''],
-    primaryColor: ['#0C447C'],
+    primaryColor: [DEFAULT_BRAND_COLOR],
     defaultLanguage: ['en', Validators.required],
   });
 
@@ -64,11 +67,18 @@ export class ProfileComponent {
         state: s.state ?? '',
         pincode: s.pincode ?? '',
         logoUrl: s.logoUrl ?? '',
-        primaryColor: s.primaryColor ?? '#0C447C',
+        primaryColor: s.primaryColor ?? DEFAULT_BRAND_COLOR,
         defaultLanguage: s.defaultLanguage,
       });
       if (!this.canManage) this.form.disable();
     });
+  }
+
+  /** Revert the brand colour to the app default (navy). Marks dirty so it can be saved. */
+  resetBrandColor(): void {
+    const c = this.form.controls.primaryColor;
+    c.setValue(DEFAULT_BRAND_COLOR);
+    c.markAsDirty();
   }
 
   save(): void {

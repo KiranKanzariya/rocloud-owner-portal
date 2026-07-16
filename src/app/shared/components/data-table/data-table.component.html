@@ -58,9 +58,9 @@
   <div class="flex items-center justify-between px-3 py-2.5 border-t border-ink-light text-caption text-ink-mid">
     <span>{{ totalCount() }} record{{ totalCount() === 1 ? '' : 's' }}</span>
     <div class="flex items-center gap-2">
-      <button class="btn-secondary py-1 px-2" [disabled]="page() <= 1" (click)="prev()"><i class="ti ti-chevron-left"></i></button>
+      <button class="btn-secondary btn-sm" [disabled]="page() <= 1" (click)="prev()"><i class="ti ti-chevron-left"></i></button>
       <span>Page {{ page() }} of {{ totalPages() }}</span>
-      <button class="btn-secondary py-1 px-2" [disabled]="page() >= totalPages()" (click)="next()"><i class="ti ti-chevron-right"></i></button>
+      <button class="btn-secondary btn-sm" [disabled]="page() >= totalPages()" (click)="next()"><i class="ti ti-chevron-right"></i></button>
     </div>
   </div>
 </div>

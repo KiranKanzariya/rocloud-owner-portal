@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
@@ -13,11 +13,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   standalone: true,
   template: `
     <div class="flex flex-col gap-2">
-      <div class="flex justify-end gap-2">
-        <button class="btn-secondary py-1" [disabled]="loading() || !objectUrl()" (click)="download()">
-          <i class="ti ti-download"></i> Download
-        </button>
-      </div>
+      @if (!hideDownload()) {
+        <div class="flex justify-end gap-2">
+          <button class="btn-secondary btn-sm" [disabled]="!ready()" (click)="download()">
+            <i class="ti ti-download"></i> Download
+          </button>
+        </div>
+      }
       @if (loading()) {
         <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> Loading PDF…</div>
       } @else if (safeUrl()) {
@@ -34,10 +36,15 @@ export class PdfPreviewComponent {
 
   readonly url = input.required<string>();
   readonly fileName = input('document.pdf');
+  /** Hide the built-in Download button so a parent can own it (e.g. in the page header). */
+  readonly hideDownload = input(false);
 
   protected readonly loading = signal(false);
   protected readonly safeUrl = signal<SafeResourceUrl | null>(null);
   protected readonly objectUrl = signal<string | null>(null);
+
+  /** True once the PDF is fetched and downloadable — for a parent-owned Download button's disabled state. */
+  readonly ready = computed(() => !this.loading() && this.objectUrl() !== null);
 
   constructor() {
     effect((onCleanup) => {

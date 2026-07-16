@@ -4,6 +4,7 @@ export interface Product {
   bottleSize: string;
   defaultRate: number;
   unit: string;
+  hsn?: string | null;
   isActive: boolean;
   createdAt: string;
 }

@@ -20,11 +20,14 @@ import { istMonthStart, istToday } from '../../shared/util/ist-date.util';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 
+// Chart palette — kept in sync with the design tokens in tailwind.config.js.
 const NAVY = '#0C447C';
 const TEAL = '#1D9E75';
-const AMBER = '#E0A030';
-const DANGER = '#D14343';
-const MIST = '#9DB2C9';
+const AMBER = '#EF9F27';
+const DANGER = '#E24B4A';
+const MIST = '#B5D4F4';
+// Mid-severity step for the dues-aging ramp (no darker-amber token exists).
+const AMBER_DEEP = '#D97706';
 
 function monthStart(): string {
   return istMonthStart();
@@ -102,7 +105,7 @@ export class ReportsComponent {
           datasets: [
             {
               data: [sum((r) => r.bucket0To7), sum((r) => r.bucket7To30), sum((r) => r.bucket30To60), sum((r) => r.bucket60Plus)],
-              backgroundColor: [TEAL, AMBER, '#D97706', DANGER],
+              backgroundColor: [TEAL, AMBER, AMBER_DEEP, DANGER],
             },
           ],
         };

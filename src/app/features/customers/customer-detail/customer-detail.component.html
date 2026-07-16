@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-2">
-        <button class="p-1.5 rounded hover:bg-shell text-ink-mid" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-h1">{{ c.name }}</h1>
@@ -81,12 +81,12 @@
                 <span class="font-mono text-body">{{ b.outstanding }}</span>
                 <div *appCan="'Inventory.Manage'" class="flex items-center gap-2">
                   <input type="number" min="1" [max]="b.outstanding" [(ngModel)]="returnQty[b.productId]"
-                         class="w-16 rounded-md border-ink-light text-body py-1" />
+                         class="w-16 rounded-md border-ink-light text-body py-1.5" />
                   <label class="flex items-center gap-1 text-caption text-ink-mid cursor-pointer" [title]="'Returned broken — write off instead of re-stocking.' | translate">
                     <input type="checkbox" [(ngModel)]="returnDamaged[b.productId]" class="rounded border-ink-light text-danger" />
                     {{ 'Damaged' | translate }}
                   </label>
-                  <button class="btn-secondary py-1" [disabled]="returning()" (click)="recordReturn(b)">{{ 'Record return' | translate }}</button>
+                  <button class="btn-secondary btn-sm" [disabled]="returning()" (click)="recordReturn(b)">{{ 'Record return' | translate }}</button>
                 </div>
               </div>
             </div>
@@ -171,7 +171,7 @@
               <div class="flex items-center justify-between gap-3 max-w-sm">
                 <span class="text-body">{{ p.name }} <span class="text-caption text-ink-mid">({{ p.bottleSize }})</span></span>
                 <input type="number" min="0" [(ngModel)]="openingJarQty[p.id]" placeholder="0"
-                       class="w-20 rounded-md border-ink-light text-body py-1 text-center" />
+                       class="w-20 rounded-md border-ink-light text-body py-1.5 text-center" />
               </div>
             } @empty {
               <span class="text-caption text-ink-mid">{{ 'No products yet — add products first.' | translate }}</span>
@@ -228,7 +228,7 @@
         @case ('subscriptions') {
           <div class="flex items-center justify-between mb-3">
             <p class="text-caption text-ink-mid">{{ 'Active subscriptions auto-generate this customer\'s orders every night.' | translate }}</p>
-            <button *appCan="'Customers.Edit'" class="btn-secondary py-1 px-2" (click)="toggleSubForm()">
+            <button *appCan="'Customers.Edit'" class="btn-secondary btn-sm" (click)="toggleSubForm()">
               <i class="ti" [class.ti-plus]="!showSubForm()" [class.ti-x]="showSubForm()"></i>
               {{ (showSubForm() ? 'Cancel' : 'Add subscription') | translate }}
             </button>
@@ -277,7 +277,7 @@
                   <td class="py-2 text-right">@if (s.isActive) {
                     <div class="flex items-center justify-end gap-2">
                       <button *appCan="'Customers.Edit'" class="text-ink-mid hover:text-navy" [title]="'Edit subscription' | translate" (click)="startEditSub(s)"><i class="ti ti-edit"></i></button>
-                      <button *appCan="'Customers.Edit'" class="text-ink-mid hover:text-danger" [title]="'End subscription' | translate" (click)="cancelSubscription(s.id)"><i class="ti ti-square-x"></i></button>
+                      <button *appCan="'Customers.Edit'" class="btn-icon btn-icon-danger" [title]="'End subscription' | translate" (click)="cancelSubscription(s.id)"><i class="ti ti-square-x"></i></button>
                     </div>
                   }</td></tr>
               }</tbody>
@@ -417,7 +417,7 @@
         @case ('service') {
           <div class="flex items-center justify-between mb-3">
             <p class="text-caption text-ink-mid">{{ 'Repair, maintenance and AMC tickets for this customer.' | translate }}</p>
-            <button *appCan="'AMC.Manage'" class="btn-secondary py-1 px-2" (click)="router.navigate(['/service-requests'])">
+            <button *appCan="'AMC.Manage'" class="btn-secondary btn-sm" (click)="router.navigate(['/service-requests'])">
               <i class="ti ti-plus"></i> {{ 'Log complaint' | translate }}
             </button>
           </div>
