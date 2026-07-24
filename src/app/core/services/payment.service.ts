@@ -27,7 +27,24 @@ export interface PaymentListItem {
   referenceNumber: string | null;
   collectedBy: string | null;
   paidAt: string;
+  /** Collector's note, plus any warning appended by reconcile / Razorpay confirm. See PAYMENT_NOTE. */
+  notes: string | null;
 }
+
+/**
+ * The API prefixes a note the owner must ACT on (currently: money captured against an already-settled
+ * invoice, so a refund may be due) with a stable marker. Matching the prose instead would break the
+ * moment the wording or language changed.
+ */
+export const PAYMENT_NOTE = {
+  actionRequiredMarker: '[!]',
+  /** True when this note is a warning rather than a plain remark. */
+  isActionRequired: (notes: string | null | undefined): boolean =>
+    !!notes && notes.includes(PAYMENT_NOTE.actionRequiredMarker),
+  /** Note text without the marker — the marker is machine-readable, not something to show. */
+  display: (notes: string | null | undefined): string =>
+    (notes ?? '').split(PAYMENT_NOTE.actionRequiredMarker).join('').trim(),
+} as const;
 
 export interface PaymentFilter {
   customerId?: string;

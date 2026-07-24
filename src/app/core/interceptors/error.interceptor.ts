@@ -10,9 +10,10 @@ import { PermissionService } from '../services/permission.service';
 /**
  * Centralised HTTP error handling (guide §18):
  *  - 401 on an API call → try a single token refresh and retry; if that fails, log out + /login.
- *  - 402 PAYMENT_REQUIRED (overdue past grace) and 401 TENANT_SUSPENDED → send the owner to the
- *    subscription page, which stays reachable so they can pay to restore access (guide §25).
- *  - 401 TENANT_CANCELLED → log out.
+ *  - Workspace blocked (402 PAYMENT_REQUIRED, 401 TENANT_SUSPENDED, 401 TENANT_CANCELLED) → the owner
+ *    goes to the subscription page, which stays reachable so they can pay to restore access
+ *    (guide §25); everyone else goes to /suspended, since they cannot clear the block.
+ *  - 403 TENANT_BLOCKED → a non-owner was refused a session at sign-in; the login screen shows why.
  *  - 403 on a write → toast; on a read → developer log (see below).
  * Requests to /auth/* are exempt from the refresh dance (login/refresh handle their own 401s).
  */
@@ -27,12 +28,25 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase());
   const code = (err: HttpErrorResponse): string | undefined => err.error?.code;
 
-  // The subscription page is Owner-only. Sending anyone else there (a delivery boy on an overdue
-  // tenant) would land them on /forbidden, which explains nothing — leave them where they are with
-  // the toast, which already says what is wrong. They cannot pay in any case.
+  // The subscription page is Owner-only, so only the Owner may be sent there. Used for nudges that are
+  // not a hard block (e.g. a plan limit) — everyone else just keeps the toast and stays put.
   const goToSubscription = (): void => {
     if (!perms.isOwner()) return;
     if (!router.url.startsWith('/settings/subscription')) void router.navigate(['/settings/subscription']);
+  };
+
+  // The whole workspace is blocked. The Owner goes to the subscription page, which stays reachable so
+  // they can pay. Anyone else cannot pay, so they get the /suspended dead-end instead: one page saying
+  // what is wrong and who to ask, rather than a shell where every widget fails and each failed request
+  // fires another toast.
+  const goToBlockedPage = (reason: 'suspended' | 'overdue' | 'cancelled'): void => {
+    if (perms.isOwner()) return goToSubscription();
+    // Drop the token now rather than leaving it to expire. It is already inert — the tenant check runs
+    // ahead of authorization, so every request 401s whether or not it is valid — but a session that
+    // outlives the access it stood for is just litter. Must run AFTER the isOwner() read above, which
+    // reads the permissions this clears.
+    auth.clearSession();
+    if (!router.url.startsWith('/suspended')) void router.navigate(['/suspended'], { queryParams: { reason } });
   };
 
   return next(req).pipe(
@@ -51,6 +65,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         toast.error(err.error?.detail ?? err.error?.error ?? 'This feature requires a higher plan.');
         return throwError(() => err);
       }
+      // A non-owner was refused a session on a blocked workspace (API: TenantBlockedException). Answered
+      // before the read/write split below, or the sign-in POST would draw a misleading "no permission"
+      // toast on top of the login screen's own message.
+      if (err.status === 403 && code(err) === 'TENANT_BLOCKED') {
+        return throwError(() => err);
+      }
 
       // A 403 on a write is the user's own action being refused — they need to be told why nothing
       // happened. A 403 on a read cannot happen through legitimate use (services check the JWT's
@@ -65,21 +85,21 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       // Overdue past grace — renewal page is still reachable; guide the owner there to pay.
       if (err.status === 402) {
         toast.error('Your subscription is overdue — please renew to continue.');
-        goToSubscription();
+        goToBlockedPage('overdue');
         return throwError(() => err);
       }
 
-      // Suspended for non-payment: can still self-pay to reactivate → route to the subscription page.
+      // Suspended for non-payment: the owner can still self-pay to reactivate → subscription page.
       if (err.status === 401 && code(err) === 'TENANT_SUSPENDED') {
         toast.error('Your account is suspended for non-payment — renew to reactivate.');
-        goToSubscription();
+        goToBlockedPage('suspended');
         return throwError(() => err);
       }
 
-      // Cancelled & period ended: can re-subscribe to reclaim the workspace → route to subscribe.
+      // Cancelled & period ended: the owner can re-subscribe to reclaim the workspace → subscribe.
       if (err.status === 401 && code(err) === 'TENANT_CANCELLED') {
         toast.error('Your subscription has ended — subscribe to reactivate your workspace.');
-        goToSubscription();
+        goToBlockedPage('cancelled');
         return throwError(() => err);
       }
 

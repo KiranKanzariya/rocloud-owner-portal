@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { LayoutService } from '../../../core/services/layout.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { NotificationService, AppNotification } from '../../../core/services/notification.service';
 import { LanguageSwitcherComponent } from '../language-switcher/language-switcher.component';
 import { isFeatureEnabled } from '../../../core/feature-flags';
@@ -73,14 +74,19 @@ const NOTIF_META: Record<string, { key: string; icon: string }> = {
           </button>
           @if (menuOpen()) {
             <div class="absolute right-0 mt-1 w-44 bg-white border border-ink-light rounded-md shadow-md py-1 z-40">
-              <a routerLink="/settings/profile" (click)="closeMenu()"
-                 class="flex items-center gap-2 px-3 py-2 text-body hover:bg-shell">
-                <i class="ti ti-user"></i> {{ 'Profile' | translate }}
-              </a>
-              <a routerLink="/settings/subscription" (click)="closeMenu()"
-                 class="flex items-center gap-2 px-3 py-2 text-body hover:bg-shell">
-                <i class="ti ti-credit-card"></i> {{ 'Subscription' | translate }}
-              </a>
+              @if (perms.can('BusinessProfile.View')) {
+                <a routerLink="/settings/profile" (click)="closeMenu()"
+                   class="flex items-center gap-2 px-3 py-2 text-body hover:bg-shell">
+                  <i class="ti ti-user"></i> {{ 'Profile' | translate }}
+                </a>
+              }
+              <!-- Subscription is owner-only (changing the plan spends the owner's money) — matches the route's ownerOnly guard. -->
+              @if (perms.isOwner()) {
+                <a routerLink="/settings/subscription" (click)="closeMenu()"
+                   class="flex items-center gap-2 px-3 py-2 text-body hover:bg-shell">
+                  <i class="ti ti-credit-card"></i> {{ 'Subscription' | translate }}
+                </a>
+              }
               <button (click)="logout()"
                       class="w-full flex items-center gap-2 px-3 py-2 text-body text-danger hover:bg-shell">
                 <i class="ti ti-logout"></i> {{ 'Sign out' | translate }}
@@ -97,6 +103,7 @@ export class TopbarComponent {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   protected readonly layout = inject(LayoutService);
+  protected readonly perms = inject(PermissionService);
 
   protected readonly menuOpen = signal(false);
   protected readonly notifOpen = signal(false);

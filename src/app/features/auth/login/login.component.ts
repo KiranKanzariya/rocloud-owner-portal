@@ -52,7 +52,10 @@ export class LoginComponent {
       next: () => this.router.navigate(['/dashboard']),
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        if (err.status === 401) this.toast.error(this.t.instant('Invalid email or password.'));
+        // Blocked workspace, non-owner: the credentials were fine, so a generic failure would send them
+        // hunting for a wrong password. Show the API's message — it names who can restore access.
+        if (err.status === 403 && err.error?.code === 'TENANT_BLOCKED') this.toast.error(err.error.error);
+        else if (err.status === 401) this.toast.error(this.t.instant('Invalid email or password.'));
         else if (err.status === 429) this.toast.error(this.t.instant('Too many attempts. Please try again later.'));
         else this.toast.error(this.t.instant('Sign-in failed. Please try again.'));
       },

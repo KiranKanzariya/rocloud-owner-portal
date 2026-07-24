@@ -38,6 +38,17 @@ export class SubscriptionInvoiceDetailComponent {
   private readonly id = this.route.snapshot.paramMap.get('id')!;
   protected readonly pdfUrl = this.service.pdfUrl(this.id);
 
+  /**
+   * periodEnd is EXCLUSIVE — access stops at that instant. Printing it raw makes consecutive invoices
+   * share a date ("01 Jul – 01 Aug" then "01 Aug – 01 Sep"), which reads as being billed twice for the
+   * 1st. Show the last day actually covered, matching the PDF.
+   */
+  protected lastCoveredDay(periodStart: string, periodEnd: string): Date {
+    const end = new Date(periodEnd);
+    end.setDate(end.getDate() - 1);
+    return end > new Date(periodStart) ? end : new Date(periodStart);
+  }
+
   constructor() {
     this.reload();
   }

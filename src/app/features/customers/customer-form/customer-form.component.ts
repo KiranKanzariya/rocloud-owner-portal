@@ -9,6 +9,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BottleSize } from '../../../core/models/bottle-size';
 import { MobileInputComponent } from '../../../shared/components/mobile-input/mobile-input.component';
+import { NavigationService } from '../../../core/services/navigation.service';
+import { Area, AreaService } from '../../../core/services/area.service';
 
 @Component({
   selector: 'app-customer-form',
@@ -19,8 +21,10 @@ import { MobileInputComponent } from '../../../shared/components/mobile-input/mo
 export class CustomerFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(CustomerService);
+  private readonly areaService = inject(AreaService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly nav = inject(NavigationService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
@@ -32,10 +36,11 @@ export class CustomerFormComponent {
   protected readonly isEdit = signal(!!this.id());
   protected readonly saving = signal(false);
 
-  // areaId is preserved across edit but not editable yet (no Areas API — see Phase notes).
-  private areaId: string | null = null;
+  /** Active delivery areas for the picker. Optional — '' means "no area". */
+  protected readonly areas = signal<Area[]>([]);
 
   protected readonly form = this.fb.nonNullable.group({
+    areaId: [''],
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200), Validators.pattern(/^[\p{L}\p{N}\s.\-,']+$/u)]],
     // Optional: an owner may not have a number for every customer (a shop, an old book entry).
     mobile: ['', [Validators.pattern(/^\+91[0-9]{10}$/)]],
@@ -51,11 +56,13 @@ export class CustomerFormComponent {
   });
 
   constructor() {
+    this.areaService.list().subscribe((a) => this.areas.set(a));
+
     const id = this.id();
     if (id) {
       this.service.get(id).subscribe((c) => {
-        this.areaId = c.areaId;
         this.form.patchValue({
+          areaId: c.areaId ?? '',
           name: c.name,
           mobile: c.mobile ?? '',
           alternateMobile: c.alternateMobile ?? '',
@@ -84,7 +91,7 @@ export class CustomerFormComponent {
     this.saving.set(true);
     const v = this.form.getRawValue();
     const body: CustomerUpsert = {
-      areaId: this.areaId,
+      areaId: v.areaId || null,
       name: v.name,
       mobile: v.mobile || null,
       alternateMobile: v.alternateMobile || null,
@@ -103,10 +110,16 @@ export class CustomerFormComponent {
     req.subscribe({
       next: (res) => {
         this.toast.success(this.t.instant(id ? 'Customer updated.' : 'Customer created.'));
-        // replaceUrl: drop the form from history. Otherwise Back from the detail page returns to the
-        // still-filled Add form, and saving it again creates a DUPLICATE customer. Now Back goes to
-        // wherever the form was opened from (the list, or the customer being edited).
-        this.router.navigate(['/customers', id ?? res.id], { replaceUrl: true });
+        if (id) {
+          // Edit: return to wherever the form was opened from (usually the customer's own page, which
+          // is already the entry behind us). POP rather than navigate — a replaceUrl navigate would put
+          // the detail directly behind the detail, so the first Back would appear to do nothing.
+          this.nav.back(['/customers', id]);
+        } else {
+          // Create: the new customer's page isn't in history yet, so navigate — replaceUrl drops the
+          // form, otherwise Back returns to the still-filled Add form and could create a DUPLICATE.
+          this.router.navigate(['/customers', res.id], { replaceUrl: true });
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
@@ -117,7 +130,9 @@ export class CustomerFormComponent {
   }
 
   cancel(): void {
+    // Pop history rather than navigate() — a push would leave the form BEHIND the page we return to,
+    // so Back from there would land on the form again. Falls back on a direct load / refresh.
     const id = this.id();
-    this.router.navigate(id ? ['/customers', id] : ['/customers']);
+    this.nav.back(id ? ['/customers', id] : '/customers');
   }
 }

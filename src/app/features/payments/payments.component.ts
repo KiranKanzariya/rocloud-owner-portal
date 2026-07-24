@@ -9,6 +9,7 @@ import {
   PaymentFilter,
   PaymentSummary,
   OutstandingDue,
+  PAYMENT_NOTE,
 } from '../../core/services/payment.service';
 import { CustomerService } from '../customers/customer.service';
 import { CustomerListItem } from '../customers/customer.models';
@@ -60,7 +61,12 @@ export class PaymentsComponent {
     { key: 'referenceNumber', header: 'Reference' },
     { key: 'amount', header: 'Amount', align: 'right' },
     { key: 'status', header: 'Status' },
+    // Notes are sparse, so this stays a narrow icon column rather than a mostly-empty text column in
+    // an already-wide table. The text is on the tooltip; a warning note also colours the icon.
+    { key: 'notes', header: '' },
   ];
+
+  protected readonly NOTE = PAYMENT_NOTE;
 
   protected filter: PaymentFilter = { page: 1, pageSize: 25 };
 

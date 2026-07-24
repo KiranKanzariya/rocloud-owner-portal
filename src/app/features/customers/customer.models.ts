@@ -51,6 +51,8 @@ export interface CustomerPaymentSummary {
   amount: number;
   paymentMethod: string;
   paidAt: string;
+  /** Collector's note, plus any warning appended by reconcile / Razorpay confirm. See PAYMENT_NOTE. */
+  notes: string | null;
 }
 
 export interface CustomerDetail {

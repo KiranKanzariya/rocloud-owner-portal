@@ -26,7 +26,7 @@
     <div class="flex flex-wrap gap-2">
       <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus"></i> {{ 'New order' | translate }}</button>
       <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
-      <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices'])"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
+      <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices/new'], { queryParams: { customerId: c.id } })"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
       @if (amcEnabled) {
         <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
       }
@@ -410,8 +410,25 @@
         }
         @case ('payments') {
           @if (c.recentPayments.length) {
-            <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
-              <tbody class="stagger">@for (p of c.recentPayments; track p.id) { <tr class="border-b border-ink-light/60"><td class="py-2 font-mono">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td><td class="py-2">{{ p.paymentMethod }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr> }</tbody></table>
+            <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2">{{ 'Note' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
+              <tbody class="stagger">@for (p of c.recentPayments; track p.id) {
+                <tr class="border-b border-ink-light/60">
+                  <td class="py-2 font-mono">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td>
+                  <td class="py-2">{{ p.paymentMethod }}</td>
+                  <!-- Warnings (e.g. possible duplicate — refund may be due) are coloured; a plain
+                       remark stays quiet. Full text on hover, since notes can be long. -->
+                  <td class="py-2 max-w-[18rem] truncate"
+                      [class.text-danger]="NOTE.isActionRequired(p.notes)"
+                      [class.text-ink-mid]="!NOTE.isActionRequired(p.notes)"
+                      [title]="NOTE.display(p.notes)">
+                    @if (p.notes) {
+                      @if (NOTE.isActionRequired(p.notes)) { <i class="ti ti-alert-triangle"></i> }
+                      {{ NOTE.display(p.notes) }}
+                    } @else { — }
+                  </td>
+                  <td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td>
+                </tr>
+              }</tbody></table>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments yet.' | translate }}</p> }
         }
         @case ('service') {

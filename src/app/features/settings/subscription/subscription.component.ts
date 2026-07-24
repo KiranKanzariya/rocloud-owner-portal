@@ -3,6 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LEGAL } from '../../../core/legal-links';
+import { expiryState } from '../../../core/subscription-status';
 import { SubscriptionService, Subscription, Plan, Usage, SubscriptionInvoice } from '../../../core/services/subscription.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -61,8 +62,11 @@ export class SubscriptionComponent {
     { key: 'actions', header: '', align: 'right' },
   ];
 
+  /** The open renewal invoice, if one has been raised — paying it is the fastest route back to Active. */
+  protected readonly pendingInvoice = computed(() => this.invoices().find((i) => i.status === 'Pending') ?? null);
+
   /** True when there's already an open invoice — the Billing history "Pay now" handles that case. */
-  protected readonly hasPendingInvoice = computed(() => this.invoices().some((i) => i.status === 'Pending'));
+  protected readonly hasPendingInvoice = computed(() => this.pendingInvoice() !== null);
 
   // Billing history is fully loaded, so it pages in the browser. The footer used to hardcode page 1
   // with no (pageChange) handler: past 100 invoices the Next button rendered enabled and did nothing.
@@ -108,6 +112,38 @@ export class SubscriptionComponent {
   protected readonly cancelledEnded = computed(
     () => this.subscription()?.status === 'Cancelled' && this.accessEnded(),
   );
+
+  /**
+   * Expiry countdown — shared with the shell-wide strip (see core/subscription-status.ts for the edge
+   * cases). One state drives four banners: trial vs paid × ending-soon vs already-expired.
+   */
+  private readonly expiry = computed(() => expiryState(this.subscription()));
+
+  /** The trial is over and nothing was bought — access is blocked (or about to be). */
+  protected readonly trialExpired = computed(() => this.expiry().kind === 'trial' && this.expiry().expired);
+
+  /** Still on trial, inside the final week — matches the Jobs:SubscriptionExpiryWarnDays email cadence. */
+  protected readonly trialEndingSoon = computed(() => this.expiry().kind === 'trial' && this.expiry().endingSoon);
+
+  /** A paid subscription coming up for renewal inside the final week. */
+  protected readonly renewalDueSoon = computed(() => this.expiry().kind === 'paid' && this.expiry().endingSoon);
+
+  /** A paid subscription that has lapsed and not been renewed. */
+  protected readonly subscriptionExpired = computed(() => this.expiry().kind === 'paid' && this.expiry().expired);
+
+  /** Days remaining, floored at 0 — only read while an ending-soon banner is showing. */
+  protected readonly daysRemaining = computed(() => Math.max(0, this.expiry().daysLeft ?? 0));
+
+  /** On a trial there is no plan to "upgrade" from — the owner is choosing their first one. */
+  protected readonly planCtaLabel = computed(() =>
+    this.trialExpired() || this.trialEndingSoon() ? 'Choose a plan' : 'Upgrade',
+  );
+
+  /** Pay the open invoice if the job already raised one; otherwise create it on demand, then pay. */
+  protected payOrRenew(): void {
+    const open = this.pendingInvoice();
+    void (open ? this.payInvoice(open) : this.renewNow());
+  }
 
   protected readonly usageRows = computed<UsageRow[]>(() => {
     const u = this.subscription()?.usage;

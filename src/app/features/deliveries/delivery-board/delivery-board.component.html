@@ -26,7 +26,27 @@
     </div>
   }
 
+  <!-- Mode switcher: only when the day has BOTH home deliveries and plant pickups, so a single-mode
+       business sees no extra chrome. Sticky so switching never needs a scroll back up. -->
+  @if (showModeFilter()) {
+    <div class="sticky top-[50px] z-20 -my-1 py-1 bg-shell">
+      <div class="flex items-center gap-1 rounded-md border border-ink-light bg-white p-0.5 w-fit">
+        <button class="seg" [class.bg-navy]="mode() === 'all'" [class.text-white]="mode() === 'all'"
+                (click)="mode.set('all')">{{ 'All' | translate }}</button>
+        <button class="seg" [class.bg-navy]="mode() === 'home'" [class.text-white]="mode() === 'home'"
+                (click)="mode.set('home')">
+          <i class="ti ti-truck"></i> {{ 'Home delivery' | translate }} ({{ homeCount() }})
+        </button>
+        <button class="seg" [class.bg-navy]="mode() === 'pickup'" [class.text-white]="mode() === 'pickup'"
+                (click)="mode.set('pickup')">
+          <i class="ti ti-building-warehouse"></i> {{ 'Plant pickup' | translate }} ({{ pickupCount() }})
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- Columns -->
+  @if (showHome()) {
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     @for (col of [
       { key: 'pending', label: 'Pending', items: board().pending, accent: 'amber' },
@@ -89,9 +109,10 @@
       </div>
     }
   </div>
+  }
 
   <!-- Plant pickups: collected at the plant, no route/van. Own section, not a status column. -->
-  @if (board().pickups?.length) {
+  @if (showPickups() && board().pickups?.length) {
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2 px-1">
         <h3 class="text-h4"><i class="ti ti-building-warehouse"></i> {{ 'Plant pickups' | translate }}</h3>

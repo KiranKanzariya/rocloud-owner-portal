@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, RegisterGoogleRequest } from '../models/auth.models';
 
@@ -19,6 +19,9 @@ export class AuthService {
   private readonly token = inject(TokenService);
   private readonly perms = inject(PermissionService);
   private readonly base = `${environment.apiUrl}/auth`;
+
+  /** Shared refresh call while one is outstanding — see refreshToken(). */
+  private refreshInFlight: Observable<AuthResponse> | null = null;
 
   login(body: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.base}/login`, body).pipe(tap((r) => this.handleTokens(r)));
@@ -70,9 +73,22 @@ export class AuthService {
     return this.http.get<{ subdomain: string; available: boolean }>(`${this.base}/subdomain-available`, { params });
   }
 
-  /** Called by the error interceptor on a 401 (cookie-based; no body). */
+  /**
+   * Called by the error interceptor on a 401 (cookie-based; no body).
+   *
+   * The in-flight call is shared: when an access token expires with several requests outstanding,
+   * every one of them 401s and asks to refresh. Letting each issue its own POST replays the same
+   * refresh cookie N times, and the server rotates the token on first use — so calls 2..N look like
+   * a replayed (stolen) token and the API revokes every session, logging the user out mid-session.
+   * One request, one rotation. Cleared on completion/error so the next expiry refreshes again.
+   */
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.base}/refresh`, {}).pipe(tap((r) => this.handleTokens(r)));
+    this.refreshInFlight ??= this.http.post<AuthResponse>(`${this.base}/refresh`, {}).pipe(
+      tap((r) => this.handleTokens(r)),
+      finalize(() => (this.refreshInFlight = null)),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+    return this.refreshInFlight;
   }
 
   logout(): void {

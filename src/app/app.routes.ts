@@ -48,6 +48,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/impersonate/impersonate.component').then((m) => m.ImpersonateComponent),
   },
 
+  // Blocked-workspace dead-end for a non-owner (suspended / overdue / cancelled). Deliberately OUTSIDE
+  // the shell: inside it, the shell's own API calls would 401 and restart the toast storm.
+  {
+    path: 'suspended',
+    loadComponent: () => import('./features/suspended/suspended.component').then((m) => m.SuspendedComponent),
+  },
+
   // ── Authenticated shell ──────────────────────────────────────────────
   {
     path: '',

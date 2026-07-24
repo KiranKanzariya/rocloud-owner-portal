@@ -44,7 +44,7 @@
         <div class="text-right text-caption text-ink-mid flex flex-col gap-0.5">
           <span class="text-body font-semibold text-ink font-mono">{{ inv.invoiceNumber }}</span>
           <span>{{ 'Due' | translate }} {{ inv.dueDate | date: 'MMM d, y' }}</span>
-          <span>{{ 'Period' | translate }} {{ inv.periodStart | date: 'MMM d' }} – {{ inv.periodEnd | date: 'MMM d, y' }}</span>
+          <span>{{ 'Period' | translate }} {{ inv.periodStart | date: 'MMM d' }} – {{ lastCoveredDay(inv.periodStart, inv.periodEnd) | date: 'MMM d, y' }}</span>
         </div>
       </div>
 

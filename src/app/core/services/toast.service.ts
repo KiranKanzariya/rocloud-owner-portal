@@ -15,6 +15,10 @@ export class ToastService {
   readonly toasts = signal<Toast[]>([]);
 
   show(message: string, type: ToastType = 'info', durationMs = 4000): void {
+    // One cause often fans out across parallel requests — a blocked workspace fails every widget the
+    // dashboard loads, and stacking six identical toasts only makes it harder to read. Show it once.
+    if (this.toasts().some((t) => t.message === message && t.type === type)) return;
+
     const id = this.nextId++;
     this.toasts.update((list) => [...list, { id, message, type }]);
     setTimeout(() => this.dismiss(id), durationMs);

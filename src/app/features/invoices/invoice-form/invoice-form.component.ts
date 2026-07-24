@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -14,6 +14,10 @@ import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { istMonth, istMonthStart, istToday } from '../../../shared/util/ist-date.util';
 
+/** All the form needs to show and submit a customer — so a search hit (CustomerListItem) or a
+ *  fetched CustomerDetail (when arriving from the customer page) can both be selected as-is. */
+type SelectedCustomer = Pick<CustomerListItem, 'id' | 'name' | 'mobile'>;
+
 @Component({
   selector: 'app-invoice-form',
   standalone: true,
@@ -26,12 +30,13 @@ export class InvoiceFormComponent {
   private readonly customers = inject(CustomerService);
   private readonly tenantSettings = inject(TenantSettingsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly nav = inject(NavigationService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
   protected readonly customerResults = signal<CustomerListItem[]>([]);
-  protected readonly selectedCustomer = signal<CustomerListItem | null>(null);
+  protected readonly selectedCustomer = signal<SelectedCustomer | null>(null);
   protected readonly saving = signal(false);
 
   /** GST config for the notice line — so it matches what will actually be charged. */
@@ -53,6 +58,13 @@ export class InvoiceFormComponent {
   }
 
   constructor() {
+    // Arriving from a customer's page (?customerId=…) → pre-select them so the customer context
+    // isn't lost. Silently ignored if the id is stale — the search box is still there.
+    const customerId = this.route.snapshot.queryParamMap.get('customerId');
+    if (customerId) {
+      this.customers.get(customerId).subscribe({ next: (c) => this.selectCustomer(c) });
+    }
+
     // Only the GST config, so an Accountant (Invoices.Create without BusinessProfile.View) still sees the
     // notice — and nobody pulls the owner's contact details just to render one line.
     this.tenantSettings.billing().subscribe((s) => {
@@ -70,7 +82,7 @@ export class InvoiceFormComponent {
       });
   }
 
-  selectCustomer(c: CustomerListItem): void {
+  selectCustomer(c: SelectedCustomer): void {
     this.selectedCustomer.set(c);
     this.customerResults.set([]);
     this.customerSearch.setValue(c.name, { emitEvent: false });

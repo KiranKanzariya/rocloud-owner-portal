@@ -30,6 +30,15 @@
       }
     </div>
 
+    <!-- Payment preference -->
+    <select class="rounded-md border-ink-light text-body py-1.5"
+            (change)="setPaymentPreference($any($event.target).value || undefined)">
+      <option value="">{{ 'All payments' | translate }}</option>
+      @for (p of paymentPreferences; track p.value) {
+        <option [value]="p.value">{{ p.label | translate }}</option>
+      }
+    </select>
+
     <!-- Status -->
     <select class="rounded-md border-ink-light text-body py-1.5"
             (change)="setStatus($any($event.target).value === '' ? undefined : $any($event.target).value === 'true')">

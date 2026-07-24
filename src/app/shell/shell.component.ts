@@ -4,17 +4,26 @@ import { SidebarComponent } from '../shared/components/sidebar/sidebar.component
 import { TopbarComponent } from '../shared/components/topbar/topbar.component';
 import { CommandPaletteComponent } from '../shared/components/command-palette/command-palette.component';
 import { ImpersonationBannerComponent } from '../shared/components/impersonation-banner/impersonation-banner.component';
+import { ExpiryBannerComponent } from '../shared/components/expiry-banner/expiry-banner.component';
 import { LayoutService } from '../core/services/layout.service';
 
 /** Authenticated app shell: 220px sidebar + 50px topbar + scrollable content (guide §19, §25). */
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, CommandPaletteComponent, ImpersonationBannerComponent],
+  imports: [
+    RouterOutlet,
+    SidebarComponent,
+    TopbarComponent,
+    CommandPaletteComponent,
+    ImpersonationBannerComponent,
+    ExpiryBannerComponent,
+  ],
   template: `
     <!-- Lock the shell to the viewport; only <main> scrolls so the topbar/sidebar stay fixed. -->
     <div class="flex flex-col h-screen overflow-hidden bg-shell">
       <roc-impersonation-banner />
+      <roc-expiry-banner />
 
       <div class="flex flex-1 min-h-0">
         <roc-sidebar />

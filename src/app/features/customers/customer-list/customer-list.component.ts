@@ -40,6 +40,7 @@ export class CustomerListComponent {
   private readonly t = inject(TranslateService);
 
   protected readonly deliveryModes = CustomerActions.deliveryModes;
+  protected readonly paymentPreferences = CustomerActions.paymentPreferences;
 
   protected readonly rows = signal<CustomerListItem[]>([]);
   protected readonly totalCount = signal(0);
@@ -86,6 +87,11 @@ export class CustomerListComponent {
 
   setDeliveryMode(mode: string | undefined): void {
     this.filter = { ...this.filter, deliveryMode: mode, page: 1 };
+    this.load();
+  }
+
+  setPaymentPreference(pref: string | undefined): void {
+    this.filter = { ...this.filter, paymentPreference: pref, page: 1 };
     this.load();
   }
 

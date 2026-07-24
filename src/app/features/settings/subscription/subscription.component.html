@@ -37,6 +37,94 @@
       </div>
     }
 
+    <!-- Trial ending soon (final week) -->
+    @if (trialEndingSoon()) {
+      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Trial ending soon' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            @if (daysRemaining() === 0) {
+              {{ 'Your free trial ends today.' | translate }}
+            } @else if (daysRemaining() === 1) {
+              {{ 'Your free trial ends tomorrow.' | translate }}
+            } @else {
+              {{ 'Your free trial ends in {{days}} days.' | translate: { days: daysRemaining() } }}
+            }
+            {{ 'Choose a plan to keep your workspace running.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary shrink-0" (click)="upgradeOpen.set(true)">
+            <i class="ti ti-arrow-up"></i> {{ 'Choose a plan' | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Trial over and no plan bought — access is blocked once the grace window passes -->
+    @if (trialExpired()) {
+      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Trial ended' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            {{ 'Your free trial ended on' | translate }}
+            <span class="font-medium">{{ s.trialEndsAt | date: 'MMM d, y' }}</span>.
+            {{ 'Choose a plan to restore access — your data is safe and will be restored.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary shrink-0" (click)="upgradeOpen.set(true)">
+            <i class="ti ti-arrow-up"></i> {{ 'Choose a plan' | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Paid subscription coming up for renewal (final week) -->
+    @if (renewalDueSoon()) {
+      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Renewal due soon' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            @if (daysRemaining() === 0) {
+              {{ 'Your subscription expires today.' | translate }}
+            } @else if (daysRemaining() === 1) {
+              {{ 'Your subscription expires tomorrow.' | translate }}
+            } @else {
+              {{ 'Your subscription expires in {{days}} days.' | translate: { days: daysRemaining() } }}
+            }
+            {{ 'Renew to keep your workspace running.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary shrink-0" [disabled]="renewing() || payingId() !== null" (click)="payOrRenew()">
+            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+            {{ (pendingInvoice() ? 'Pay now' : 'Renew now') | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Paid subscription lapsed — access is blocked once the grace window passes -->
+    @if (subscriptionExpired()) {
+      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-h4">{{ 'Subscription expired' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            {{ 'Your subscription ended on' | translate }}
+            <span class="font-medium">{{ s.subscriptionEndsAt | date: 'MMM d, y' }}</span>.
+            {{ 'Renew to restore access — your data is safe and will be restored.' | translate }}
+          </p>
+        </div>
+        @if (canManage) {
+          <button class="btn-primary shrink-0" [disabled]="renewing() || payingId() !== null" (click)="payOrRenew()">
+            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+            {{ (pendingInvoice() ? 'Pay now' : 'Renew now') | translate }}
+          </button>
+        }
+      </div>
+    }
+
     <!-- Current plan card -->
     <div class="card flex flex-col gap-4">
       <div class="flex items-start justify-between">
@@ -67,13 +155,15 @@
           }
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          @if (canRenew()) {
+          <!-- Suppressed while the expired banner is up: it carries the same action, and two identical
+               "Renew now" buttons a few pixels apart is just noise. The banner is the prominent one. -->
+          @if (canRenew() && !subscriptionExpired()) {
             <button class="btn-primary" [disabled]="renewing() || payingId() !== null" (click)="renewNow()">
               @if (renewing()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-refresh"></i> {{ 'Renew now' | translate }} }
             </button>
           }
           @if (canManage && !isEnterprise()) {
-            <button [class]="canRenew() ? 'btn-secondary' : 'btn-primary'" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ 'Upgrade' | translate }}</button>
+            <button [class]="canRenew() ? 'btn-secondary' : 'btn-primary'" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ planCtaLabel() | translate }}</button>
           }
         </div>
       </div>

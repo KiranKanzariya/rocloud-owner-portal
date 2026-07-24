@@ -16,6 +16,7 @@ import { Product } from '../../../core/models/product';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { BottleBadgeComponent } from '../../../shared/components/bottle-badge/bottle-badge.component';
 import { CollectPaymentModalComponent } from '../../payments/collect-payment-modal/collect-payment-modal.component';
+import { PAYMENT_NOTE } from '../../../core/services/payment.service';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { AnimateOnChangeDirective } from '../../../shared/directives/animate-on-change.directive';
 import { PulseOnChangeDirective } from '../../../shared/directives/pulse-on-change.directive';
@@ -36,6 +37,9 @@ type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'payments' | 's
   templateUrl: './customer-detail.component.html',
 })
 export class CustomerDetailComponent {
+  /** Tells an actionable payment warning from a plain remark — see PAYMENT_NOTE. */
+  protected readonly NOTE = PAYMENT_NOTE;
+
   private readonly service = inject(CustomerService);
   private readonly orders = inject(OrderService);
   private readonly inventory = inject(InventoryService);

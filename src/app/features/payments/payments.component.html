@@ -79,6 +79,20 @@
     </ng-template>
     <ng-template appColumnCell="amount" let-row><span class="font-mono">₹{{ row.amount | number: '1.0-0' }}</span></ng-template>
     <ng-template appColumnCell="status" let-row><span [class]="statusClass(row.status)">{{ row.status | translate }}</span></ng-template>
+    <!-- A warning note (e.g. possible duplicate — refund may be due) is coloured so it is caught while
+         scanning; a plain remark stays quiet. Both read in full on hover. -->
+    <ng-template appColumnCell="notes" let-row>
+      @if (row.notes) {
+        <i
+          class="ti"
+          [class.ti-alert-triangle]="NOTE.isActionRequired(row.notes)"
+          [class.text-danger]="NOTE.isActionRequired(row.notes)"
+          [class.ti-notes]="!NOTE.isActionRequired(row.notes)"
+          [class.text-ink-mid]="!NOTE.isActionRequired(row.notes)"
+          [title]="NOTE.display(row.notes)"
+        ></i>
+      }
+    </ng-template>
   </roc-data-table>
 </div>
 

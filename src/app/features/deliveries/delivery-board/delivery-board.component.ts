@@ -30,6 +30,31 @@ export class DeliveryBoardComponent {
     (this.board().toDeliver ?? []).reduce((sum, t) => sum + t.quantity, 0),
   );
 
+  /**
+   * Which mode the board is focused on. A tenant running BOTH modes otherwise has to scroll past the
+   * whole home-delivery Kanban to reach plant pickups (and back) every time a walk-in arrives.
+   */
+  protected readonly mode = signal<'all' | 'home' | 'pickup'>('all');
+
+  protected readonly homeCount = computed(() => {
+    const b = this.board();
+    return b.pending.length + b.inTransit.length + b.delivered.length + b.failed.length;
+  });
+  protected readonly pickupCount = computed(() => this.board().pickups?.length ?? 0);
+
+  /** Only worth showing the switcher when the day actually has both kinds of work. */
+  protected readonly showModeFilter = computed(() => this.homeCount() > 0 && this.pickupCount() > 0);
+
+  protected readonly showHome = computed(() => {
+    if (this.showModeFilter()) return this.mode() !== 'pickup';
+    // Pickup-only day: don't spend the top of the screen on four empty status columns — that pushes
+    // the actual work below the fold. Keep them only when there is nothing else to show, so a day
+    // with no deliveries at all still renders a board instead of a blank page.
+    return this.homeCount() > 0 || this.pickupCount() === 0;
+  });
+
+  protected readonly showPickups = computed(() => !this.showModeFilter() || this.mode() !== 'home');
+
   constructor() {
     this.load();
     // Live updates every 30s; skip when the tab is hidden to avoid wasted calls.

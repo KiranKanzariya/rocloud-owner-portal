@@ -29,16 +29,18 @@ describe('errorInterceptor — 403 handling', () => {
   let toast: ToastSpy;
   let perms: PermissionService;
   let navigated: string[];
+  let sessionsCleared: number;
   let consoleError: typeof console.error;
 
   beforeEach(() => {
     navigated = [];
+    sessionsCleared = 0;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         { provide: ToastService, useClass: ToastSpy },
-        { provide: AuthService, useValue: { refreshToken: () => undefined, clearSession: () => undefined } },
+        { provide: AuthService, useValue: { refreshToken: () => undefined, clearSession: () => sessionsCleared++ } },
         { provide: TokenService, useValue: { getToken: () => null } },
         {
           provide: Router,
@@ -99,9 +101,37 @@ describe('errorInterceptor — 403 handling', () => {
     perms.loadFromToken(makeJwt('Deliveries.ViewOwn,Payments.Collect', 'DeliveryBoy'));
 
     http.get('/api/thing').subscribe({ error: () => undefined });
+    ctrl.expectOne('/api/thing').flush({ code: 'PLAN_LIMIT_REACHED', error: 'Limit reached.' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(toast.errors).toEqual(['Limit reached.']);
+    expect(navigated).toEqual([]);
+  });
+
+  it('sends a non-owner to /suspended when the whole workspace is blocked', () => {
+    perms.loadFromToken(makeJwt('Deliveries.ViewOwn,Payments.Collect', 'DeliveryBoy'));
+
+    http.get('/api/thing').subscribe({ error: () => undefined });
     ctrl.expectOne('/api/thing').flush({ code: 'PAYMENT_REQUIRED' }, { status: 402, statusText: 'Payment Required' });
 
     expect(toast.errors).toEqual(['Your subscription is overdue — please renew to continue.']);
-    expect(navigated).toEqual([]);
+    expect(navigated).toEqual(['/suspended']);
+    expect(sessionsCleared).toBe(1); // the token is inert now — don't leave it lying around
+  });
+
+  it('sends the Owner to the subscription page instead — they can actually pay', () => {
+    http.get('/api/thing').subscribe({ error: () => undefined });
+    ctrl.expectOne('/api/thing').flush({ code: 'TENANT_SUSPENDED' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(navigated).toEqual(['/settings/subscription']);
+    expect(sessionsCleared).toBe(0); // the Owner keeps their session — they still have a bill to pay
+  });
+
+  it('stays quiet on TENANT_BLOCKED — the login screen shows the real reason', () => {
+    http.post('/api/auth/login', {}).subscribe({ error: () => undefined });
+    ctrl
+      .expectOne('/api/auth/login')
+      .flush({ code: 'TENANT_BLOCKED', error: 'This workspace is suspended.' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(toast.errors).toEqual([]);
   });
 });
