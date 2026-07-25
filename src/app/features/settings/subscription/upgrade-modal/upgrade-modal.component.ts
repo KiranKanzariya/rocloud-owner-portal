@@ -27,6 +27,13 @@ export class UpgradeModalComponent {
 
   readonly open = input(false);
   readonly plans = input<Plan[]>([]);
+  /**
+   * Lock the tenant's current plan as "Current plan" (and block downgrades). True only for a LIVE PAID
+   * subscription, where re-buying the same plan is a no-op. Defaults true to preserve behaviour for any
+   * caller that doesn't pass it; the subscription page passes false while lapsed/trial/blocked so the
+   * owner can pick their current plan to (re)subscribe instead of being forced to upgrade.
+   */
+  readonly lockCurrentPlan = input(true);
   /** Emitted after the JWT has been refreshed with the new plan. */
   readonly upgraded = output<void>();
   readonly closed = output<void>();
@@ -53,8 +60,13 @@ export class UpgradeModalComponent {
     return this.billing() === 'Yearly' ? p.yearlyPrice : p.monthlyPrice;
   }
 
+  /** The current plan is only a dead-end (unclickable) when it's a live paid plan; else it's re-choosable. */
+  isLockedCurrent(p: Plan): boolean {
+    return this.lockCurrentPlan() && this.isCurrent(p);
+  }
+
   async choose(p: Plan): Promise<void> {
-    if (this.isCurrent(p) || this.busyPlan()) return;
+    if (this.isLockedCurrent(p) || this.busyPlan()) return;
     this.busyPlan.set(p.planType);
     try {
       const init = await firstValueFrom(this.service.initiate(p.planType, this.billing()));

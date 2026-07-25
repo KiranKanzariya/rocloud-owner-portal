@@ -5,6 +5,7 @@ import { TenantSettingsService, TenantSettings } from '../../../core/services/te
 import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { environment } from '../../../../environments/environment';
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -28,6 +29,8 @@ export class ProfileComponent {
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
+  /** Root domain the workspace signs in under (from environment), e.g. "rocloud.in". */
+  protected readonly baseDomain = environment.baseDomain;
   protected readonly languages = LANGUAGES;
   protected readonly settings = signal<TenantSettings | null>(null);
   protected readonly saving = signal(false);

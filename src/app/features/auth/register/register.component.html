@@ -65,7 +65,7 @@
               <span class="text-caption font-medium">{{ 'Subdomain' | translate }}</span>
               <div class="flex items-center gap-1">
                 <input formControlName="subdomain" class="rounded-md border-ink-light flex-1" placeholder="sharma-ro" />
-                <span class="text-caption text-ink-mid">.rocloud.app</span>
+                <span class="text-caption text-ink-mid">.{{ baseDomain }}</span>
               </div>
               @if (form.controls.subdomain.touched && form.controls.subdomain.invalid) {
                 <span class="text-micro text-danger">{{ '3–30 chars: lowercase letters, numbers, hyphens.' | translate }}</span>

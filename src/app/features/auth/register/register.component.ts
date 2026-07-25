@@ -32,6 +32,8 @@ export class RegisterComponent {
   private readonly t = inject(TranslateService);
   private readonly social = inject(SocialAuthService);
 
+  /** Root domain the new workspace will sign in under (from environment), e.g. "rocloud.in". */
+  protected readonly baseDomain = environment.baseDomain;
   protected readonly step = signal(1);
   protected readonly loading = signal(false);
 

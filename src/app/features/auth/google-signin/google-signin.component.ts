@@ -70,7 +70,7 @@ export class GoogleSigninComponent {
   protected readonly workspaces = signal<GoogleWorkspace[] | null>(null);
   protected readonly noWorkspace = signal(false);
 
-  /** Optional subdomain the user came from (e.g. they clicked Google on acme.rocloud.app/login). */
+  /** Optional subdomain the user came from (e.g. they clicked Google on acme.rocloud.in/login). */
   private readonly tenantHint = this.route.snapshot.queryParamMap.get('tenant');
 
   constructor() {

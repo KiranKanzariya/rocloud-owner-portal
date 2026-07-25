@@ -25,7 +25,7 @@
               <div class="flex items-center gap-2">
                 <h4 class="text-h3">{{ p.name }}</h4>
                 @if (p.planType === 'Pro') { <span class="status-active-info">{{ 'Popular' | translate }}</span> }
-                @if (isCurrent(p)) { <span class="status-delivered">{{ 'Current' | translate }}</span> }
+                @if (isLockedCurrent(p)) { <span class="status-delivered">{{ 'Current' | translate }}</span> }
               </div>
               <p class="mt-1"><span class="text-h2 font-semibold">₹{{ price(p) | number: '1.0-0' }}</span>
                 <span class="text-caption text-ink-mid">/{{ (billing() === 'Yearly' ? 'year' : 'month') | translate }}</span></p>
@@ -50,9 +50,9 @@
                 <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
             </ul>
 
-            @if (isCurrent(p)) {
+            @if (isLockedCurrent(p)) {
               <button class="btn-secondary" disabled>{{ 'Current plan' | translate }}</button>
-            } @else if (isDowngrade(p)) {
+            } @else if (lockCurrentPlan() && isDowngrade(p)) {
               <button class="btn-secondary" disabled>{{ 'Contact us to downgrade' | translate }}</button>
             } @else {
               <button class="btn-primary" [disabled]="busyPlan() !== null" (click)="choose(p)">

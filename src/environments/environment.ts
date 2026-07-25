@@ -2,6 +2,8 @@ export const environment = {
   production: false,
   apiUrl: '/api',
   tenantUrlFormat: 'https://{subdomain}.localhost:4200',
+  // Root domain tenants sign in under; shown wherever a tenant's {subdomain}.<domain> is displayed.
+  baseDomain: 'rocloud.in',
   googleClientId: '926900050656-2kbm2un1r4d3l6kn0ssoo2l7asnhipn7.apps.googleusercontent.com',
   // Central app domain where Google sign-in runs (single Google "Authorized origin"). Subdomain
   // login redirects here; this page resolves the workspace and hands back to the tenant subdomain.
@@ -9,7 +11,7 @@ export const environment = {
   // Public marketing site — the single home of the Terms, Privacy and other policies (see
   // core/legal-links.ts). Points at the real site even locally: the policies are public, and a
   // dev-only copy would be a second version of our legal text.
-  siteUrl: 'https://rocloud.app',
+  siteUrl: 'https://rocloud.in',
   // Timezone for displaying all dates/times — Angular DatePipe offset (e.g. '+0530' = IST).
   // Keep in sync with the API's App:TimeZone.
   timeZoneOffset: '+0530',

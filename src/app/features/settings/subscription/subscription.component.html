@@ -260,4 +260,4 @@
   }
 </div>
 
-<app-upgrade-modal [open]="upgradeOpen()" [plans]="plans()" (upgraded)="onUpgraded()" (closed)="upgradeOpen.set(false)" />
+<app-upgrade-modal [open]="upgradeOpen()" [plans]="plans()" [lockCurrentPlan]="hasLivePaidPlan()" (upgraded)="onUpgraded()" (closed)="upgradeOpen.set(false)" />

@@ -134,6 +134,18 @@ export class SubscriptionComponent {
   /** Days remaining, floored at 0 — only read while an ending-soon banner is showing. */
   protected readonly daysRemaining = computed(() => Math.max(0, this.expiry().daysLeft ?? 0));
 
+  /**
+   * True only when the tenant has a LIVE PAID subscription — the one case where re-choosing the same
+   * plan in the modal is a genuine no-op and it should be locked as "Current plan". While on a trial
+   * (converting to paid), overdue, suspended, cancelled, or lapsed, the owner MUST be able to pick
+   * their current plan to (re)subscribe — otherwise a lapsed Basic tenant can only escape by upgrading.
+   */
+  protected readonly hasLivePaidPlan = computed(() => {
+    const s = this.subscription();
+    return !!s && s.status === 'Active' && !!s.subscriptionEndsAt
+      && new Date(s.subscriptionEndsAt).getTime() > Date.now();
+  });
+
   /** On a trial there is no plan to "upgrade" from — the owner is choosing their first one. */
   protected readonly planCtaLabel = computed(() =>
     this.trialExpired() || this.trialEndingSoon() ? 'Choose a plan' : 'Upgrade',

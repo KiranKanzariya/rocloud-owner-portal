@@ -1,7 +1,7 @@
 import { environment } from '../../environments/environment';
 
 /**
- * The public policy pages, served from the marketing site (rocloud.app) — not from this portal.
+ * The public policy pages, served from the marketing site (rocloud.in) — not from this portal.
  *
  * They live in exactly one place so the published text can never drift into two versions, and so
  * the URLs stay stable: these are the addresses registered with Razorpay. Always link out to them;
