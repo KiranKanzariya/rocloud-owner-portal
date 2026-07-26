@@ -52,28 +52,31 @@ describe('CustomerDetailComponent — permission-gated tabs', () => {
   // The Service requests tab is deferred to a future release (feature flag `amcService` off), so it
   // never appears in v1 regardless of the AMC.View permission.
   it('a Manager sees every v1 tab (Service requests is feature-flagged off)', () => {
-    expect(tabIdsFor('Customers.View,Orders.View,Inventory.View,AMC.View')).toEqual([
+    expect(tabIdsFor('Customers.View,Orders.View,Inventory.View,Invoices.View,Payments.View,AMC.View')).toEqual([
       'overview',
       'subscriptions',
       'orders',
       'returns',
+      'invoices',
       'payments',
     ]);
   });
 
-  it('a Technician loses Order/Return history, and Service requests stays hidden in v1', () => {
+  // Payment history now fetches from GET /api/payments (Payments.View), so a role without it loses the
+  // tab too — it would otherwise open onto a 403.
+  it('a Technician loses Order/Return/Payment history, and Service requests stays hidden in v1', () => {
     expect(tabIdsFor('Customers.View,AMC.View,AMC.Update')).toEqual([
       'overview',
       'subscriptions',
-      'payments',
     ]);
   });
 
-  it('an Accountant loses Return history and Service requests, keeps Order history', () => {
+  it('an Accountant loses Return history and Service requests, keeps Order history and Invoices', () => {
     expect(tabIdsFor('Customers.View,Orders.View,Payments.View,Invoices.View')).toEqual([
       'overview',
       'subscriptions',
       'orders',
+      'invoices',
       'payments',
     ]);
   });

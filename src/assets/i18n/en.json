@@ -352,6 +352,12 @@
   "Jars delivered": "Jars delivered",
   "Jars out": "Jars out",
   "Jars returned": "Jars returned",
+  "Jars returned by": "Jars returned by",
+  "No customer selected.": "No customer selected.",
+  "Received on": "Received on",
+  "Return recorded.": "Return recorded.",
+  "Returned on": "Returned on",
+  "Select a product": "Select a product",
   "Jars with customer": "Jars with customer",
   "Jump to…": "Jump to…",
   "Landmark": "Landmark",
@@ -787,5 +793,8 @@
   "Your subscription expires in {{days}} days.": "Your subscription expires in {{days}} days.",
   "Your subscription expires today.": "Your subscription expires today.",
   "Your subscription expires tomorrow.": "Your subscription expires tomorrow.",
-  "Your subscription has expired.": "Your subscription has expired."
+  "Your subscription has expired.": "Your subscription has expired.",
+  "No invoices yet.": "No invoices yet.",
+  "{{count}} invoice(s)": "{{count}} invoice(s)",
+  "{{count}} payment(s)": "{{count}} payment(s)"
 }

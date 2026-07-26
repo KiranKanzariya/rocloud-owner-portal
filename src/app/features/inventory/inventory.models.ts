@@ -42,3 +42,13 @@ export interface AddMovement {
   customerId?: string | null;
   notes?: string | null;
 }
+
+/** Empty jars a customer handed back with no delivery to attach them to. May be backdated. */
+export interface RecordCustomerReturn {
+  customerId: string;
+  productId: string;
+  quantity: number;
+  /** The day the jars came back. Omit for today; may be backdated within the platform window. */
+  returnedOn?: string | null;
+  notes?: string | null;
+}

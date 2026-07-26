@@ -14,7 +14,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
-import { istToday } from '../../../shared/util/ist-date.util';
+import { TenantSettingsService } from '../../../core/services/tenant-settings.service';
+import { istToday, istTodayMinusDays } from '../../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-order-form',
@@ -30,6 +31,7 @@ export class OrderFormComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly nav = inject(NavigationService);
+  private readonly settings = inject(TenantSettingsService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
@@ -54,8 +56,13 @@ export class OrderFormComponent {
   // frozen price rather than the current catalogue price. Mirrors the backend's freeze-on-edit.
   private readonly frozenRates = signal<Map<string, number>>(new Map());
 
-  /** Today in yyyy-MM-dd — the date input's default (deliver today) and min (no past dates). */
+  /** Today in yyyy-MM-dd — the date input's default (deliver today). */
   protected readonly todayIso = istToday();
+  /**
+   * Earliest selectable order date — today minus the platform backdating window. Starts at today (window
+   * unknown → no backdating, never more permissive than the API) and widens once the window loads.
+   */
+  protected readonly earliestOrderDate = signal(this.todayIso);
 
   protected readonly customerSearch = this.fb.nonNullable.control('');
   protected readonly form = this.fb.nonNullable.group({
@@ -84,6 +91,9 @@ export class OrderFormComponent {
   }
 
   constructor() {
+    // Widen the date picker to the platform backdating window (defaults to today-only until it loads).
+    this.settings.backdateWindowDays().subscribe((days) => this.earliestOrderDate.set(istTodayMinusDays(days)));
+
     const editId = this.editId();
     if (editId) {
       // Load products FIRST, then populate the order's lines. The item <select> options come from

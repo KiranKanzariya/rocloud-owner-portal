@@ -12,6 +12,8 @@ export interface CollectPayment {
   paymentMethod: string;
   referenceNumber?: string | null;
   notes?: string | null;
+  /** The day the money was received. Omit for today; may be backdated within the platform window. */
+  paidOn?: string | null;
 }
 
 export interface PaymentListItem {

@@ -57,7 +57,7 @@
       <div class="flex flex-col gap-1">
         <span class="text-caption font-medium">{{ 'Deliver on' | translate }}</span>
         <div class="flex items-center gap-2">
-          <input type="date" formControlName="orderDate" [min]="todayIso"
+          <input type="date" formControlName="orderDate" [min]="earliestOrderDate()"
                  class="rounded-md border-ink-light text-body py-1.5" />
           @if (isAdvance()) {
             <span class="inline-flex items-center gap-1 rounded-full bg-foam text-navy px-2.5 py-1 text-micro font-medium">

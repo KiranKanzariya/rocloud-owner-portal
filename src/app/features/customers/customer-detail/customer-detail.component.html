@@ -26,6 +26,7 @@
     <div class="flex flex-wrap gap-2">
       <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus"></i> {{ 'New order' | translate }}</button>
       <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
+      <button *appCan="'Inventory.Manage'" class="btn-secondary" (click)="showReturn.set(true)"><i class="ti ti-arrow-back-up"></i> {{ 'Record return' | translate }}</button>
       <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices/new'], { queryParams: { customerId: c.id } })"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
       @if (amcEnabled) {
         <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
@@ -408,10 +409,58 @@
             <p class="text-body text-ink-mid">{{ 'No returns recorded yet.' | translate }}</p>
           }
         }
+        @case ('invoices') {
+          @if (invoicesLoading() && !invoiceRows().length) {
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+          } @else if (invoiceRows().length) {
+            <table class="w-full text-body">
+              <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
+                <th class="py-2">{{ 'Date' | translate }}</th>
+                <th class="py-2">{{ 'Invoice #' | translate }}</th>
+                <th class="py-2">{{ 'Due' | translate }}</th>
+                <th class="py-2 text-right">{{ 'Amount' | translate }}</th>
+                <th class="py-2 text-right">{{ 'Paid' | translate }}</th>
+                <th class="py-2 text-right">{{ 'Balance' | translate }}</th>
+                <th class="py-2 pl-6">{{ 'Status' | translate }}</th>
+                <th class="py-2 w-8"></th>
+              </tr></thead>
+              <tbody class="stagger">
+                @for (inv of invoiceRows(); track inv.id) {
+                  <tr class="border-b border-ink-light/60 hover:bg-shell cursor-pointer" (click)="openInvoice(inv)">
+                    <td class="py-2 font-mono">{{ inv.invoiceDate | date: 'MMM d, y' }}</td>
+                    <td class="py-2 font-mono">{{ inv.invoiceNumber }}</td>
+                    <td class="py-2 font-mono">{{ inv.dueDate | date: 'MMM d, y' }}</td>
+                    <td class="py-2 text-right font-mono">₹{{ inv.totalAmount | number: '1.0-0' }}</td>
+                    <td class="py-2 text-right font-mono">₹{{ inv.paidAmount | number: '1.0-0' }}</td>
+                    <td class="py-2 text-right font-mono" [class.text-danger]="inv.balance > 0">₹{{ inv.balance | number: '1.0-0' }}</td>
+                    <td class="py-2 pl-6"><span [class]="invoiceStatusClass(inv.status)">{{ inv.status | translate }}</span></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Footer: total + pagination -->
+            <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
+              <span>{{ '{{count}} invoice(s)' | translate: { count: invoicesTotal() } }}</span>
+              @if (invoicesTotalPages() > 1) {
+                <div class="flex items-center gap-2">
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="invoicesPage() === 1" (click)="invoicesGoTo(invoicesPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <span>{{ invoicesPage() }} / {{ invoicesTotalPages() }}</span>
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="invoicesPage() === invoicesTotalPages()" (click)="invoicesGoTo(invoicesPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-body text-ink-mid">{{ 'No invoices yet.' | translate }}</p>
+          }
+        }
         @case ('payments') {
-          @if (c.recentPayments.length) {
+          @if (paymentsLoading() && !paymentRows().length) {
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+          } @else if (paymentRows().length) {
             <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2">{{ 'Note' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
-              <tbody class="stagger">@for (p of c.recentPayments; track p.id) {
+              <tbody class="stagger">@for (p of paymentRows(); track p.id) {
                 <tr class="border-b border-ink-light/60">
                   <td class="py-2 font-mono">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td>
                   <td class="py-2">{{ p.paymentMethod }}</td>
@@ -429,6 +478,18 @@
                   <td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td>
                 </tr>
               }</tbody></table>
+
+            <!-- Footer: total + pagination -->
+            <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
+              <span>{{ '{{count}} payment(s)' | translate: { count: paymentsTotal() } }}</span>
+              @if (paymentsTotalPages() > 1) {
+                <div class="flex items-center gap-2">
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="paymentsPage() === 1" (click)="paymentsGoTo(paymentsPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <span>{{ paymentsPage() }} / {{ paymentsTotalPages() }}</span>
+                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="paymentsPage() === paymentsTotalPages()" (click)="paymentsGoTo(paymentsPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                </div>
+              }
+            </div>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments yet.' | translate }}</p> }
         }
         @case ('service') {
@@ -493,6 +554,12 @@
     [presetCustomer]="{ id: c.id, name: c.name, mobile: c.mobile }"
     (saved)="onPaymentSaved()"
     (closed)="showPayment.set(false)" />
+
+  <app-record-return-modal
+    [open]="showReturn()"
+    [customer]="{ id: c.id, name: c.name }"
+    (saved)="onReturnSaved()"
+    (closed)="showReturn.set(false)" />
 
   <app-service-detail-modal
     [requestId]="serviceDetailId()"

@@ -42,6 +42,21 @@ export class DeliveryBoardComponent {
   });
   protected readonly pickupCount = computed(() => this.board().pickups?.length ?? 0);
 
+  /**
+   * Pickups shown awaiting-first, then completed. The flat grid otherwise mixes still-to-collect cards
+   * among Delivered/Failed ones in API order, so the owner has to hunt for what still needs doing.
+   * Completed cards fall below, most recently actioned first (deliveredAt is the best "last updated"
+   * proxy on the list item). Awaiting cards keep their incoming order (JS sort is stable).
+   */
+  protected readonly sortedPickups = computed(() => {
+    const done = (s: string): boolean => s === 'Delivered' || s === 'Failed';
+    return [...(this.board().pickups ?? [])].sort((a, b) => {
+      if (done(a.status) !== done(b.status)) return done(a.status) ? 1 : -1;   // awaiting first
+      if (!done(a.status)) return 0;                                           // both awaiting → keep order
+      return (b.deliveredAt ?? '').localeCompare(a.deliveredAt ?? '');         // both done → newest first
+    });
+  });
+
   /** Only worth showing the switcher when the day actually has both kinds of work. */
   protected readonly showModeFilter = computed(() => this.homeCount() > 0 && this.pickupCount() > 0);
 

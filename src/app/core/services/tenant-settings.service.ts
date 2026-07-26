@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response';
 import { guarded } from '../http/guarded';
@@ -71,5 +71,23 @@ export class TenantSettingsService {
 
   update(body: UpdateTenantSettings): Observable<unknown> {
     return this.http.put<ApiResponse<unknown>>(this.base, body);
+  }
+
+  /** Cached — the window is a platform constant for the session, so fetch it at most once. */
+  private backdateWindow$?: Observable<number>;
+
+  /**
+   * How many days back an order/payment/return may be dated. Readable by any authenticated user, so the
+   * date pickers can grey out older days to match exactly what the API enforces. Defaults to 0 (today
+   * only) if the call fails, so the UI is never more permissive than the server.
+   */
+  backdateWindowDays(): Observable<number> {
+    this.backdateWindow$ ??= this.http
+      .get<ApiResponse<{ backdateWindowDays: number }>>(`${this.base}/backdate-window`)
+      .pipe(
+        map((r) => r.data?.backdateWindowDays ?? 0),
+        shareReplay(1),
+      );
+    return this.backdateWindow$;
   }
 }

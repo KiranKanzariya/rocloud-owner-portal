@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PagedResult } from '../../core/models/api-response';
-import { AddMovement, InventoryMovement, InventorySummary, MovementFilter } from './inventory.models';
+import { AddMovement, InventoryMovement, InventorySummary, MovementFilter, RecordCustomerReturn } from './inventory.models';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -28,6 +28,11 @@ export class InventoryService {
 
   addMovement(body: AddMovement): Observable<{ id: string }> {
     return this.http.post<ApiResponse<{ id: string }>>(`${this.base}/movements`, body).pipe(map((r) => r.data!));
+  }
+
+  /** Record jars a customer handed back outside a delivery (optionally backdated). */
+  recordCustomerReturn(body: RecordCustomerReturn): Observable<{ id: string }> {
+    return this.http.post<ApiResponse<{ id: string }>>(`${this.base}/returns`, body).pipe(map((r) => r.data!));
   }
 
   reconcile(): Observable<unknown> {

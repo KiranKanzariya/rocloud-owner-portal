@@ -23,6 +23,15 @@ export function istToday(): string {
   return new Date(Date.now() + offsetMs()).toISOString().slice(0, 10);
 }
 
+/**
+ * `days` before today in the configured timezone as `YYYY-MM-DD` — the earliest a backdated order /
+ * payment / return may be dated (the `min` of the date picker). `days = 0` yields today.
+ */
+export function istTodayMinusDays(days: number): string {
+  const dayMs = 24 * 60 * 60 * 1000;
+  return new Date(Date.now() + offsetMs() - Math.max(0, days) * dayMs).toISOString().slice(0, 10);
+}
+
 /** Current month in the configured timezone as `YYYY-MM` (for <input type="month"> defaults). */
 export function istMonth(): string {
   return istToday().slice(0, 7);

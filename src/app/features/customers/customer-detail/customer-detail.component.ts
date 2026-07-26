@@ -10,13 +10,16 @@ import { InventoryService } from '../../inventory/inventory.service';
 import { InventoryMovement } from '../../inventory/inventory.models';
 import { ServiceRequestService } from '../../service-requests/service-request.service';
 import { ServiceRequestListItem } from '../../service-requests/service-request.models';
+import { InvoiceService } from '../../invoices/invoice.service';
+import { InvoiceListItem } from '../../invoices/invoice.models';
 import { ServiceDetailModalComponent } from '../../service-requests/service-detail-modal/service-detail-modal.component';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { BottleBadgeComponent } from '../../../shared/components/bottle-badge/bottle-badge.component';
 import { CollectPaymentModalComponent } from '../../payments/collect-payment-modal/collect-payment-modal.component';
-import { PAYMENT_NOTE } from '../../../core/services/payment.service';
+import { RecordReturnModalComponent } from '../../inventory/record-return-modal/record-return-modal.component';
+import { PaymentService, PaymentListItem, PAYMENT_NOTE } from '../../../core/services/payment.service';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { AnimateOnChangeDirective } from '../../../shared/directives/animate-on-change.directive';
 import { PulseOnChangeDirective } from '../../../shared/directives/pulse-on-change.directive';
@@ -28,12 +31,12 @@ import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { istToday } from '../../../shared/util/ist-date.util';
 import { FeatureName, isFeatureEnabled } from '../../../core/feature-flags';
 
-type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'payments' | 'service';
+type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'invoices' | 'payments' | 'service';
 
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, ServiceDetailModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
+  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, RecordReturnModalComponent, ServiceDetailModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
   templateUrl: './customer-detail.component.html',
 })
 export class CustomerDetailComponent {
@@ -44,6 +47,8 @@ export class CustomerDetailComponent {
   private readonly orders = inject(OrderService);
   private readonly inventory = inject(InventoryService);
   private readonly serviceRequests = inject(ServiceRequestService);
+  private readonly invoicesApi = inject(InvoiceService);
+  private readonly paymentsApi = inject(PaymentService);
   private readonly productsApi = inject(ProductService);
   private readonly perms = inject(PermissionService);
   private readonly route = inject(ActivatedRoute);
@@ -62,6 +67,7 @@ export class CustomerDetailComponent {
   protected readonly tab = signal<Tab>('overview');
   protected readonly savingDiscount = signal(false);
   protected readonly showPayment = signal(false);
+  protected readonly showReturn = signal(false);
 
   // Add-subscription form (recurring delivery → nightly auto-orders).
   protected readonly products = signal<Product[]>([]);
@@ -114,6 +120,26 @@ export class CustomerDetailComponent {
   private returnsLoaded = false;
   protected readonly returnsTotalPages = computed(() => Math.max(1, Math.ceil(this.returnsTotal() / this.returnsPageSize)));
 
+  // Invoice history for this customer — loaded lazily on the Invoices tab, newest first (same source as
+  // the standalone /invoices list, scoped to this customer). Rows drill through to /invoices/:id.
+  private readonly invoicesPageSize = 10;
+  protected readonly invoiceRows = signal<InvoiceListItem[]>([]);
+  protected readonly invoicesTotal = signal(0);
+  protected readonly invoicesPage = signal(1);
+  protected readonly invoicesLoading = signal(false);
+  private invoicesLoaded = false;
+  protected readonly invoicesTotalPages = computed(() => Math.max(1, Math.ceil(this.invoicesTotal() / this.invoicesPageSize)));
+
+  // Payment history for this customer — loaded lazily on the Payments tab, newest first, PAGED (the
+  // customer payload only carries the latest 5; this endpoint reaches the whole history).
+  private readonly paymentsPageSize = 10;
+  protected readonly paymentRows = signal<PaymentListItem[]>([]);
+  protected readonly paymentsTotal = signal(0);
+  protected readonly paymentsPage = signal(1);
+  protected readonly paymentsLoading = signal(false);
+  private paymentsLoaded = false;
+  protected readonly paymentsTotalPages = computed(() => Math.max(1, Math.ceil(this.paymentsTotal() / this.paymentsPageSize)));
+
   // Service requests (repair / maintenance / AMC tickets) for this customer — loaded lazily on the
   // Service tab, newest first. Clicking a row opens the shared service-detail modal in place.
   private readonly servicePageSize = 10;
@@ -131,16 +157,18 @@ export class CustomerDetailComponent {
   protected discountValue = 0;
 
   /**
-   * Overview / subscriptions / payments render from the customer payload this page already loaded,
-   * so Customers.View covers them. The other three fetch from their own module's API, which a role
-   * like Technician or Accountant cannot read — hide the tab rather than open it onto an empty list.
+   * Overview / subscriptions render from the customer payload this page already loaded, so
+   * Customers.View covers them. The rest fetch from their own module's API — which the API gates on
+   * that module's permission (GET /api/payments needs Payments.View, etc.) — so a role that cannot
+   * read one has its tab hidden rather than opening onto a 403.
    */
   private static readonly ALL_TABS: { id: Tab; label: string; permission?: string; feature?: FeatureName }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'subscriptions', label: 'Subscriptions' },
     { id: 'orders', label: 'Order history', permission: 'Orders.View' },
     { id: 'returns', label: 'Return history', permission: 'Inventory.View' },
-    { id: 'payments', label: 'Payment history' },
+    { id: 'invoices', label: 'Invoices', permission: 'Invoices.View' },
+    { id: 'payments', label: 'Payment history', permission: 'Payments.View' },
     // AMC / Service is deferred to a future release — the tab is hidden by the `amcService` flag.
     { id: 'service', label: 'Service requests', permission: 'AMC.View', feature: 'amcService' },
   ];
@@ -373,9 +401,74 @@ export class CustomerDetailComponent {
       this.returnsLoaded = true;
       this.loadReturns();
     }
+    if (id === 'invoices' && !this.invoicesLoaded) {
+      this.invoicesLoaded = true;
+      this.loadInvoices();
+    }
+    if (id === 'payments' && !this.paymentsLoaded) {
+      this.paymentsLoaded = true;
+      this.loadPayments();
+    }
     if (id === 'service' && !this.serviceLoaded) {
       this.serviceLoaded = true;
       this.loadServices();
+    }
+  }
+
+  /** Loads this customer's invoices (newest first), paged. */
+  private loadInvoices(): void {
+    this.invoicesLoading.set(true);
+    this.invoicesApi
+      .list({ customerId: this.id, page: this.invoicesPage(), pageSize: this.invoicesPageSize })
+      .subscribe({
+        next: (res) => {
+          this.invoiceRows.set(res.items);
+          this.invoicesTotal.set(res.totalCount);
+          this.invoicesLoading.set(false);
+        },
+        error: () => this.invoicesLoading.set(false),
+      });
+  }
+
+  invoicesGoTo(page: number): void {
+    if (page < 1 || page > this.invoicesTotalPages() || page === this.invoicesPage()) return;
+    this.invoicesPage.set(page);
+    this.loadInvoices();
+  }
+
+  openInvoice(inv: InvoiceListItem): void {
+    this.router.navigate(['/invoices', inv.id]);
+  }
+
+  /** Loads this customer's full payment history (newest first), paged. */
+  private loadPayments(): void {
+    this.paymentsLoading.set(true);
+    this.paymentsApi
+      .list({ customerId: this.id, page: this.paymentsPage(), pageSize: this.paymentsPageSize })
+      .subscribe({
+        next: (res) => {
+          this.paymentRows.set(res.items);
+          this.paymentsTotal.set(res.totalCount);
+          this.paymentsLoading.set(false);
+        },
+        error: () => this.paymentsLoading.set(false),
+      });
+  }
+
+  paymentsGoTo(page: number): void {
+    if (page < 1 || page > this.paymentsTotalPages() || page === this.paymentsPage()) return;
+    this.paymentsPage.set(page);
+    this.loadPayments();
+  }
+
+  invoiceStatusClass(status: string): string {
+    switch (status) {
+      case 'Paid': return 'status-delivered';
+      case 'Draft':
+      case 'Sent':
+      case 'PartiallyPaid': return 'status-pending';
+      case 'Overdue': return 'status-overdue';
+      default: return 'status-active-info';
     }
   }
 
@@ -490,6 +583,15 @@ export class CustomerDetailComponent {
     this.load();
     this.service.stats(this.id).subscribe((s) => this.stats.set(s));
     if (this.ordersLoaded) this.loadOrders();
+    if (this.invoicesLoaded) this.loadInvoices();   // a payment changes invoice paid/balance
+    if (this.paymentsLoaded) { this.paymentsPage.set(1); this.loadPayments(); }   // show the new payment
+  }
+
+  /** Refreshes the jar balance / stats after a standalone return is recorded. */
+  onReturnSaved(): void {
+    this.showReturn.set(false);
+    this.load();
+    this.service.stats(this.id).subscribe((s) => this.stats.set(s));
   }
 
   orderStatusClass(status: string): string {

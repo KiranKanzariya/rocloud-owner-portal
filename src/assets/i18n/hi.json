@@ -350,6 +350,12 @@
   "Jars delivered": "जार डिलीवर किए",
   "Jars out": "जार बाहर",
   "Jars returned": "लौटाए गए जार",
+  "Jars returned by": "जार वापस करने वाले",
+  "No customer selected.": "कोई ग्राहक चयनित नहीं है।",
+  "Received on": "प्राप्त तिथि",
+  "Return recorded.": "वापसी दर्ज की गई।",
+  "Returned on": "वापसी की तिथि",
+  "Select a product": "उत्पाद चुनें",
   "Jars with customer": "ग्राहक के पास जार",
   "Jump to…": "पर जाएँ…",
   "Landmark": "लैंडमार्क",
@@ -779,5 +785,8 @@
   "Your subscription expires in {{days}} days.": "आपकी सदस्यता {{days}} दिनों में समाप्त हो रही है।",
   "Your subscription expires today.": "आपकी सदस्यता आज समाप्त हो रही है।",
   "Your subscription expires tomorrow.": "आपकी सदस्यता कल समाप्त हो रही है।",
-  "Your subscription has expired.": "आपकी सदस्यता समाप्त हो गई है।"
+  "Your subscription has expired.": "आपकी सदस्यता समाप्त हो गई है।",
+  "No invoices yet.": "अभी तक कोई इनवॉइस नहीं।",
+  "{{count}} invoice(s)": "{{count}} इनवॉइस",
+  "{{count}} payment(s)": "{{count}} भुगतान"
 }

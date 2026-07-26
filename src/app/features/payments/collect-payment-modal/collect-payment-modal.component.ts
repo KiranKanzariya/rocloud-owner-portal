@@ -6,8 +6,10 @@ import { PaymentService } from '../../../core/services/payment.service';
 import { CustomerService } from '../../customers/customer.service';
 import { CustomerListItem } from '../../customers/customer.models';
 import { ToastService } from '../../../core/services/toast.service';
+import { TenantSettingsService } from '../../../core/services/tenant-settings.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { istToday, istTodayMinusDays } from '../../../shared/util/ist-date.util';
 
 @Component({
   selector: 'app-collect-payment-modal',
@@ -19,6 +21,7 @@ export class CollectPaymentModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly payments = inject(PaymentService);
   private readonly customers = inject(CustomerService);
+  private readonly settings = inject(TenantSettingsService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
 
@@ -36,15 +39,23 @@ export class CollectPaymentModalComponent {
   /** The customer the payment applies to: an explicit pick wins, else the preset from the host page. */
   protected readonly effectiveCustomer = computed(() => this.selectedCustomer() ?? this.presetCustomer());
 
+  /** Today, and the earliest a payment may be backdated (today minus the platform window). */
+  protected readonly todayIso = istToday();
+  protected readonly earliestPaidOn = signal(this.todayIso);
+
   protected readonly customerSearch = this.fb.nonNullable.control('');
   protected readonly form = this.fb.nonNullable.group({
     amount: [0, [Validators.required, Validators.min(1)]],
     paymentMethod: ['Cash', Validators.required],
+    paidOn: [this.todayIso],
     referenceNumber: [''],
     notes: [''],
   });
 
   constructor() {
+    // Widen the date picker to the platform backdating window (today-only until it loads).
+    this.settings.backdateWindowDays().subscribe((days) => this.earliestPaidOn.set(istTodayMinusDays(days)));
+
     this.customerSearch.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((term) => {
@@ -84,6 +95,8 @@ export class CollectPaymentModalComponent {
         customerId: customer.id,
         amount: v.amount,
         paymentMethod: v.paymentMethod,
+        // Omit when it's today, so a same-day collection keeps its exact time-of-day server-side.
+        paidOn: v.paidOn && v.paidOn !== this.todayIso ? v.paidOn : null,
         referenceNumber: v.referenceNumber || null,
         notes: v.notes || null,
       })
@@ -102,7 +115,7 @@ export class CollectPaymentModalComponent {
   }
 
   private reset(): void {
-    this.form.reset({ amount: 0, paymentMethod: 'Cash', referenceNumber: '', notes: '' });
+    this.form.reset({ amount: 0, paymentMethod: 'Cash', paidOn: this.todayIso, referenceNumber: '', notes: '' });
     this.clearCustomer();
   }
 

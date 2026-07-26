@@ -47,6 +47,12 @@
         </div>
 
         <label class="flex flex-col gap-1">
+          <span class="text-caption font-medium">{{ 'Received on' | translate }}</span>
+          <input type="date" formControlName="paidOn" [min]="earliestPaidOn()" [max]="todayIso"
+                 class="rounded-md border-ink-light py-1.5" />
+        </label>
+
+        <label class="flex flex-col gap-1">
           <span class="text-caption font-medium">{{ 'Reference' | translate }}</span>
           <input formControlName="referenceNumber" class="rounded-md border-ink-light py-1.5" [placeholder]="'UPI ref / cheque no. (optional)' | translate" />
         </label>

@@ -350,6 +350,12 @@
   "Jars delivered": "જાર ડિલિવર કર્યા",
   "Jars out": "જાર બહાર",
   "Jars returned": "પરત કરેલા જાર",
+  "Jars returned by": "જાર પરત કરનાર",
+  "No customer selected.": "કોઈ ગ્રાહક પસંદ કરેલ નથી.",
+  "Received on": "પ્રાપ્ત તારીખ",
+  "Return recorded.": "વાપસી નોંધાઈ.",
+  "Returned on": "વાપસી તારીખ",
+  "Select a product": "ઉત્પાદન પસંદ કરો",
   "Jars with customer": "ગ્રાહક પાસે જાર",
   "Jump to…": "પર જાઓ…",
   "Landmark": "લેન્ડમાર્ક",
@@ -779,5 +785,8 @@
   "Your subscription expires in {{days}} days.": "તમારું સબસ્ક્રિપ્શન {{days}} દિવસમાં સમાપ્ત થાય છે.",
   "Your subscription expires today.": "તમારું સબસ્ક્રિપ્શન આજે સમાપ્ત થાય છે.",
   "Your subscription expires tomorrow.": "તમારું સબસ્ક્રિપ્શન કાલે સમાપ્ત થાય છે.",
-  "Your subscription has expired.": "તમારું સબસ્ક્રિપ્શન સમાપ્ત થઈ ગયું છે."
+  "Your subscription has expired.": "તમારું સબસ્ક્રિપ્શન સમાપ્ત થઈ ગયું છે.",
+  "No invoices yet.": "હજી સુધી કોઈ ઇન્વોઇસ નથી.",
+  "{{count}} invoice(s)": "{{count}} ઇન્વોઇસ",
+  "{{count}} payment(s)": "{{count}} ચુકવણી"
 }

@@ -120,7 +120,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-        @for (d of board().pickups; track d.id) {
+        @for (d of sortedPickups(); track d.id) {
           <button type="button" (click)="selected.set(d)"
                   class="card text-left p-3 hover:border-navy transition-colors flex flex-col gap-1">
             <div class="flex items-center justify-between">
