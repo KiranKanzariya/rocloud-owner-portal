@@ -1,0 +1,28 @@
+{
+  // Cloudflare Workers config for the owner portal.
+  //
+  // Why Cloudflare and not Netlify: tenants sign in at {workspace}.rocloud.in, which needs a
+  // wildcard domain. Netlify only offers wildcards on Pro; Cloudflare serves them free, and
+  // static-asset requests are unmetered. Requires rocloud.in's nameservers to be at Cloudflare.
+  //
+  // Deploy from this folder:  npm run build  &&  npx wrangler deploy
+  "name": "rocloud-owner",
+  "compatibility_date": "2026-07-01",
+
+  // Assets-only Worker — no server code runs, so nothing is billable.
+  "assets": {
+    // Angular 22 emits the browser bundle here (see angular.json / dist layout).
+    "directory": "./dist/rocloud-owner-portal/browser",
+    // Serve index.html for any unmatched path so deep links and F5 work. This is the Cloudflare
+    // equivalent of the `_redirects` file the admin portal uses on Netlify.
+    "not_found_handling": "single-page-application"
+  },
+
+  // app.rocloud.in is the central sign-in domain; the wildcard serves every tenant subdomain.
+  // The tenant is resolved in the browser from window.location.hostname
+  // (core/interceptors/tenant.interceptor.ts), so every subdomain serves the same bundle.
+  "routes": [
+    { "pattern": "app.rocloud.in/*", "zone_name": "rocloud.in" },
+    { "pattern": "*.rocloud.in/*", "zone_name": "rocloud.in" }
+  ]
+}
