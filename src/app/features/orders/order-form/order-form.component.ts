@@ -16,11 +16,12 @@ import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { TenantSettingsService } from '../../../core/services/tenant-settings.service';
 import { istToday, istTodayMinusDays } from '../../../shared/util/ist-date.util';
+import { AutocompleteDirective } from '../../../shared/directives/autocomplete.directive';
 
 @Component({
   selector: 'app-order-form',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, ReactiveFormsModule, DecimalPipe, TranslatePipe, MobilePipe],
   templateUrl: './order-form.component.html',
 })
 export class OrderFormComponent {

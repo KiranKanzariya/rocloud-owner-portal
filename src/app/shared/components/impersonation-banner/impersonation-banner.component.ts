@@ -14,8 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [TranslatePipe],
   template: `
     @if (impersonation.active()) {
-      <div class="bg-amber-light text-[#633806] text-caption font-medium px-4 py-1.5 flex items-center justify-center gap-3 animate-slide-down">
-        <span><i class="ti ti-user-share"></i>
+      <div class="bg-amber-light text-[#633806] text-caption font-medium px-4 py-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center animate-slide-down" role="status">
+        <span><i class="ti ti-user-share" aria-hidden="true"></i>
           {{ 'You are viewing' | translate }} <b>{{ impersonation.ownerName() }}</b>{{ "'s workspace (impersonation)." | translate }}</span>
         <button class="underline hover:no-underline" (click)="exit()">{{ 'Exit' | translate }}</button>
       </div>

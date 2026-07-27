@@ -113,4 +113,17 @@ export class ServiceRequestsComponent {
       default: return 'status-active-info';
     }
   }
+
+  /** True when anything is narrowing the list — drives the Clear button and the
+      table's "no matches" empty state (as opposed to "nothing here yet"). */
+  protected hasFilters(): boolean {
+    return !!this.filter.status || !!this.filter.priority;
+  }
+
+  /** Resets every filter back to the unfiltered list. */
+  clearFilters(): void {
+    this.filter = { ...this.filter, status: undefined, priority: undefined, page: 1 };
+    this.load();
+  }
+
 }

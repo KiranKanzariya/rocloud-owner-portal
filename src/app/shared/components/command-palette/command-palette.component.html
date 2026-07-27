@@ -1,8 +1,8 @@
 @if (open()) {
-  <div class="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] bg-black/40 px-4" (click)="close()">
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] bg-black/40 px-4" (click)="close()">
     <div class="w-full max-w-lg bg-white rounded-lg shadow-md overflow-hidden" (click)="$event.stopPropagation()">
       <div class="flex items-center gap-2 px-3 border-b border-ink-light">
-        <i class="ti ti-search text-ink-mid"></i>
+        <i class="ti ti-search text-ink-mid" aria-hidden="true"></i>
         <input
           #search
           autofocus
@@ -19,7 +19,7 @@
             [class.bg-shell]="i === activeIndex()"
             (mouseenter)="activeIndex.set(i)"
             (click)="go(cmd)">
-            <i class="ti text-ink-mid" [class]="'ti-' + cmd.icon"></i>
+            <i class="ti text-ink-mid" [class]="'ti-' + cmd.icon" aria-hidden="true"></i>
             <span>{{ cmd.label | translate }}</span>
           </li>
         } @empty {

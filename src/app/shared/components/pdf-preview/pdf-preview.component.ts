@@ -16,12 +16,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       @if (!hideDownload()) {
         <div class="flex justify-end gap-2">
           <button class="btn-secondary btn-sm" [disabled]="!ready()" (click)="download()">
-            <i class="ti ti-download"></i> Download
+            <i class="ti ti-download" aria-hidden="true"></i> Download
           </button>
         </div>
       }
       @if (loading()) {
-        <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> Loading PDF…</div>
+        <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> Loading PDF…</div>
       } @else if (safeUrl()) {
         <iframe [src]="safeUrl()" class="w-full h-[70vh] rounded-md border border-ink-light" title="Invoice PDF"></iframe>
       } @else {

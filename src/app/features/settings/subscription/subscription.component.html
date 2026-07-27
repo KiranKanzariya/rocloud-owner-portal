@@ -7,7 +7,7 @@
   } @else if (subscription(); as s) {
     <!-- Pending cancellation banner (still within the paid period) -->
     @if (pendingCancel()) {
-      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-amber/40 bg-amber-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Subscription cancelled' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -17,14 +17,14 @@
           </p>
         </div>
         @if (canManage) {
-          <button class="btn-primary" (click)="resume()"><i class="ti ti-refresh"></i> {{ 'Resume subscription' | translate }}</button>
+          <button class="btn-primary" (click)="resume()"><i class="ti ti-refresh" aria-hidden="true"></i> {{ 'Resume subscription' | translate }}</button>
         }
       </div>
     }
 
     <!-- Reactivation banner (cancelled and the period has ended) -->
     @if (cancelledEnded()) {
-      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-danger/40 bg-danger-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Subscription ended' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -32,14 +32,14 @@
           </p>
         </div>
         @if (canManage) {
-          <button class="btn-primary" (click)="upgradeOpen.set(true)"><i class="ti ti-rocket"></i> {{ 'Subscribe to reactivate' | translate }}</button>
+          <button class="btn-primary" (click)="upgradeOpen.set(true)"><i class="ti ti-rocket" aria-hidden="true"></i> {{ 'Subscribe to reactivate' | translate }}</button>
         }
       </div>
     }
 
     <!-- Trial ending soon (final week) -->
     @if (trialEndingSoon()) {
-      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-amber/40 bg-amber-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Trial ending soon' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -55,7 +55,7 @@
         </div>
         @if (canManage) {
           <button class="btn-primary shrink-0" (click)="upgradeOpen.set(true)">
-            <i class="ti ti-arrow-up"></i> {{ 'Choose a plan' | translate }}
+            <i class="ti ti-arrow-up" aria-hidden="true"></i> {{ 'Choose a plan' | translate }}
           </button>
         }
       </div>
@@ -63,7 +63,7 @@
 
     <!-- Trial over and no plan bought — access is blocked once the grace window passes -->
     @if (trialExpired()) {
-      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-danger/40 bg-danger-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Trial ended' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -74,7 +74,7 @@
         </div>
         @if (canManage) {
           <button class="btn-primary shrink-0" (click)="upgradeOpen.set(true)">
-            <i class="ti ti-arrow-up"></i> {{ 'Choose a plan' | translate }}
+            <i class="ti ti-arrow-up" aria-hidden="true"></i> {{ 'Choose a plan' | translate }}
           </button>
         }
       </div>
@@ -82,7 +82,7 @@
 
     <!-- Paid subscription coming up for renewal (final week) -->
     @if (renewalDueSoon()) {
-      <div class="card border border-amber/40 bg-amber-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-amber/40 bg-amber-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Renewal due soon' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -98,7 +98,7 @@
         </div>
         @if (canManage) {
           <button class="btn-primary shrink-0" [disabled]="renewing() || payingId() !== null" (click)="payOrRenew()">
-            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-cash" aria-hidden="true"></i> }
             {{ (pendingInvoice() ? 'Pay now' : 'Renew now') | translate }}
           </button>
         }
@@ -107,7 +107,7 @@
 
     <!-- Paid subscription lapsed — access is blocked once the grace window passes -->
     @if (subscriptionExpired()) {
-      <div class="card border border-danger/40 bg-danger-light/40 flex items-center justify-between gap-3">
+      <div class="card border border-danger/40 bg-danger-light/40 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-h4">{{ 'Subscription expired' | translate }}</h3>
           <p class="text-caption text-ink-mid">
@@ -118,7 +118,7 @@
         </div>
         @if (canManage) {
           <button class="btn-primary shrink-0" [disabled]="renewing() || payingId() !== null" (click)="payOrRenew()">
-            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+            @if (renewing() || payingId()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-cash" aria-hidden="true"></i> }
             {{ (pendingInvoice() ? 'Pay now' : 'Renew now') | translate }}
           </button>
         }
@@ -127,9 +127,9 @@
 
     <!-- Current plan card -->
     <div class="card flex flex-col gap-4">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-h2">{{ s.planName }}</h2>
             <span [class]="statusClass(s.status)">{{ s.status | translate }}</span>
           </div>
@@ -151,7 +151,15 @@
             @else if (s.trialEndsAt) { · {{ 'Trial ends' | translate }} {{ s.trialEndsAt | date: 'MMM d, y' }} }
           </p>
           @if (s.subscriptionDiscountType !== 'None' && s.netMonthlyPrice < s.monthlyPrice) {
-            <p class="text-caption text-ink-mid mt-0.5"><i class="ti ti-discount-2 text-teal"></i> {{ 'A discount has been applied to your subscription by ROCloud.' | translate }}</p>
+            <p class="text-caption text-ink-mid mt-0.5"><i class="ti ti-discount-2 text-teal" aria-hidden="true"></i> {{ 'A discount has been applied to your subscription by ROCloud.' | translate }}</p>
+          }
+          <!-- A downgrade is parked until the paid period ends — say so plainly, and say how to undo it,
+               otherwise the owner sees the old plan and assumes their request was lost. -->
+          @if (s.scheduledPlanName) {
+            <p class="text-caption text-ink-mid mt-0.5">
+              <i class="ti ti-arrow-down-circle text-amber" aria-hidden="true"></i>
+              {{ 'Changing to the {{name}} plan on {{date}}. Choose your current plan again to cancel.' | translate: { name: s.scheduledPlanName, date: (s.subscriptionEndsAt | date: 'MMM d, y') } }}
+            </p>
           }
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -159,11 +167,11 @@
                "Renew now" buttons a few pixels apart is just noise. The banner is the prominent one. -->
           @if (canRenew() && !subscriptionExpired()) {
             <button class="btn-primary" [disabled]="renewing() || payingId() !== null" (click)="renewNow()">
-              @if (renewing()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-refresh"></i> {{ 'Renew now' | translate }} }
+              @if (renewing()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-refresh" aria-hidden="true"></i> {{ 'Renew now' | translate }} }
             </button>
           }
           @if (canManage && !isEnterprise()) {
-            <button [class]="canRenew() ? 'btn-secondary' : 'btn-primary'" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up"></i> {{ planCtaLabel() | translate }}</button>
+            <button [class]="canRenew() ? 'btn-secondary' : 'btn-primary'" (click)="upgradeOpen.set(true)"><i class="ti ti-arrow-up" aria-hidden="true"></i> {{ planCtaLabel() | translate }}</button>
           }
         </div>
       </div>
@@ -198,12 +206,13 @@
       <h3 class="text-h3">{{ 'Billing history' | translate }}</h3>
       @if (invoices().length === 0) {
         <div class="card flex flex-col items-center justify-center text-center gap-2 py-8 text-ink-mid">
-          <i class="ti ti-file-invoice text-3xl"></i>
+          <i class="ti ti-file-invoice text-3xl" aria-hidden="true"></i>
           <p class="text-body">{{ 'No billing history yet.' | translate }}</p>
           <p class="text-caption">{{ 'Your ROCloud subscription invoices will appear here.' | translate }}</p>
         </div>
       } @else {
         <roc-data-table
+    [rowLink]="true"
           [columns]="invoiceColumns" [rows]="invoiceRows()" [totalCount]="invoices().length"
           [page]="invoicePage()" [pageSize]="invoicePageSize"
           (pageChange)="onInvoicePage($event)" (rowClick)="openInvoice($any($event))">
@@ -216,13 +225,13 @@
 
           <ng-template appColumnCell="actions" let-row>
             <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-              <button class="btn-icon" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate"><i class="ti ti-download"></i></button>
+              <button class="btn-icon" (click)="downloadInvoice(row)" [title]="'Download PDF' | translate" [attr.aria-label]="'Download PDF' | translate"><i class="ti ti-download" aria-hidden="true"></i></button>
               @if (row.status === 'Pending' && canManage) {
-                <button class="btn-icon text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate">
-                  @if (payingId() === row.id) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> }
+                <button class="btn-icon text-teal" [disabled]="payingId() !== null" (click)="payInvoice(row)" [title]="'Pay now' | translate" [attr.aria-label]="'Pay now' | translate">
+                  @if (payingId() === row.id) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-cash" aria-hidden="true"></i> }
                 </button>
               }
-              <button class="btn-icon" (click)="openInvoice(row)" [title]="'View' | translate"><i class="ti ti-eye"></i></button>
+              <button class="btn-icon" (click)="openInvoice(row)" [title]="'View' | translate" [attr.aria-label]="'View' | translate"><i class="ti ti-eye" aria-hidden="true"></i></button>
             </div>
           </ng-template>
         </roc-data-table>
@@ -232,7 +241,7 @@
     <!-- Danger zone (hidden once a cancellation is already pending) -->
     @if (canManage && !pendingCancel() && (s.status === 'Active' || s.status === 'Trial')) {
       <div class="card border border-danger/30">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="text-h4">{{ 'Cancel subscription' | translate }}</h3>
             <p class="text-caption text-ink-mid">

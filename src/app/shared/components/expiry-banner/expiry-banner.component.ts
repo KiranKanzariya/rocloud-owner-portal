@@ -33,11 +33,14 @@ const DISMISS_KEY = 'roc.expiryBannerDismissedOn';
   imports: [RouterLink, TranslatePipe],
   template: `
     @if (visible()) {
+      <!-- Wraps: the message + CTA + dismiss already ran ~354px in English against 328px
+           of a 360px phone, and hi/gu run 20-30% longer again. -->
       <div
-        class="bg-amber-light text-[#633806] text-caption font-medium px-4 py-1.5 flex items-center justify-center gap-3 animate-slide-down"
+        class="bg-amber-light text-[#633806] text-caption font-medium px-4 py-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center animate-slide-down"
+        role="status"
       >
         <span>
-          <i class="ti ti-clock-exclamation"></i>
+          <i class="ti ti-clock-exclamation" aria-hidden="true"></i>
           @if (isTrial()) {
             @if (state().expired) {
               {{ 'Your free trial has ended.' | translate }}
@@ -62,8 +65,8 @@ const DISMISS_KEY = 'roc.expiryBannerDismissedOn';
         </span>
         <a routerLink="/settings/subscription" class="underline hover:no-underline">{{ ctaLabel() | translate }}</a>
         @if (dismissible()) {
-          <button type="button" class="hover:opacity-70" [title]="'Dismiss' | translate" (click)="dismiss()">
-            <i class="ti ti-x"></i>
+          <button type="button" class="p-1 -m-1 rounded hover:opacity-70" [title]="'Dismiss' | translate" [attr.aria-label]="'Dismiss' | translate" (click)="dismiss()">
+            <i class="ti ti-x" aria-hidden="true"></i>
           </button>
         }
       </div>

@@ -21,13 +21,13 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
         <div class="flex justify-center mb-6"><roc-logo size="lg" variant="default"></roc-logo></div>
         @if (error()) {
           <div class="card">
-            <i class="ti ti-alert-triangle text-3xl text-amber"></i>
+            <i class="ti ti-alert-triangle text-3xl text-amber" aria-hidden="true"></i>
             <p class="text-body mt-2">{{ 'This impersonation link has expired or is invalid.' | translate }}</p>
             <a routerLink="/login" class="btn-primary w-full justify-center mt-4">{{ 'Back to sign in' | translate }}</a>
           </div>
         } @else {
           <div class="card py-12">
-            <i class="ti ti-loader-2 animate-spin text-2xl text-teal"></i>
+            <i class="ti ti-loader-2 animate-spin text-2xl text-teal" aria-hidden="true"></i>
             <p class="text-body text-ink-mid mt-2">{{ 'Opening workspace…' | translate }}</p>
           </div>
         }

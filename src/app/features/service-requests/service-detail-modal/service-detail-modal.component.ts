@@ -8,11 +8,12 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 @Component({
   selector: 'app-service-detail-modal',
   standalone: true,
-  imports: [DatePipe, FormsModule, TranslatePipe, MobilePipe],
+  imports: [ModalDirective, DatePipe, FormsModule, TranslatePipe, MobilePipe],
   templateUrl: './service-detail-modal.component.html',
 })
 export class ServiceDetailModalComponent {

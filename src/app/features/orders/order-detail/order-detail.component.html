@@ -1,11 +1,11 @@
 @if (order(); as o) {
   <div class="flex flex-col gap-5 max-w-3xl">
     <!-- Header -->
-    <div class="flex items-start justify-between">
-      <div class="flex items-center gap-2">
-        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
-        <div>
-          <div class="flex items-center gap-2">
+    <div class="page-header items-start">
+      <div class="flex items-center gap-2 min-w-0">
+        <button class="btn-icon" (click)="back()" [attr.aria-label]="'Back' | translate"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
             <a [routerLink]="['/customers', o.customerId]" class="text-h1 hover:underline">{{ o.customerName }}</a>
             <span [class]="statusClass(o.status)">{{ o.status | translate }}</span>
             @if (o.status === 'Delivered') {
@@ -16,12 +16,12 @@
           <p class="text-caption text-ink-mid">{{ 'Placed' | translate }} {{ o.createdAt | date: 'MMM d, y h:mm a' }}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="page-header-actions">
         @if (o.status === 'Pending' || o.status === 'Confirmed') {
-          <button *appCan="'Orders.Edit'" class="btn-secondary" (click)="router.navigate(['/orders', o.id, 'edit'])"><i class="ti ti-edit"></i> {{ 'Edit' | translate }}</button>
+          <button *appCan="'Orders.Edit'" class="btn-secondary" (click)="router.navigate(['/orders', o.id, 'edit'])"><i class="ti ti-edit" aria-hidden="true"></i> {{ 'Edit' | translate }}</button>
         }
         @if (o.status === 'Pending') {
-          <button *appCan="'Orders.Cancel'" class="btn-danger" (click)="cancel()"><i class="ti ti-x"></i> {{ 'Cancel order' | translate }}</button>
+          <button *appCan="'Orders.Cancel'" class="btn-danger" (click)="cancel()"><i class="ti ti-x" aria-hidden="true"></i> {{ 'Cancel order' | translate }}</button>
         }
       </div>
     </div>
@@ -29,7 +29,7 @@
     <!-- Items -->
     <div class="card">
       <h3 class="text-h3 mb-3">{{ 'Items' | translate }}</h3>
-      <table class="w-full text-body">
+      <div class="table-scroll"><table class="w-full text-body min-w-[28rem]">
         <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Total' | translate }}</th></tr></thead>
         <tbody>
           @for (it of o.items; track it.id) {
@@ -47,7 +47,7 @@
             <tr><td colspan="4" class="py-1 text-right text-caption text-ink-mid">{{ 'Billed on an invoice' | translate }}</td></tr>
           }
         </tfoot>
-      </table>
+      </table></div>
       @if (o.notes) { <p class="text-caption text-ink-mid mt-3">{{ 'Notes' | translate }}: {{ o.notes }}</p> }
     </div>
 
@@ -97,5 +97,5 @@
     </div>
   </div>
 } @else {
-  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</div>
 }

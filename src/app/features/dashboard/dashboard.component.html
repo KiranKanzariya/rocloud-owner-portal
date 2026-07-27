@@ -8,7 +8,7 @@
   <!-- Metric cards. Each is hidden unless its data is readable, matching the fetch guards. -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="metric-card" *appCan="'Deliveries.View'">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-truck"></i> {{ "Today's deliveries" | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-truck" aria-hidden="true"></i> {{ "Today's deliveries" | translate }}</p>
       <p class="metric-value"><span [rocCountUp]="todaysDeliveries()"></span></p>
       @if (deliveryProductTotals().length) {
         <!-- Per-product breakdown of today's load, so the owner knows how many of each to prepare. -->
@@ -23,15 +23,15 @@
       }
     </div>
     <div class="metric-card" *appCan="'Inventory.View'">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-package"></i> {{ 'Bottles out' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-package" aria-hidden="true"></i> {{ 'Bottles out' | translate }}</p>
       <p class="metric-value"><span [rocCountUp]="bottlesOut()"></span></p>
     </div>
     <div class="metric-card" *appCan="'Payments.View'">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash"></i> {{ 'Collection today' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash" aria-hidden="true"></i> {{ 'Collection today' | translate }}</p>
       <p class="metric-value">₹<span [rocCountUp]="collectionToday()" [currency]="true"></span></p>
     </div>
     <div class="metric-card" *appCan="'Payments.View'">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle"></i> {{ 'Outstanding dues' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle" aria-hidden="true"></i> {{ 'Outstanding dues' | translate }}</p>
       <p class="metric-value text-danger">₹<span [rocCountUp]="outstandingTotal()" [currency]="true"></span></p>
     </div>
   </div>
@@ -64,15 +64,15 @@
       <h3 class="text-h3 mb-3">{{ 'Payment modes (today)' | translate }}</h3>
       <ul class="flex flex-col gap-2 text-body">
         <li class="flex items-center justify-between">
-          <span class="flex items-center gap-2"><i class="ti ti-coin text-teal"></i> {{ 'Cash' | translate }}</span>
+          <span class="flex items-center gap-2"><i class="ti ti-coin text-teal" aria-hidden="true"></i> {{ 'Cash' | translate }}</span>
           <span class="font-mono">₹{{ paymentSplit().cash | number: '1.0-0' }}</span>
         </li>
         <li class="flex items-center justify-between">
-          <span class="flex items-center gap-2"><i class="ti ti-brand-google-pay text-navy"></i> {{ 'UPI' | translate }}</span>
+          <span class="flex items-center gap-2"><i class="ti ti-brand-google-pay text-navy" aria-hidden="true"></i> {{ 'UPI' | translate }}</span>
           <span class="font-mono">₹{{ paymentSplit().upi | number: '1.0-0' }}</span>
         </li>
         <li class="flex items-center justify-between">
-          <span class="flex items-center gap-2"><i class="ti ti-dots text-ink-mid"></i> {{ 'Other' | translate }}</span>
+          <span class="flex items-center gap-2"><i class="ti ti-dots text-ink-mid" aria-hidden="true"></i> {{ 'Other' | translate }}</span>
           <span class="font-mono">₹{{ paymentSplit().other | number: '1.0-0' }}</span>
         </li>
       </ul>

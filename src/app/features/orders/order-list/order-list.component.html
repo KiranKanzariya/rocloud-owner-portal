@@ -1,13 +1,17 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Orders' | translate }}</h1>
-    <div class="flex gap-2">
-      <button *appCanPlan="'Pro'" class="btn-secondary" [disabled]="bulkRunning()" (click)="bulkImport()">
-        @if (bulkRunning()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-download"></i> }
-        {{ 'Bulk from subscriptions' | translate }}
-      </button>
+    <div class="page-header-actions">
+      <!-- Plan tier AND permission: the endpoint requires Orders.Create, so a Pro-tenant delivery boy
+           was shown a button that could only ever answer 403. -->
+      <ng-container *appCan="'Orders.Create'">
+        <button *appCanPlan="'Pro'" class="btn-secondary" [disabled]="bulkRunning()" (click)="bulkImport()">
+          @if (bulkRunning()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-download" aria-hidden="true"></i> }
+          {{ 'Bulk from subscriptions' | translate }}
+        </button>
+      </ng-container>
       <button *appCan="'Orders.Create'" class="btn-primary" (click)="router.navigate(['/orders/new'])">
-        <i class="ti ti-plus"></i> {{ 'New order' | translate }}
+        <i class="ti ti-plus" aria-hidden="true"></i> {{ 'New order' | translate }}
       </button>
     </div>
   </div>
@@ -16,32 +20,42 @@
   @if (customerFilterName(); as name) {
     <div class="flex items-center gap-2 text-caption">
       <span class="inline-flex items-center gap-1.5 rounded-full bg-foam text-navy px-3 py-1">
-        <i class="ti ti-user"></i> {{ 'Orders for {{name}}' | translate: { name } }}
-        <button class="hover:text-danger" (click)="clearCustomerFilter()" aria-label="Clear filter"><i class="ti ti-x"></i></button>
+        <i class="ti ti-user" aria-hidden="true"></i> {{ 'Orders for {{name}}' | translate: { name } }}
+        <button class="p-1 -m-1 rounded hover:text-danger" (click)="clearCustomerFilter()" aria-label="Clear filter"><i class="ti ti-x" aria-hidden="true"></i></button>
       </span>
     </div>
   }
 
-  <!-- Filters -->
-  <div class="card flex flex-wrap items-center gap-3">
-    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+  <!-- Filters. Bound to the filter object (they were bare (change) handlers with no
+       [value]), so the bar reflects what is active and survives a Back navigation. -->
+  <div class="filter-bar">
+    <select class="rounded-md border-ink-light text-body py-1.5"
+            [attr.aria-label]="'Status' | translate"
+            [value]="filter.status ?? ''"
+            (change)="setStatus($any($event.target).value)">
       <option value="">{{ 'All statuses' | translate }}</option>
       @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
     </select>
-    <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'From' | translate }}
-      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('fromDate', $any($event.target).value)" />
+    <label class="filter-field">{{ 'From' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5"
+             [value]="filter.fromDate ?? ''" [max]="filter.toDate || null"
+             (change)="setDate('fromDate', $any($event.target).value)" />
     </label>
-    <label class="flex items-center gap-1 text-caption text-ink-mid">{{ 'To' | translate }}
-      <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('toDate', $any($event.target).value)" />
+    <label class="filter-field">{{ 'To' | translate }}
+      <input type="date" class="rounded-md border-ink-light text-body py-1.5"
+             [value]="filter.toDate ?? ''" [min]="filter.fromDate || null"
+             (change)="setDate('toDate', $any($event.target).value)" />
     </label>
     <!-- Customer filter: search + pick. The active selection shows as the chip above (shared with the
          "View all orders" deep-link), so the box only appears when nothing is selected. -->
     @if (!customerFilterName()) {
-      <div class="relative">
+      <div class="relative" rocAutocomplete>
+        <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
         <input [formControl]="customerSearch" type="search" [placeholder]="'Filter by customer…' | translate"
-               class="rounded-md border-ink-light text-body py-1.5 min-w-[200px]" />
+               [attr.aria-label]="'Customer' | translate"
+               class="rounded-md border-ink-light text-body py-1.5 pl-9 min-w-[200px]" />
         @if (customerResults().length) {
-          <ul class="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
+          <ul class="ac-popup absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
             @for (c of customerResults(); track c.id) {
               <li><button type="button" class="w-full text-left px-3 py-2 hover:bg-shell text-body" (click)="selectCustomer(c)">
                 <span class="text-ink">{{ c.name }}</span>
@@ -52,12 +66,25 @@
         }
       </div>
     }
+
+    @if (hasFilters()) {
+      <button type="button" class="btn-secondary btn-sm ml-auto" (click)="clearFilters()">
+        <i class="ti ti-filter-off" aria-hidden="true"></i> {{ 'Clear filters' | translate }}
+      </button>
+    }
   </div>
+
+  @if (dateRangeInvalid()) {
+    <p class="text-caption text-danger"><i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      {{ 'The "to" date is before the "from" date.' | translate }}</p>
+  }
 
   <roc-data-table
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="filter.page" [pageSize]="filter.pageSize" [sortBy]="filter.sortBy" [sortDir]="$any(filter.sortDir)"
-    (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
+    [rowLink]="true" [filtered]="hasFilters()" minWidth="52rem"
+    (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))"
+    (clearFilters)="clearFilters()">
 
     <ng-template appColumnCell="orderDate" let-row>
       <span class="font-mono text-caption" [title]="row.createdAt | date: 'MMM d, y h:mm a'">{{ row.orderDate | date: 'MMM d, y' }} <span class="text-ink-mid">{{ row.createdAt | date: 'shortTime' }}</span></span>

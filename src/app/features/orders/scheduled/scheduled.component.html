@@ -1,11 +1,12 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <div class="flex flex-col gap-0.5">
       <h1 class="text-h1">{{ 'Scheduled orders' | translate }}</h1>
       <p class="text-caption text-ink-mid">{{ 'Future-dated bookings for events & programs, before they reach the delivery board.' | translate }}</p>
     </div>
-    <button class="btn-primary" (click)="router.navigate(['/orders/new'])">
-      <i class="ti ti-calendar-plus"></i> {{ 'Book advance order' | translate }}
+    <!-- /orders/new is guarded by Orders.Create — without this gate a delivery boy lands on /forbidden. -->
+    <button *appCan="'Orders.Create'" class="btn-primary" (click)="router.navigate(['/orders/new'])">
+      <i class="ti ti-calendar-plus" aria-hidden="true"></i> {{ 'Book advance order' | translate }}
     </button>
   </div>
 
@@ -13,21 +14,21 @@
   <div class="flex gap-1 rounded-md border border-ink-light p-1 w-fit text-caption">
     <button type="button" class="seg"
             [class.bg-navy]="tab() === 'upcoming'" [class.text-white]="tab() === 'upcoming'"
-            (click)="setTab('upcoming')"><i class="ti ti-calendar-event"></i> {{ 'Upcoming' | translate }}</button>
+            (click)="setTab('upcoming')"><i class="ti ti-calendar-event" aria-hidden="true"></i> {{ 'Upcoming' | translate }}</button>
     <button type="button" class="seg"
             [class.bg-navy]="tab() === 'plan'" [class.text-white]="tab() === 'plan'"
-            (click)="setTab('plan')"><i class="ti ti-clipboard-check"></i> {{ 'Production plan' | translate }}</button>
+            (click)="setTab('plan')"><i class="ti ti-clipboard-check" aria-hidden="true"></i> {{ 'Production plan' | translate }}</button>
   </div>
 
   @if (loading()) {
-    <div class="card flex items-center gap-2 text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+    <div class="card flex items-center gap-2 text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</div>
   }
 
   <!-- ── Upcoming tab ─────────────────────────────────────────── -->
   @if (tab() === 'upcoming' && !loading()) {
     @if (!upcomingGroups().length) {
       <div class="card flex flex-col items-center gap-2 py-10 text-center">
-        <i class="ti ti-calendar-off text-4xl text-ink-light"></i>
+        <i class="ti ti-calendar-off text-4xl text-ink-light" aria-hidden="true"></i>
         <p class="text-body text-ink-mid">{{ 'No upcoming bookings.' | translate }}</p>
         <p class="text-caption text-ink-mid">{{ 'Book an advance order from the New order screen by choosing a future delivery date.' | translate }}</p>
       </div>
@@ -48,7 +49,7 @@
                 <div class="flex items-center gap-3">
                   <span class="rounded-full px-2 py-0.5 text-micro font-medium" [class]="typeClass(o.orderType)">{{ o.orderType | translate }}</span>
                   <span class="font-mono text-body">₹{{ o.totalAmount | number: '1.0-0' }}</span>
-                  <i class="ti ti-chevron-right text-ink-light"></i>
+                  <i class="ti ti-chevron-right text-ink-light" aria-hidden="true"></i>
                 </div>
               </div>
               <!-- Line items: what's actually booked -->
@@ -70,7 +71,7 @@
   @if (tab() === 'plan' && !loading()) {
     @if (!plan().length) {
       <div class="card flex flex-col items-center gap-2 py-10 text-center">
-        <i class="ti ti-clipboard-off text-4xl text-ink-light"></i>
+        <i class="ti ti-clipboard-off text-4xl text-ink-light" aria-hidden="true"></i>
         <p class="text-body text-ink-mid">{{ 'Nothing to prepare in the next 30 days.' | translate }}</p>
       </div>
     } @else {
@@ -100,7 +101,7 @@
 
           <div class="flex items-center justify-between border-t border-ink-light pt-2">
             <button type="button" class="text-caption text-navy-light hover:underline" (click)="toggleDay(day.date)">
-              <i class="ti" [class.ti-chevron-down]="expandedDay() !== day.date" [class.ti-chevron-up]="expandedDay() === day.date"></i>
+              <i class="ti" [class.ti-chevron-down]="expandedDay() !== day.date" [class.ti-chevron-up]="expandedDay() === day.date" aria-hidden="true"></i>
               {{ (expandedDay() === day.date ? 'Hide bookings' : 'Show bookings') | translate }}
             </button>
             <span class="text-caption text-ink-mid">{{ 'Total' | translate }}: <span class="font-mono text-ink">{{ day.totalUnits | number: '1.0-0' }}</span></span>

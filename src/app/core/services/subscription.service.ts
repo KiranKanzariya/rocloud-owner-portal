@@ -41,6 +41,9 @@ export interface Subscription {
   subscriptionDiscountValue: number;
   /** Monthly price after the discount — what the tenant actually pays. */
   netMonthlyPrice: number;
+  /** A downgrade waiting for period end. Re-selecting the current plan cancels it. */
+  scheduledPlanName?: string | null;
+  scheduledPlanType?: string | null;
 }
 
 export interface SubscriptionInitiate {
@@ -50,11 +53,34 @@ export interface SubscriptionInitiate {
   amount: number;
   currency: string;
   devMode: boolean;
-  /** Net amount is ₹0 (100% discount / free months) — skip Razorpay and complete directly. */
+  /** Nothing chargeable (₹0 discount, a downgrade, or a sub-₹1 prorated delta) — skip Razorpay. */
   isFree: boolean;
+  /**
+   * What this change actually does. Mid-cycle an upgrade is charged only for the days remaining, and
+   * a downgrade is not charged at all — it applies at period end. NewTerm buys a full cycle.
+   */
+  changeKind?: 'NewTerm' | 'Upgrade' | 'Downgrade' | 'Lateral';
+  /** Days left in the current cycle that `amount` was prorated over. */
+  remainingDays?: number;
+  /** Full-cycle price of the target plan, before proration — what they'll pay from the next renewal. */
+  fullCycleAmount?: number;
+  /** When a scheduled downgrade takes effect (the current period end). */
+  effectiveAt?: string | null;
 }
 
 /** A ROCloud subscription invoice row for the Billing history (guide §25). */
+/** The tenant's own business details, as they appear on the invoice. Detail view only. */
+export interface SubscriptionBillTo {
+  name: string;
+  gstin: string | null;
+  addressLine: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  email: string | null;
+  mobile: string | null;
+}
+
 export interface SubscriptionInvoice {
   id: string;
   invoiceNumber: string;
@@ -69,6 +95,14 @@ export interface SubscriptionInvoice {
   dueDate: string;
   description: string | null;
   paidAt: string | null;
+  /** Razorpay references — only present on the detail view, and only once actually paid online. */
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  billTo?: SubscriptionBillTo | null;
+  /** card | upi | netbanking | wallet. */
+  paymentMethod?: string | null;
+  /** UPI id, "Visa •••• 4366", bank, or wallet — whatever identifies the instrument used. */
+  paymentInstrument?: string | null;
 }
 
 /** The tenant's own ROCloud subscription (guide §25). */

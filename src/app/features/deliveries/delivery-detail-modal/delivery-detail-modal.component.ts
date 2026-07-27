@@ -6,17 +6,19 @@ import { DeliveryDetail, DeliveryItemInput, DeliveryListItem, OtherReturnInput, 
 import { OrderService } from '../../orders/order.service';
 import { CustomerService } from '../../customers/customer.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { istToday } from '../../../shared/util/ist-date.util';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 type Choice = 'InTransit' | 'Delivered' | 'Failed';
 
 @Component({
   selector: 'app-delivery-detail-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, MobilePipe, CanDirective],
+  imports: [ModalDirective, ReactiveFormsModule, DatePipe, DecimalPipe, TranslatePipe, MobilePipe, CanDirective],
   templateUrl: './delivery-detail-modal.component.html',
 })
 export class DeliveryDetailModalComponent {
@@ -27,6 +29,14 @@ export class DeliveryDetailModalComponent {
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly perms = inject(PermissionService);
+
+  /**
+   * The status form writes via PATCH /deliveries/{id}/status, which requires Deliveries.Update. A role
+   * with Deliveries.View alone (Viewer, CustomerCare) must never be dropped into it — it would fill in
+   * and answer 403 on save.
+   */
+  protected readonly canUpdate = this.perms.can('Deliveries.Update');
 
   readonly delivery = input<DeliveryListItem | null>(null);
   readonly completed = output<void>();
@@ -84,6 +94,9 @@ export class DeliveryDetailModalComponent {
         // Future-dated stop (e.g. tonight's rollover created tomorrow's deliveries) — not actionable
         // yet. Leave editing off; the template shows the "not due yet" notice (notYetDue()).
         this.editing.set(false);
+      } else if (!this.canUpdate) {
+        // View-only role — the template shows the read-only notice instead of the status form.
+        this.editing.set(false);
       } else {
         this.editing.set(true); // pending / in-transit → go straight to the editable form
         // Plant-pickup has no in-transit leg (customer collects at the plant) — pre-select the
@@ -104,7 +117,8 @@ export class DeliveryDetailModalComponent {
     const seq = ++this.loadSeq;
     this.service.detail(id).subscribe({
       next: (det) => { if (seq === this.loadSeq) this.detail.set(det); },
-      error: () => { if (seq === this.loadSeq) this.editing.set(true); }, // fall back to the form if it fails
+      // Fall back to the form if the summary can't be loaded — but never for a user who can't save it.
+      error: () => { if (seq === this.loadSeq && this.canUpdate) this.editing.set(true); },
     });
   }
 

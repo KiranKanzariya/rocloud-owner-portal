@@ -6,6 +6,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { CanPlanDirective } from '../../../shared/directives/can.directive';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { isFeatureEnabled } from '../../../core/feature-flags';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 interface PermGroup {
   module: string;
@@ -15,7 +16,7 @@ interface PermGroup {
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [FormsModule, CanPlanDirective, TranslatePipe],
+  imports: [ModalDirective, FormsModule, CanPlanDirective, TranslatePipe],
   templateUrl: './roles.component.html',
 })
 export class RolesComponent {

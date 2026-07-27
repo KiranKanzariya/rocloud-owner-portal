@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
+import { isFiltered, readFilter, writeFilter } from '../../../core/services/list-filter';
 import { OrderService } from '../order.service';
 import { OrderFilter, OrderListItem } from '../order.models';
 import { CustomerService } from '../../customers/customer.service';
@@ -14,13 +15,14 @@ import { CanDirective, CanPlanDirective } from '../../../shared/directives/can.d
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { AutocompleteDirective } from '../../../shared/directives/autocomplete.directive';
 
 const STATUSES = ['Pending', 'Confirmed', 'InTransit', 'Delivered', 'Cancelled', 'Returned'];
 
 @Component({
   selector: 'app-order-list',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, DataTableComponent, ColumnCellDirective, CanDirective, CanPlanDirective, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, DatePipe, DecimalPipe, ReactiveFormsModule, DataTableComponent, ColumnCellDirective, CanDirective, CanPlanDirective, TranslatePipe, MobilePipe],
   templateUrl: './order-list.component.html',
 })
 export class OrderListComponent {
@@ -50,7 +52,33 @@ export class OrderListComponent {
     { key: 'status', header: 'Status' },
   ];
 
-  protected filter: OrderFilter = { page: 1, pageSize: 25, sortBy: 'orderDate', sortDir: 'desc' };
+  /** Baseline the URL is diffed against — only non-default values reach the address bar. */
+  private static readonly DEFAULTS = {
+    page: 1,
+    pageSize: 25,
+    sortBy: 'orderDate',
+    sortDir: 'desc',
+    status: undefined,
+    fromDate: undefined,
+    toDate: undefined,
+    customerId: undefined,
+  } as unknown as OrderFilter & Record<string, string | number | boolean | undefined>;
+
+  /** Hydrated from the query string, so Back off an order restores the list you left. */
+  protected filter = readFilter(inject(ActivatedRoute), OrderListComponent.DEFAULTS);
+
+  protected readonly filterState = signal(0);
+  protected readonly hasFilters = computed(() => {
+    this.filterState();
+    return isFiltered(this.filter, OrderListComponent.DEFAULTS);
+  });
+
+  /** Non-null when From is later than To — the pair silently returned nothing before. */
+  protected readonly dateRangeInvalid = computed(() => {
+    this.filterState();
+    const { fromDate, toDate } = this.filter;
+    return !!fromDate && !!toDate && fromDate > toDate;
+  });
 
   // Customer filter: a debounced search over the customers list. A pick drives the same chip the
   // "View all orders" deep-link uses, so there is one consistent customer filter.
@@ -59,32 +87,51 @@ export class OrderListComponent {
 
   constructor() {
     const qp = this.route.snapshot.queryParamMap;
-    const customerId = qp.get('customerId');
-    if (customerId) {
-      this.filter = { ...this.filter, customerId };
+    if (this.filter.customerId) {
       this.customerFilterName.set(qp.get('customerName') ?? this.t.instant('one customer'));
     }
 
+    // switchMap cancels the in-flight lookup, so a slow early response can't land after
+    // (and overwrite) the results for what you have actually typed.
     this.customerSearch.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((term) => {
-        // Once a customer is picked the chip shows their name; don't re-search until it's cleared.
-        if (this.customerFilterName() || !term.trim()) {
-          this.customerResults.set([]);
-          return;
-        }
-        this.customers.list({ search: term.trim(), page: 1, pageSize: 6 })
-          .subscribe((r) => this.customerResults.set(r.items));
-      });
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term) => {
+          // Once a customer is picked the chip shows their name; don't re-search until cleared.
+          if (this.customerFilterName() || !term.trim()) return of(null);
+          return this.customers.list({ search: term.trim(), page: 1, pageSize: 6 });
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.customerResults.set(r?.items ?? []));
+
     this.load();
+  }
+
+  /** Single funnel for every filter change: merge, mirror to the URL, refresh the flags. */
+  private apply(next: Partial<OrderFilter>, reload = true): void {
+    this.filter = { ...this.filter, ...next, page: 'page' in next ? this.filter.page : 1 };
+    writeFilter(this.router, this.route, this.filter, OrderListComponent.DEFAULTS, {
+      customerName: this.customerFilterName() ?? null,
+    });
+    this.filterState.update((v) => v + 1);
+    if (reload && !this.dateRangeInvalid()) this.load();
+  }
+
+  /** Resets every filter back to the unfiltered list. */
+  clearFilters(): void {
+    this.customerFilterName.set(null);
+    this.customerResults.set([]);
+    this.customerSearch.setValue('', { emitEvent: false });
+    this.apply({ status: undefined, fromDate: undefined, toDate: undefined, customerId: undefined });
   }
 
   selectCustomer(c: CustomerListItem): void {
     this.customerFilterName.set(c.name);
     this.customerResults.set([]);
     this.customerSearch.setValue('', { emitEvent: false });
-    this.filter = { ...this.filter, customerId: c.id, page: 1 };
-    this.load();
+    this.apply({ customerId: c.id });
   }
 
   /** Clears the customer filter (from either the search or the "View all orders" deep-link). */
@@ -92,9 +139,7 @@ export class OrderListComponent {
     this.customerFilterName.set(null);
     this.customerResults.set([]);
     this.customerSearch.setValue('', { emitEvent: false });
-    this.filter = { ...this.filter, customerId: undefined, page: 1 };
-    this.router.navigate([], { queryParams: {} });
-    this.load();
+    this.apply({ customerId: undefined });
   }
 
   load(): void {
@@ -110,24 +155,20 @@ export class OrderListComponent {
   }
 
   setStatus(status: string): void {
-    this.filter = { ...this.filter, status: status || undefined, page: 1 };
-    this.load();
+    this.apply({ status: status || undefined });
   }
 
   setDate(which: 'fromDate' | 'toDate', value: string): void {
-    this.filter = { ...this.filter, [which]: value || undefined, page: 1 };
-    this.load();
+    this.apply({ [which]: value || undefined });
   }
 
   onSort(s: SortState): void {
     // Reset to page 1 so a new sort starts at the top, not mid-list (matches the Users grid).
-    this.filter = { ...this.filter, sortBy: s.sortBy, sortDir: s.sortDir, page: 1 };
-    this.load();
+    this.apply({ sortBy: s.sortBy, sortDir: s.sortDir });
   }
 
   onPage(page: number): void {
-    this.filter = { ...this.filter, page };
-    this.load();
+    this.apply({ page });
   }
 
   open(o: OrderListItem): void {

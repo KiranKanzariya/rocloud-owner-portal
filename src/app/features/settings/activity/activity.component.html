@@ -5,7 +5,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="card flex flex-wrap items-end gap-3">
+  <div class="filter-bar items-end">
     <label class="flex flex-col gap-1">
       <span class="text-caption font-medium">{{ 'Area' | translate }}</span>
       <select [(ngModel)]="module" class="rounded-md border-ink-light py-1.5">
@@ -27,21 +27,32 @@
     </label>
     <label class="flex flex-col gap-1">
       <span class="text-caption font-medium">{{ 'From' | translate }}</span>
-      <input type="date" [(ngModel)]="fromDate" class="rounded-md border-ink-light py-1.5" />
+      <input type="date" [(ngModel)]="fromDate" [max]="toDate || null" class="rounded-md border-ink-light py-1.5" />
     </label>
     <label class="flex flex-col gap-1">
       <span class="text-caption font-medium">{{ 'To' | translate }}</span>
-      <input type="date" [(ngModel)]="toDate" class="rounded-md border-ink-light py-1.5" />
+      <input type="date" [(ngModel)]="toDate" [min]="fromDate || null" class="rounded-md border-ink-light py-1.5" />
     </label>
-    <button class="btn-primary" (click)="applyFilters()"><i class="ti ti-filter"></i> {{ 'Apply' | translate }}</button>
+    <button class="btn-primary" [disabled]="dateRangeInvalid()" (click)="applyFilters()"><i class="ti ti-filter" aria-hidden="true"></i> {{ 'Apply' | translate }}</button>
     <button class="btn-secondary" [disabled]="exporting()" (click)="exportCsv()">
-      @if (exporting()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-download"></i> }
+      @if (exporting()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-download" aria-hidden="true"></i> }
       {{ 'Export CSV' | translate }}
     </button>
+    @if (hasFilters()) {
+      <button class="btn-secondary btn-sm ml-auto" (click)="clearFilters()">
+        <i class="ti ti-filter-off" aria-hidden="true"></i> {{ 'Clear filters' | translate }}
+      </button>
+    }
   </div>
+
+  @if (dateRangeInvalid()) {
+    <p class="text-caption text-danger"><i class="ti ti-alert-triangle" aria-hidden="true"></i>
+      {{ 'The "to" date is before the "from" date.' | translate }}</p>
+  }
 
   <!-- Table -->
   <roc-data-table
+    [rowLink]="true" [filtered]="hasFilters()" (clearFilters)="clearFilters()" minWidth="52rem"
     [columns]="columns" [rows]="rows()" [totalCount]="total()" [loading]="loading()"
     [page]="page()" [pageSize]="pageSize"
     (pageChange)="goTo($event)" (rowClick)="selected.set($any($event))">
@@ -57,11 +68,11 @@
 
 <!-- Detail drill-down -->
 @if (selected(); as r) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" (click)="selected.set(null)">
+  <div rocModal (dismiss)="selected.set(null)" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" (click)="selected.set(null)">
     <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[85vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-ink-light px-5 py-3">
         <h3 class="text-h3">{{ 'Activity detail' | translate }}</h3>
-        <button class="btn-icon" (click)="selected.set(null)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon" (click)="selected.set(null)"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
 
       <div class="p-5 flex flex-col gap-4">

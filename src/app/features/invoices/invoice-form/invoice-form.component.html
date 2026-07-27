@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-4">
   <div class="flex items-center gap-2">
-    <button class="btn-icon" (click)="cancel()"><i class="ti ti-arrow-left"></i></button>
+    <button class="btn-icon" (click)="cancel()"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
     <h1 class="text-h1">{{ 'Generate invoice' | translate }}</h1>
   </div>
 
@@ -11,15 +11,15 @@
       @if (selectedCustomer(); as c) {
         <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
           <span class="text-body"><b>{{ c.name }}</b> · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
-          <button class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+          <button class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
       } @else {
-        <div class="relative">
-          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+        <div class="relative" rocAutocomplete>
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
           <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer…' | translate"
                  class="w-full pl-9 pr-3 py-1.5 rounded-md border-ink-light" />
           @if (customerResults().length) {
-            <div class="absolute z-20 mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-56 overflow-y-auto">
+            <div class="ac-popup absolute z-20 mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-56 overflow-y-auto">
               @for (c of customerResults(); track c.id) {
                 <button type="button" (click)="selectCustomer(c)" class="w-full text-left px-3 py-2 hover:bg-shell flex justify-between">
                   <span>{{ c.name }}</span><span class="font-mono text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
@@ -45,7 +45,7 @@
         </div>
 
         @if (periodMode() === 'month') {
-          <input type="month" formControlName="month" class="rounded-md border-ink-light py-1.5 w-48" />
+          <input type="month" formControlName="month" [attr.aria-label]="'Month' | translate" class="rounded-md border-ink-light py-1.5 w-48" />
         } @else {
           <div class="flex flex-wrap items-end gap-3">
             <label class="flex flex-col gap-1">
@@ -61,7 +61,7 @@
       </div>
 
       <div class="rounded-md bg-foam p-3 text-caption text-navy flex items-start gap-2">
-        <i class="ti ti-info-circle mt-0.5"></i>
+        <i class="ti ti-info-circle mt-0.5" aria-hidden="true"></i>
         <span>
           {{ 'The invoice is generated from all delivered orders in the selected period.' | translate }}
           @if (gst(); as g) {
@@ -82,7 +82,7 @@
       <div class="flex justify-end gap-2">
         <button type="button" class="btn-secondary" (click)="cancel()">{{ 'Cancel' | translate }}</button>
         <button type="submit" class="btn-primary" [disabled]="saving()">
-          @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Generating…' | translate }} } @else { {{ 'Generate invoice' | translate }} }
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Generating…' | translate }} } @else { {{ 'Generate invoice' | translate }} }
         </button>
       </div>
     </form>

@@ -1,35 +1,41 @@
 @if (customer(); as c) {
   <div class="flex flex-col gap-5">
     <!-- Header -->
-    <div class="flex items-start justify-between">
-      <div class="flex items-center gap-2">
-        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
-        <div>
+    <div class="page-header items-start">
+      <div class="flex items-center gap-2 min-w-0">
+        <button class="btn-icon" (click)="back()" [attr.aria-label]="'Back' | translate"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
+        <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-h1">{{ c.name }}</h1>
             <span [class]="c.isActive ? 'status-active' : 'status-overdue'">{{ (c.isActive ? 'Active' : 'Inactive') | translate }}</span>
             @if (c.discountType !== 'None') {
-              <span class="status-delivered"><i class="ti ti-discount-2"></i>{{ discountLabel(c) }}</span>
+              <span class="status-delivered"><i class="ti ti-discount-2" aria-hidden="true"></i>{{ discountLabel(c) }}</span>
             }
           </div>
-          <p class="text-body text-ink-mid">
-            <i class="ti ti-phone"></i> {{ c.mobile | mobile }}
-            @if (c.areaName) { · <i class="ti ti-map-pin"></i> {{ c.areaName }} }
+          <p class="text-body text-ink-mid break-words">
+            <i class="ti ti-phone" aria-hidden="true"></i> {{ c.mobile | mobile }}
+            @if (c.areaName) { · <i class="ti ti-map-pin" aria-hidden="true"></i> {{ c.areaName }} }
             @if (c.customerCode) { · <span class="font-mono">{{ c.customerCode }}</span> }
           </p>
         </div>
       </div>
-      <button *appCan="'Customers.Edit'" class="btn-secondary" (click)="edit()"><i class="ti ti-edit"></i> {{ 'Edit' | translate }}</button>
+      <div class="page-header-actions">
+        <button *appCan="'Customers.Edit'" class="btn-secondary" (click)="edit()"><i class="ti ti-edit" aria-hidden="true"></i> {{ 'Edit' | translate }}</button>
+      </div>
     </div>
 
-    <!-- Quick actions -->
-    <div class="flex flex-wrap gap-2">
-      <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus"></i> {{ 'New order' | translate }}</button>
-      <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
-      <button *appCan="'Inventory.Manage'" class="btn-secondary" (click)="showReturn.set(true)"><i class="ti ti-arrow-back-up"></i> {{ 'Record return' | translate }}</button>
-      <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices/new'], { queryParams: { customerId: c.id } })"><i class="ti ti-file-invoice"></i> {{ 'Generate invoice' | translate }}</button>
+    <!-- Quick actions.
+         A two-column grid on a phone rather than `flex-wrap`: wrapping left the buttons at
+         their own intrinsic widths, so each row ended at a different place and the set read
+         as ragged. The grid makes every action the same width; from `sm` up they flow
+         inline again at their natural size. -->
+    <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <button *appCan="'Orders.Create'" class="btn-primary" (click)="newOrder()"><i class="ti ti-plus" aria-hidden="true"></i> {{ 'New order' | translate }}</button>
+      <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash" aria-hidden="true"></i> {{ 'Record payment' | translate }}</button>
+      <button *appCan="'Inventory.Manage'" class="btn-secondary" (click)="showReturn.set(true)"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> {{ 'Record return' | translate }}</button>
+      <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices/new'], { queryParams: { customerId: c.id } })"><i class="ti ti-file-invoice" aria-hidden="true"></i> {{ 'Generate invoice' | translate }}</button>
       @if (amcEnabled) {
-        <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool"></i> {{ 'Log complaint' | translate }}</button>
+        <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool" aria-hidden="true"></i> {{ 'Log complaint' | translate }}</button>
       }
     </div>
 
@@ -76,19 +82,28 @@
       @if (jarBalances().length) {
         <div class="flex flex-col gap-2">
           @for (b of jarBalances(); track b.productId) {
-            <div class="flex items-center justify-between border-t border-ink-light pt-2">
-              <span class="text-body">{{ b.productName }} <span class="text-caption text-ink-mid">({{ b.bottleSize }})</span></span>
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-body">{{ b.outstanding }}</span>
-                <div *appCan="'Inventory.Manage'" class="flex items-center gap-2">
-                  <input type="number" min="1" [max]="b.outstanding" [(ngModel)]="returnQty[b.productId]"
-                         class="w-16 rounded-md border-ink-light text-body py-1.5" />
-                  <label class="flex items-center gap-1 text-caption text-ink-mid cursor-pointer" [title]="'Returned broken — write off instead of re-stocking.' | translate">
-                    <input type="checkbox" [(ngModel)]="returnDamaged[b.productId]" class="rounded border-ink-light text-danger" />
-                    {{ 'Damaged' | translate }}
-                  </label>
-                  <button class="btn-secondary btn-sm" [disabled]="returning()" (click)="recordReturn(b)">{{ 'Record return' | translate }}</button>
-                </div>
+            <!--
+              Two explicit rows on a phone rather than one wrapping row. Nesting the controls
+              inside a second flex container left them sized to their max-content (a flex item
+              defaults to min-width:auto), so the group ran past the card edge and "Record
+              return" was clipped. Row 1 is the product and its outstanding count; row 2 is the
+              return controls. From `sm` up the whole thing is a single justified row again.
+            -->
+            <div class="border-t border-ink-light pt-2 flex flex-col gap-2
+                        sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div class="flex items-center justify-between gap-2 min-w-0 sm:justify-start">
+                <span class="text-body min-w-0 break-words">{{ b.productName }} <span class="text-caption text-ink-mid">({{ b.bottleSize }})</span></span>
+                <span class="font-mono text-body shrink-0">{{ b.outstanding }}</span>
+              </div>
+              <div *appCan="'Inventory.Manage'" class="flex flex-wrap items-center gap-2 shrink-0">
+                <input type="number" min="1" [max]="b.outstanding" [(ngModel)]="returnQty[b.productId]"
+                       [attr.aria-label]="'Jars to return' | translate"
+                       class="w-16 shrink-0 rounded-md border-ink-light text-body py-1.5" />
+                <label class="flex items-center gap-1 text-caption text-ink-mid cursor-pointer whitespace-nowrap" [title]="'Returned broken — write off instead of re-stocking.' | translate">
+                  <input type="checkbox" [(ngModel)]="returnDamaged[b.productId]" class="rounded border-ink-light text-danger" />
+                  {{ 'Damaged' | translate }}
+                </label>
+                <button class="btn-secondary btn-sm shrink-0" [disabled]="returning()" (click)="recordReturn(b)">{{ 'Record return' | translate }}</button>
               </div>
             </div>
           }
@@ -148,13 +163,13 @@
           </div>
           <div>
             <button class="btn-secondary text-danger" [disabled]="clearingOpening()" (click)="clearOpeningBalance()">
-              <i class="ti ti-trash"></i> {{ 'Clear opening balance' | translate }}
+              <i class="ti ti-trash" aria-hidden="true"></i> {{ 'Clear opening balance' | translate }}
             </button>
           </div>
         } @else if (!showOpeningForm()) {
           <!-- Not set yet -->
           <div>
-            <button class="btn-secondary" (click)="openOpeningForm()"><i class="ti ti-history"></i> {{ 'Set opening balance' | translate }}</button>
+            <button class="btn-secondary" (click)="openOpeningForm()"><i class="ti ti-history" aria-hidden="true"></i> {{ 'Set opening balance' | translate }}</button>
           </div>
         }
       }
@@ -193,7 +208,7 @@
 
           <div class="flex gap-2">
             <button class="btn-primary" [disabled]="savingOpening()" (click)="saveOpeningBalance()">
-              @if (savingOpening()) { <i class="ti ti-loader-2 animate-spin"></i> } {{ 'Save opening balance' | translate }}
+              @if (savingOpening()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } {{ 'Save opening balance' | translate }}
             </button>
             <button class="btn-secondary" (click)="showOpeningForm.set(false)">{{ 'Cancel' | translate }}</button>
           </div>
@@ -201,10 +216,12 @@
       }
     </div>
 
-    <!-- Tabs -->
-    <div class="border-b border-ink-light flex gap-1">
+    <!-- Tabs. Seven of these never fit a phone side by side, so the strip scrolls
+         horizontally instead of squeezing the labels into each other. -->
+    <div class="border-b border-ink-light flex gap-1 overflow-x-auto overscroll-x-contain" role="tablist">
       @for (t of tabs(); track t.id) {
-        <button class="px-3 py-2 text-body border-b-2 -mb-px transition-colors"
+        <button class="px-3 py-2 text-body border-b-2 -mb-px transition-colors shrink-0 whitespace-nowrap"
+                role="tab" [attr.aria-selected]="tab() === t.id"
                 [class.border-navy]="tab() === t.id" [class.text-navy]="tab() === t.id"
                 [class.border-transparent]="tab() !== t.id" [class.text-ink-mid]="tab() !== t.id"
                 (click)="selectTab(t.id)">{{ t.label | translate }}</button>
@@ -230,7 +247,7 @@
           <div class="flex items-center justify-between mb-3">
             <p class="text-caption text-ink-mid">{{ 'Active subscriptions auto-generate this customer\'s orders every night.' | translate }}</p>
             <button *appCan="'Customers.Edit'" class="btn-secondary btn-sm" (click)="toggleSubForm()">
-              <i class="ti" [class.ti-plus]="!showSubForm()" [class.ti-x]="showSubForm()"></i>
+              <i class="ti" [class.ti-plus]="!showSubForm()" [class.ti-x]="showSubForm()" aria-hidden="true"></i>
               {{ (showSubForm() ? 'Cancel' : 'Add subscription') | translate }}
             </button>
           </div>
@@ -265,31 +282,31 @@
                 <input type="number" min="0" [(ngModel)]="subRate" [placeholder]="'Product rate' | translate" class="w-28 rounded-md border-ink-light py-1.5" />
               </label>
               <button class="btn-primary" [disabled]="savingSub()" (click)="saveSubscription()">
-                @if (savingSub()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ (editingSubId() ? 'Save' : 'Add') | translate }} }
+                @if (savingSub()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ (editingSubId() ? 'Save' : 'Add') | translate }} }
               </button>
             </div>
           }
 
           @if (c.subscriptions.length) {
-            <table class="w-full text-body">
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]">
               <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2">{{ 'Frequency' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2">{{ 'Status' | translate }}</th><th class="py-2 w-8"></th></tr></thead>
               <tbody>@for (s of c.subscriptions; track s.id) {
                 <tr class="border-b border-ink-light/60"><td class="py-2">{{ s.productName }}</td><td class="py-2">{{ s.quantity }}</td><td class="py-2">{{ s.frequency | translate }}</td><td class="py-2 text-right font-mono">₹{{ s.ratePerUnit | number: '1.0-2' }}</td><td class="py-2"><span [class]="s.isActive ? 'status-active' : 'status-overdue'">{{ (s.isActive ? 'Active' : 'Ended') | translate }}</span></td>
                   <td class="py-2 text-right">@if (s.isActive) {
                     <div class="flex items-center justify-end gap-2">
-                      <button *appCan="'Customers.Edit'" class="text-ink-mid hover:text-navy" [title]="'Edit subscription' | translate" (click)="startEditSub(s)"><i class="ti ti-edit"></i></button>
-                      <button *appCan="'Customers.Edit'" class="btn-icon btn-icon-danger" [title]="'End subscription' | translate" (click)="cancelSubscription(s.id)"><i class="ti ti-square-x"></i></button>
+                      <button *appCan="'Customers.Edit'" class="btn-icon" [title]="'Edit subscription' | translate" [attr.aria-label]="'Edit subscription' | translate" (click)="startEditSub(s)"><i class="ti ti-edit" aria-hidden="true"></i></button>
+                      <button *appCan="'Customers.Edit'" class="btn-icon text-danger" [title]="'End subscription' | translate" [attr.aria-label]="'End subscription' | translate" (click)="cancelSubscription(s.id)"><i class="ti ti-square-x" aria-hidden="true"></i></button>
                     </div>
                   }</td></tr>
               }</tbody>
-            </table>
+            </table></div>
           } @else { <p class="text-body text-ink-mid">{{ 'No subscriptions yet.' | translate }}</p> }
         }
         @case ('orders') {
           @if (ordersLoading() && !orderRows().length) {
-            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</p>
           } @else if (orderRows().length) {
-            <table class="w-full text-body">
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]">
               <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
                 <th class="py-2">{{ 'Date' | translate }}</th>
                 <th class="py-2">{{ 'Mode' | translate }}</th>
@@ -331,11 +348,11 @@
                     <td class="py-2 text-right font-mono">₹{{ o.totalAmount | number: '1.0-0' }}</td>
                     <td class="py-2">@if (o.status === 'Delivered') { <span [class]="paymentClass(o.paymentStatus)">{{ o.paymentStatus | translate }}</span> } @else { <span class="text-micro text-ink-mid">—</span> }</td>
                     <td class="py-2"><span [class]="orderStatusClass(o.status)">{{ o.status }}</span></td>
-                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right" aria-hidden="true"></i></td>
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
 
             <!-- Footer: total + pagination + view-all -->
             <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
@@ -343,9 +360,9 @@
               <div class="flex items-center gap-3">
                 @if (ordersTotalPages() > 1) {
                   <div class="flex items-center gap-2">
-                    <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="ordersPage() === 1" (click)="ordersGoTo(ordersPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                    <button class="btn-icon disabled:opacity-40" [disabled]="ordersPage() === 1" (click)="ordersGoTo(ordersPage() - 1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                     <span>{{ ordersPage() }} / {{ ordersTotalPages() }}</span>
-                    <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="ordersPage() === ordersTotalPages()" (click)="ordersGoTo(ordersPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                    <button class="btn-icon disabled:opacity-40" [disabled]="ordersPage() === ordersTotalPages()" (click)="ordersGoTo(ordersPage() + 1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
                   </div>
                 }
                 <button class="text-navy hover:underline" (click)="viewAllOrders()">{{ 'View all orders' | translate }}</button>
@@ -357,9 +374,9 @@
         }
         @case ('returns') {
           @if (returnsLoading() && !returnRows().length) {
-            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</p>
           } @else if (returnRows().length) {
-            <table class="w-full text-body">
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]">
               <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
                 <th class="py-2">{{ 'Date' | translate }}</th>
                 <th class="py-2">{{ 'Item' | translate }}</th>
@@ -376,7 +393,7 @@
                     <td class="py-2 text-center font-mono">{{ r.quantity }}</td>
                     <td class="py-2">
                       @if (r.movementType === 'Damage') {
-                        <span class="status-overdue"><i class="ti ti-alert-triangle"></i>{{ 'Damaged' | translate }}</span>
+                        <span class="status-overdue"><i class="ti ti-alert-triangle" aria-hidden="true"></i>{{ 'Damaged' | translate }}</span>
                       } @else {
                         <span class="status-active">{{ 'Good' | translate }}</span>
                       }
@@ -392,16 +409,16 @@
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
 
             <!-- Footer: total + pagination -->
             <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
               <span>{{ '{{count}} return(s)' | translate: { count: returnsTotal() } }}</span>
               @if (returnsTotalPages() > 1) {
                 <div class="flex items-center gap-2">
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="returnsPage() === 1" (click)="returnsGoTo(returnsPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="returnsPage() === 1" (click)="returnsGoTo(returnsPage() - 1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                   <span>{{ returnsPage() }} / {{ returnsTotalPages() }}</span>
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="returnsPage() === returnsTotalPages()" (click)="returnsGoTo(returnsPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="returnsPage() === returnsTotalPages()" (click)="returnsGoTo(returnsPage() + 1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
                 </div>
               }
             </div>
@@ -411,9 +428,9 @@
         }
         @case ('invoices') {
           @if (invoicesLoading() && !invoiceRows().length) {
-            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</p>
           } @else if (invoiceRows().length) {
-            <table class="w-full text-body">
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]">
               <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
                 <th class="py-2">{{ 'Date' | translate }}</th>
                 <th class="py-2">{{ 'Invoice #' | translate }}</th>
@@ -434,20 +451,20 @@
                     <td class="py-2 text-right font-mono">₹{{ inv.paidAmount | number: '1.0-0' }}</td>
                     <td class="py-2 text-right font-mono" [class.text-danger]="inv.balance > 0">₹{{ inv.balance | number: '1.0-0' }}</td>
                     <td class="py-2 pl-6"><span [class]="invoiceStatusClass(inv.status)">{{ inv.status | translate }}</span></td>
-                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right" aria-hidden="true"></i></td>
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
 
             <!-- Footer: total + pagination -->
             <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
               <span>{{ '{{count}} invoice(s)' | translate: { count: invoicesTotal() } }}</span>
               @if (invoicesTotalPages() > 1) {
                 <div class="flex items-center gap-2">
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="invoicesPage() === 1" (click)="invoicesGoTo(invoicesPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="invoicesPage() === 1" (click)="invoicesGoTo(invoicesPage() - 1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                   <span>{{ invoicesPage() }} / {{ invoicesTotalPages() }}</span>
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="invoicesPage() === invoicesTotalPages()" (click)="invoicesGoTo(invoicesPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="invoicesPage() === invoicesTotalPages()" (click)="invoicesGoTo(invoicesPage() + 1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
                 </div>
               }
             </div>
@@ -457,9 +474,9 @@
         }
         @case ('payments') {
           @if (paymentsLoading() && !paymentRows().length) {
-            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</p>
           } @else if (paymentRows().length) {
-            <table class="w-full text-body"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2">{{ 'Note' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]"><thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Date' | translate }}</th><th class="py-2">{{ 'Method' | translate }}</th><th class="py-2">{{ 'Note' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
               <tbody class="stagger">@for (p of paymentRows(); track p.id) {
                 <tr class="border-b border-ink-light/60">
                   <td class="py-2 font-mono">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td>
@@ -471,22 +488,22 @@
                       [class.text-ink-mid]="!NOTE.isActionRequired(p.notes)"
                       [title]="NOTE.display(p.notes)">
                     @if (p.notes) {
-                      @if (NOTE.isActionRequired(p.notes)) { <i class="ti ti-alert-triangle"></i> }
+                      @if (NOTE.isActionRequired(p.notes)) { <i class="ti ti-alert-triangle" aria-hidden="true"></i> }
                       {{ NOTE.display(p.notes) }}
                     } @else { — }
                   </td>
                   <td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td>
                 </tr>
-              }</tbody></table>
+              }</tbody></table></div>
 
             <!-- Footer: total + pagination -->
             <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
               <span>{{ '{{count}} payment(s)' | translate: { count: paymentsTotal() } }}</span>
               @if (paymentsTotalPages() > 1) {
                 <div class="flex items-center gap-2">
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="paymentsPage() === 1" (click)="paymentsGoTo(paymentsPage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="paymentsPage() === 1" (click)="paymentsGoTo(paymentsPage() - 1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                   <span>{{ paymentsPage() }} / {{ paymentsTotalPages() }}</span>
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="paymentsPage() === paymentsTotalPages()" (click)="paymentsGoTo(paymentsPage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="paymentsPage() === paymentsTotalPages()" (click)="paymentsGoTo(paymentsPage() + 1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
                 </div>
               }
             </div>
@@ -496,14 +513,14 @@
           <div class="flex items-center justify-between mb-3">
             <p class="text-caption text-ink-mid">{{ 'Repair, maintenance and AMC tickets for this customer.' | translate }}</p>
             <button *appCan="'AMC.Manage'" class="btn-secondary btn-sm" (click)="router.navigate(['/service-requests'])">
-              <i class="ti ti-plus"></i> {{ 'Log complaint' | translate }}
+              <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Log complaint' | translate }}
             </button>
           </div>
 
           @if (serviceLoading() && !serviceRows().length) {
-            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</p>
+            <p class="text-body text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</p>
           } @else if (serviceRows().length) {
-            <table class="w-full text-body">
+            <div class="table-scroll"><table class="w-full text-body min-w-[42rem]">
               <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light">
                 <th class="py-2">{{ 'Ticket' | translate }}</th>
                 <th class="py-2">{{ 'Title' | translate }}</th>
@@ -524,20 +541,20 @@
                     <td class="py-2"><span [class]="servicePriorityClass(s.priority)">{{ s.priority | translate }}</span></td>
                     <td class="py-2 font-mono">{{ s.scheduledDate ? (s.scheduledDate | date: 'MMM d, y') : '—' }}</td>
                     <td class="py-2"><span [class]="serviceStatusClass(s.status)">{{ s.status | translate }}</span></td>
-                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right"></i></td>
+                    <td class="py-2 text-ink-mid text-right"><i class="ti ti-chevron-right" aria-hidden="true"></i></td>
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
 
             <!-- Footer: total + pagination -->
             <div class="flex items-center justify-between mt-3 text-caption text-ink-mid">
               <span>{{ '{{count}} ticket(s)' | translate: { count: serviceTotal() } }}</span>
               @if (serviceTotalPages() > 1) {
                 <div class="flex items-center gap-2">
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="servicePage() === 1" (click)="servicesGoTo(servicePage() - 1)"><i class="ti ti-chevron-left"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="servicePage() === 1" (click)="servicesGoTo(servicePage() - 1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                   <span>{{ servicePage() }} / {{ serviceTotalPages() }}</span>
-                  <button class="p-1 rounded hover:bg-shell disabled:opacity-40" [disabled]="servicePage() === serviceTotalPages()" (click)="servicesGoTo(servicePage() + 1)"><i class="ti ti-chevron-right"></i></button>
+                  <button class="btn-icon disabled:opacity-40" [disabled]="servicePage() === serviceTotalPages()" (click)="servicesGoTo(servicePage() + 1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
                 </div>
               }
             </div>
@@ -566,5 +583,5 @@
     (updated)="onServiceUpdated()"
     (closed)="serviceDetailId.set(null)" />
 } @else {
-  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</div>
 }

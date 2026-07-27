@@ -35,6 +35,25 @@ export class RegisterComponent {
   /** Root domain the new workspace will sign in under (from environment), e.g. "rocloud.in". */
   protected readonly baseDomain = environment.baseDomain;
   protected readonly step = signal(1);
+
+  /**
+   * Reports is gated by TIER, not by a flag on the plan — see `plan: 'Pro'` on the /reports route
+   * in app.routes.ts. The catalogue carries no field for it, so the plan list here couldn't show
+   * it. Keep in step with that route, the upgrade modal, and rocloud-site/assets/site.js.
+   */
+  protected hasReports(p: { planType: string }): boolean {
+    return ['Pro', 'Enterprise'].includes(p.planType);
+  }
+
+  /**
+   * The Google button takes a pixel width, not a CSS length. 320px overflowed the card
+   * interior on a 360px phone (page p-6 + card p-4 leave ~280px), so cap it to what is
+   * actually available. 240px is the widget's own minimum.
+   */
+  protected googleButtonWidth(): number {
+    if (typeof window === 'undefined') return 320;
+    return Math.max(240, Math.min(320, window.innerWidth - 80));
+  }
   protected readonly loading = signal(false);
 
   /** Set once the user chooses "Continue with Google" — switches the credentials step to passwordless. */

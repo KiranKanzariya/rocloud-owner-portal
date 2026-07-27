@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { InvoiceService } from '../invoice.service';
 import { CustomerService } from '../../customers/customer.service';
 import { CustomerListItem } from '../../customers/customer.models';
@@ -13,6 +13,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { istMonth, istMonthStart, istToday } from '../../../shared/util/ist-date.util';
+import { AutocompleteDirective } from '../../../shared/directives/autocomplete.directive';
 
 /** All the form needs to show and submit a customer — so a search hit (CustomerListItem) or a
  *  fetched CustomerDetail (when arriving from the customer page) can both be selected as-is. */
@@ -21,7 +22,7 @@ type SelectedCustomer = Pick<CustomerListItem, 'id' | 'name' | 'mobile'>;
 @Component({
   selector: 'app-invoice-form',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, ReactiveFormsModule, TranslatePipe, MobilePipe],
   templateUrl: './invoice-form.component.html',
 })
 export class InvoiceFormComponent {
@@ -72,14 +73,17 @@ export class InvoiceFormComponent {
     });
 
     this.customerSearch.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((term) => {
-        if (term.trim()) {
-          this.customers.list({ search: term, page: 1, pageSize: 8 }).subscribe((r) => this.customerResults.set(r.items));
-        } else {
-          this.customerResults.set([]);
-        }
-      });
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        // switchMap cancels the previous lookup. With a nested subscribe two requests raced
+        // and whichever LANDED last won, so results for an older term could replace newer ones.
+        switchMap((term) =>
+          term.trim() ? this.customers.list({ search: term, page: 1, pageSize: 8 }) : of(null),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.customerResults.set(r?.items ?? []));
   }
 
   selectCustomer(c: SelectedCustomer): void {

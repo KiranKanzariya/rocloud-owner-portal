@@ -1,10 +1,10 @@
 <div class="flex flex-col gap-4 max-w-2xl mx-auto">
   <!-- Header -->
-  <div class="flex items-center justify-between gap-2 flex-wrap">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'My route' | translate }}</h1>
-    <div class="flex items-center gap-2">
-      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid"></i> }
-      <input type="date" [value]="date()" (change)="changeDate($any($event.target).value)"
+    <div class="page-header-actions">
+      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid" aria-hidden="true"></i> }
+      <input type="date" [attr.aria-label]="'Date' | translate" [value]="date()" (change)="changeDate($any($event.target).value)"
              class="rounded-md border-ink-light text-body py-1.5" />
     </div>
   </div>
@@ -16,9 +16,9 @@
     @if (total() === 0) {
       <span class="ml-auto text-caption text-ink-mid">—</span>
     } @else if (remaining() > 0) {
-      <span class="ml-auto text-caption text-amber"><i class="ti ti-clock"></i> {{ remaining() }} {{ 'left' | translate }}</span>
+      <span class="ml-auto text-caption text-amber"><i class="ti ti-clock" aria-hidden="true"></i> {{ remaining() }} {{ 'left' | translate }}</span>
     } @else {
-      <span class="ml-auto text-caption text-teal"><i class="ti ti-circle-check"></i> {{ 'All done' | translate }}</span>
+      <span class="ml-auto text-caption text-teal"><i class="ti ti-circle-check" aria-hidden="true"></i> {{ 'All done' | translate }}</span>
     }
   </div>
 
@@ -32,13 +32,13 @@
           <span [class]="statusClass(d.status)">{{ d.status | translate }}</span>
         </div>
 
-        <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }}</span>
+        <span class="text-caption text-ink-mid"><i class="ti ti-map-pin" aria-hidden="true"></i> {{ d.areaName || '—' }}</span>
         @if (d.addressLine) { <span class="text-caption text-ink-mid">{{ d.addressLine }}</span> }
 
         <div class="flex items-center justify-between gap-2 text-caption">
           @if (d.customerMobile) {
             <a [href]="'tel:' + d.customerMobile" (click)="$event.stopPropagation()"
-               class="text-navy font-mono inline-flex items-center gap-1"><i class="ti ti-phone"></i> {{ d.customerMobile | mobile }}</a>
+               class="text-navy font-mono inline-flex items-center gap-1"><i class="ti ti-phone" aria-hidden="true"></i> {{ d.customerMobile | mobile }}</a>
           } @else {
             <span class="text-ink-mid">—</span>
           }
@@ -62,7 +62,7 @@
           <span class="text-caption text-ink-mid">{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}</span>
         }
         @if (d.status === 'Failed' && d.notes) {
-          <span class="text-caption text-danger"><i class="ti ti-alert-triangle"></i> {{ d.notes }}</span>
+          <span class="text-caption text-danger"><i class="ti ti-alert-triangle" aria-hidden="true"></i> {{ d.notes }}</span>
         }
       </div>
     } @empty {

@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { isFiltered, readFilter, writeFilter } from '../../../core/services/list-filter';
 import { CustomerService } from '../customer.service';
 import { CustomerFilter, CustomerListItem } from '../customer.models';
 import { CustomerActions } from '../customer.constants';
@@ -61,15 +62,55 @@ export class CustomerListComponent {
     { key: 'actions', header: '', align: 'right' },
   ];
 
-  protected filter: CustomerFilter = { page: 1, pageSize: 25, sortBy: 'name', sortDir: 'asc' };
+  /** Baseline the URL is diffed against — only non-default values reach the address bar. */
+  private static readonly DEFAULTS = {
+    page: 1,
+    pageSize: 25,
+    sortBy: 'name',
+    sortDir: 'asc',
+    search: undefined,
+    deliveryMode: undefined,
+    paymentPreference: undefined,
+    isActive: undefined,
+  } as unknown as CustomerFilter & Record<string, string | number | boolean | undefined>;
+
+  /** Hydrated from the query string, so Back off a customer restores the list you left. */
+  protected filter = readFilter(inject(ActivatedRoute), CustomerListComponent.DEFAULTS);
+
+  /** Drives the table's "no matches" empty state and the Clear button. */
+  protected readonly filterState = signal(0);
+  protected readonly hasFilters = computed(() => {
+    this.filterState();
+    return isFiltered(this.filter, CustomerListComponent.DEFAULTS);
+  });
+
+  private readonly route = inject(ActivatedRoute);
 
   constructor() {
+    // switchMap, not a nested subscribe: typing "Ram" then "Ramesh" fired two requests and
+    // whichever LANDED last won, so a slow early response could overwrite the newer results.
     this.search.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((term) => {
-        this.filter = { ...this.filter, search: term.trim() || undefined, page: 1 };
-        this.load();
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term) => {
+          this.apply({ search: term.trim() || undefined });
+          this.loading.set(true);
+          return this.service.list(this.filter);
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: (res) => {
+          this.rows.set(res.items);
+          this.totalCount.set(res.totalCount);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
       });
+
+    // Restore the search box from the URL without re-firing the stream.
+    if (this.filter.search) this.search.setValue(this.filter.search, { emitEvent: false });
     this.load();
   }
 
@@ -85,31 +126,43 @@ export class CustomerListComponent {
     });
   }
 
+  /** Single funnel for every filter change: merge, mirror to the URL, refresh the flags. */
+  private apply(next: Partial<CustomerFilter>, reload = false): void {
+    this.filter = { ...this.filter, ...next, page: 'page' in next ? this.filter.page : 1 };
+    writeFilter(this.router, this.route, this.filter, CustomerListComponent.DEFAULTS);
+    this.filterState.update((v) => v + 1);
+    if (reload) this.load();
+  }
+
   setDeliveryMode(mode: string | undefined): void {
-    this.filter = { ...this.filter, deliveryMode: mode, page: 1 };
-    this.load();
+    this.apply({ deliveryMode: mode }, true);
   }
 
   setPaymentPreference(pref: string | undefined): void {
-    this.filter = { ...this.filter, paymentPreference: pref, page: 1 };
-    this.load();
+    this.apply({ paymentPreference: pref }, true);
   }
 
   setStatus(isActive: boolean | undefined): void {
-    this.filter = { ...this.filter, isActive, page: 1 };
-    this.load();
+    this.apply({ isActive }, true);
+  }
+
+  /** Resets every filter and the search box back to the unfiltered list. */
+  clearFilters(): void {
+    this.search.setValue('', { emitEvent: false });
+    this.apply(
+      { search: undefined, deliveryMode: undefined, paymentPreference: undefined, isActive: undefined },
+      true,
+    );
   }
 
   onSort(s: SortState): void {
     // Reset to page 1: a new sort should show the top of the results, not leave you mid-list on
     // whatever page you were on (matches the Users grid).
-    this.filter = { ...this.filter, sortBy: s.sortBy, sortDir: s.sortDir, page: 1 };
-    this.load();
+    this.apply({ sortBy: s.sortBy, sortDir: s.sortDir }, true);
   }
 
   onPage(page: number): void {
-    this.filter = { ...this.filter, page };
-    this.load();
+    this.apply({ page }, true);
   }
 
   create(): void {

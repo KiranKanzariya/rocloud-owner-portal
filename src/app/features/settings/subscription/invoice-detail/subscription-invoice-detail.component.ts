@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { SubscriptionService, SubscriptionInvoice } from '../../../../core/services/subscription.service';
+import { SubscriptionService, SubscriptionInvoice, SubscriptionBillTo } from '../../../../core/services/subscription.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PermissionService } from '../../../../core/services/permission.service';
@@ -66,6 +66,41 @@ export class SubscriptionInvoiceDetailComponent {
 
   back(): void {
     this.nav.back('/settings/subscription');
+  }
+
+  /** Copies a payment reference — the ids are long and are what support asks for. */
+  copy(value: string | null | undefined): void {
+    if (!value) return;
+    navigator.clipboard?.writeText(value).then(() => this.toast.success(this.t.instant('Copied.')));
+  }
+
+  /** Razorpay's raw method → a label worth reading. Unknown values pass through as-is. */
+  private static readonly METHOD_LABELS: Record<string, string> = {
+    card: 'Card',
+    upi: 'UPI',
+    netbanking: 'Netbanking',
+    wallet: 'Wallet',
+  };
+
+  protected methodLabel(method: string | null | undefined): string {
+    if (!method) return 'Razorpay';
+    return SubscriptionInvoiceDetailComponent.METHOD_LABELS[method.toLowerCase()] ?? method;
+  }
+
+  protected methodIcon(method: string | null | undefined): string {
+    switch ((method ?? '').toLowerCase()) {
+      case 'card': return 'ti-credit-card';
+      case 'upi': return 'ti-qrcode';
+      case 'netbanking': return 'ti-building-bank';
+      case 'wallet': return 'ti-wallet';
+      default: return 'ti-cash';
+    }
+  }
+
+  /** "City, State — Pincode", skipping whatever the owner hasn't filled in. */
+  protected cityLine(b: SubscriptionBillTo): string {
+    const left = [b.city, b.state].filter(Boolean).join(', ');
+    return [left, b.pincode].filter(Boolean).join(' — ');
   }
 
   /** Pay this Pending invoice: initiate → Razorpay (unless free/dev) → complete → refresh JWT → reload. */

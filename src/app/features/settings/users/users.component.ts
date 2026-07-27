@@ -9,6 +9,7 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { UserFormModalComponent } from './user-form-modal/user-form-modal.component';
+import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { DataTableComponent, ColumnDef, SortState } from '../../../shared/components/data-table/data-table.component';
@@ -17,7 +18,7 @@ import { ColumnCellDirective } from '../../../shared/components/data-table/colum
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, CanDirective, UserFormModalComponent, TranslatePipe, MobilePipe, DataTableComponent, ColumnCellDirective],
+  imports: [DatePipe, ReactiveFormsModule, CanDirective, UserFormModalComponent, ConfirmModalComponent, TranslatePipe, MobilePipe, DataTableComponent, ColumnCellDirective],
   templateUrl: './users.component.html',
 })
 export class UsersComponent {
@@ -43,7 +44,7 @@ export class UsersComponent {
     { key: 'areas', header: 'Areas' },
     { key: 'lastLoginAt', header: 'Last login', sortable: true },
     { key: 'isActive', header: 'Status', sortable: true },
-    { key: 'actions', header: '', align: 'right', width: '110px' },
+    { key: 'actions', header: '', align: 'right', width: '145px' },   // edit · reset · deactivate · delete
   ];
   protected readonly sortBy = signal('name');
   protected readonly sortDir = signal<'asc' | 'desc'>('asc');
@@ -60,9 +61,22 @@ export class UsersComponent {
     this.page.set(p);
     this.load();
   }
+
+  /** Drives the table's "no matches" empty state rather than the ambiguous "No records found." */
+  protected hasFilters(): boolean {
+    return !!this.search.value.trim();
+  }
+
+  clearFilters(): void {
+    this.search.setValue('');
+  }
   protected readonly modalOpen = signal(false);
   protected readonly editing = signal<UserListItem | null>(null);
   protected readonly canManage = this.perm.can('Users.Manage');
+  /** Row awaiting delete confirmation (null = modal closed). */
+  protected readonly deleteTarget = signal<UserListItem | null>(null);
+  /** Own row: the API refuses self-deletion, so don't offer the button. */
+  protected readonly myUserId = this.perm.userId();
 
   constructor() {
     this.search.valueChanges
@@ -119,6 +133,23 @@ export class UsersComponent {
         this.load();
       },
       error: (err) => this.toast.apiError(err, this.t.instant('Could not deactivate the user.')),
+    });
+  }
+
+  /** Permanent (soft-delete) removal — confirmed through the shared modal, as on the customers page. */
+  confirmDelete(): void {
+    const u = this.deleteTarget();
+    if (!u) return;
+    this.users.delete(u.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.toast.success(this.t.instant('{{name}} deleted.', { name: u.name }));
+        this.load();
+      },
+      error: (err) => {
+        this.deleteTarget.set(null);
+        this.toast.apiError(err, this.t.instant('Could not delete the user.'));
+      },
     });
   }
 

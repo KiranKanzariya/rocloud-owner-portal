@@ -1,27 +1,37 @@
 <div class="flex flex-col gap-4">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Customers' | translate }}</h1>
-    <div class="flex items-center gap-2">
+    <div class="page-header-actions">
       <button *appCan="'Customers.Create'" class="btn-secondary" (click)="router.navigate(['/customers/import'])">
-        <i class="ti ti-upload"></i> {{ 'Import' | translate }}
+        <i class="ti ti-upload" aria-hidden="true"></i> {{ 'Import' | translate }}
       </button>
       <button *appCan="'Customers.Create'" class="btn-primary" (click)="create()">
-        <i class="ti ti-plus"></i> {{ 'Add customer' | translate }}
+        <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Add customer' | translate }}
       </button>
     </div>
   </div>
 
-  <!-- Filter bar -->
-  <div class="card flex flex-wrap items-center gap-3">
+  <!-- Filter bar. Every control is BOUND to the filter now (it used to be a bare
+       (change) handler with no [value]), so the bar reflects the active filters,
+       survives a Back navigation, and can be reset in one click. -->
+  <div class="filter-bar">
     <div class="relative flex-1 min-w-[200px]">
-      <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+      <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
       <input [formControl]="search" type="search" [placeholder]="'Search name, mobile or code…' | translate"
-             class="w-full pl-9 pr-3 py-1.5 text-body rounded-md border-ink-light" />
+             [attr.aria-label]="'Search' | translate"
+             class="w-full pl-9 pr-9 py-1.5 text-body rounded-md border-ink-light" />
+      @if (search.value) {
+        <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 btn-icon"
+                [attr.aria-label]="'Clear search' | translate" (click)="search.setValue('')">
+          <i class="ti ti-x text-sm" aria-hidden="true"></i>
+        </button>
+      }
     </div>
 
     <!-- Delivery mode pills -->
-    <div class="flex items-center gap-1 rounded-md border border-ink-light p-0.5">
+    <div class="flex items-center gap-1 rounded-md border border-ink-light p-0.5 max-w-full overflow-x-auto"
+         role="group" [attr.aria-label]="'Delivery mode' | translate">
       <button class="seg" [class.bg-navy]="!filter.deliveryMode" [class.text-white]="!filter.deliveryMode"
               (click)="setDeliveryMode(undefined)">{{ 'All' | translate }}</button>
       @for (m of deliveryModes; track m.value) {
@@ -32,6 +42,8 @@
 
     <!-- Payment preference -->
     <select class="rounded-md border-ink-light text-body py-1.5"
+            [attr.aria-label]="'Payment' | translate"
+            [value]="filter.paymentPreference ?? ''"
             (change)="setPaymentPreference($any($event.target).value || undefined)">
       <option value="">{{ 'All payments' | translate }}</option>
       @for (p of paymentPreferences; track p.value) {
@@ -41,24 +53,34 @@
 
     <!-- Status -->
     <select class="rounded-md border-ink-light text-body py-1.5"
+            [attr.aria-label]="'Status' | translate"
+            [value]="filter.isActive === undefined ? '' : (filter.isActive ? 'true' : 'false')"
             (change)="setStatus($any($event.target).value === '' ? undefined : $any($event.target).value === 'true')">
       <option value="">{{ 'All statuses' | translate }}</option>
       <option value="true">{{ 'Active' | translate }}</option>
       <option value="false">{{ 'Inactive' | translate }}</option>
     </select>
+
+    @if (hasFilters()) {
+      <button type="button" class="btn-secondary btn-sm ml-auto" (click)="clearFilters()">
+        <i class="ti ti-filter-off" aria-hidden="true"></i> {{ 'Clear filters' | translate }}
+      </button>
+    }
   </div>
 
   <!-- Table -->
   <roc-data-table
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="filter.page" [pageSize]="filter.pageSize" [sortBy]="filter.sortBy" [sortDir]="$any(filter.sortDir)"
-    (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))">
+    [rowLink]="true" [filtered]="hasFilters()" minWidth="52rem"
+    (sortChange)="onSort($event)" (pageChange)="onPage($event)" (rowClick)="open($any($event))"
+    (clearFilters)="clearFilters()">
 
     <ng-template appColumnCell="name" let-row>
       <div class="flex flex-col">
         <span class="font-medium text-ink">{{ row.name }}@if (row.discountType !== 'None') {
           <i class="ti ti-discount-2 text-teal ml-1 align-middle"
-             [title]="(row.discountType === 'Percentage' ? '{{value}}% off every invoice' : '₹{{value}} off every invoice') | translate: { value: row.discountValue }"></i>
+             [title]="(row.discountType === 'Percentage' ? '{{value}}% off every invoice' : '₹{{value}} off every invoice') | translate: { value: row.discountValue }" aria-hidden="true"></i>
         }</span>
         <span class="text-caption text-ink-mid font-mono">{{ row.mobile | mobile }}@if (row.customerCode) { · {{ row.customerCode }} }</span>
       </div>
@@ -88,9 +110,17 @@
 
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
-        <button class="btn-icon" (click)="open(row)" title="View"><i class="ti ti-eye"></i></button>
-        <button *appCan="'Customers.Edit'" class="btn-icon" (click)="edit(row)" title="Edit"><i class="ti ti-edit"></i></button>
-        <button *appCan="'Customers.Delete'" class="btn-icon text-danger" (click)="deleteTarget.set(row)" title="Delete"><i class="ti ti-trash"></i></button>
+        <!-- aria-label, not just title: title is not a reliable accessible name and never
+             surfaces on touch, so these icon-only buttons were unnamed. Translated too —
+             they were the only hardcoded English left on this page. -->
+        <button class="btn-icon" (click)="open(row)"
+                [title]="'View' | translate" [attr.aria-label]="'View' | translate"><i class="ti ti-eye" aria-hidden="true"></i></button>
+        <button *appCan="'Customers.Edit'" class="btn-icon" (click)="edit(row)"
+                [title]="'Edit' | translate" [attr.aria-label]="'Edit' | translate"><i class="ti ti-edit" aria-hidden="true"></i></button>
+        <!-- text-danger, not btn-icon-danger: the latter is hover-only, which reads as a
+             neutral action on desktop and is never red at all on touch. -->
+        <button *appCan="'Customers.Delete'" class="btn-icon text-danger" (click)="deleteTarget.set(row)"
+                [title]="'Delete' | translate" [attr.aria-label]="'Delete' | translate"><i class="ti ti-trash" aria-hidden="true"></i></button>
       </div>
     </ng-template>
   </roc-data-table>

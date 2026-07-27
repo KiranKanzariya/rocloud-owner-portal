@@ -11,9 +11,9 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   imports: [RouterLink, TranslatePipe],
   template: `
-    <div class="card flex items-center gap-3 border-l-4 border-amber">
-      <i class="ti ti-crown text-amber text-h2"></i>
-      <div class="flex-1">
+    <div class="card flex flex-wrap items-center gap-3 border-l-4 border-amber">
+      <i class="ti ti-crown text-amber text-h2" aria-hidden="true"></i>
+      <div class="flex-1 min-w-[12rem]">
         <p class="text-body font-medium">{{ '{{feature}} is available on the {{plan}} plan.' | translate: { feature: (feature() | translate), plan: plan() } }}</p>
         @if (description()) { <p class="text-caption text-ink-mid">{{ description() | translate }}</p> }
       </div>

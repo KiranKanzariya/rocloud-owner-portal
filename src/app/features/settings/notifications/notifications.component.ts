@@ -12,6 +12,7 @@ import { DataTableComponent, ColumnDef, SortState } from '../../../shared/compon
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
 import { sortAndPage } from '../../../shared/components/data-table/client-table';
 import { isFeatureEnabled } from '../../../core/feature-flags';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 /** Customer-facing templates the tenant can customise, with their placeholder tokens. */
 const TEMPLATE_CODES = [
@@ -25,7 +26,7 @@ const LANGUAGES: Record<string, string> = { en: 'English', hi: 'हिन्द�
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [DatePipe, FormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
+  imports: [ModalDirective, DatePipe, FormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
   templateUrl: './notifications.component.html',
 })
 export class NotificationsComponent {

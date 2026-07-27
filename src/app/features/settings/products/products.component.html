@@ -1,8 +1,8 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Products' | translate }}</h1>
     @if (canManage) {
-      <button class="btn-primary" (click)="openCreate()"><i class="ti ti-plus"></i> {{ 'Add product' | translate }}</button>
+      <button class="btn-primary" (click)="openCreate()"><i class="ti ti-plus" aria-hidden="true"></i> {{ 'Add product' | translate }}</button>
     }
   </div>
 
@@ -20,10 +20,10 @@
     <ng-template appColumnCell="actions" let-row>
       @if (canManage) {
         <div class="flex items-center justify-end gap-1">
-          <button class="btn-icon" (click)="openEdit(row)" [title]="'Edit rate' | translate"><i class="ti ti-pencil"></i></button>
+          <button class="btn-icon" (click)="openEdit(row)" [title]="'Edit rate' | translate" [attr.aria-label]="'Edit rate' | translate"><i class="ti ti-pencil" aria-hidden="true"></i></button>
           <button class="btn-icon" [class.text-danger]="row.isActive" [class.text-teal]="!row.isActive"
-            (click)="toggleActive(row)" [title]="(row.isActive ? 'Deactivate' : 'Activate') | translate">
-            <i class="ti" [class.ti-toggle-right]="row.isActive" [class.ti-toggle-left]="!row.isActive"></i>
+            (click)="toggleActive(row)" [title]="(row.isActive ? 'Deactivate' : 'Activate') | translate" [attr.aria-label]="(row.isActive ? 'Deactivate' : 'Activate') | translate">
+            <i class="ti" [class.ti-toggle-right]="row.isActive" [class.ti-toggle-left]="!row.isActive" aria-hidden="true"></i>
           </button>
         </div>
       }
@@ -32,11 +32,11 @@
 </div>
 
 @if (modalOpen()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="modalOpen.set(false)">
-    <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
+  <div rocModal (dismiss)="modalOpen.set(false)" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="modalOpen.set(false)">
+    <div class="card w-full max-w-sm max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ (editingId() ? 'Edit product' : 'Add product') | translate }}</h3>
-        <button class="btn-icon btn-icon-danger" (click)="modalOpen.set(false)"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="modalOpen.set(false)"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-3">
         <label class="flex flex-col gap-1">
@@ -66,7 +66,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="modalOpen.set(false)">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Save' | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Save' | translate }} }
           </button>
         </div>
       </form>

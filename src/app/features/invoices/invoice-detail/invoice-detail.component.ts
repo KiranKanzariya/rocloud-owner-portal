@@ -10,11 +10,12 @@ import { NavigationService } from '../../../core/services/navigation.service';
 import { PaymentService, PaymentListItem } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, PdfPreviewComponent, CanDirective, TranslatePipe],
+  imports: [ModalDirective, DatePipe, DecimalPipe, ReactiveFormsModule, PdfPreviewComponent, CanDirective, TranslatePipe],
   templateUrl: './invoice-detail.component.html',
 })
 export class InvoiceDetailComponent {

@@ -1,9 +1,9 @@
 @if (open()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
-    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ 'Record return' | translate }}</h3>
-        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
 
       @if (customer(); as c) {
@@ -19,7 +19,9 @@
           </select>
         </label>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- One column on a phone: a native date input has a ~150px intrinsic minimum and
+             this modal only affords ~142px per cell at 360px, so it overflowed its cell. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="flex flex-col gap-1">
             <span class="text-caption font-medium">{{ 'Jars returned' | translate }}</span>
             <input type="number" formControlName="quantity" min="1" class="rounded-md border-ink-light py-1.5" />
@@ -39,7 +41,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Record' | translate }} }
           </button>
         </div>
       </form>

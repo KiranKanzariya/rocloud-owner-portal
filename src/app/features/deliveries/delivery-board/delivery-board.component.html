@@ -1,19 +1,19 @@
 <div class="flex flex-col gap-4">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Delivery board' | translate }}</h1>
-    <div class="flex items-center gap-2">
-      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid"></i> }
-      <input type="date" [value]="date()" (change)="changeDate($any($event.target).value)"
+    <div class="page-header-actions">
+      @if (loading()) { <i class="ti ti-loader-2 animate-spin text-ink-mid" aria-hidden="true"></i> }
+      <input type="date" [attr.aria-label]="'Date' | translate" [value]="date()" (change)="changeDate($any($event.target).value)"
              class="rounded-md border-ink-light text-body py-1.5" />
-      <button class="btn-secondary" (click)="router.navigate(['/deliveries/map'])"><i class="ti ti-map"></i> {{ 'Route map' | translate }}</button>
+      <button class="btn-secondary" (click)="router.navigate(['/deliveries/map'])"><i class="ti ti-map" aria-hidden="true"></i> {{ 'Route map' | translate }}</button>
     </div>
   </div>
 
   <!-- Load summary: item-wise jar totals still to be delivered (Pending + In transit) -->
   @if (board().toDeliver?.length) {
     <div class="card p-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-      <span class="text-caption font-medium text-ink-mid"><i class="ti ti-package"></i> {{ 'To deliver' | translate }}</span>
+      <span class="text-caption font-medium text-ink-mid"><i class="ti ti-package" aria-hidden="true"></i> {{ 'To deliver' | translate }}</span>
       @for (t of board().toDeliver; track t.productName) {
         <span class="text-caption">
           <span class="font-medium text-ink">{{ t.productName }}</span>
@@ -29,17 +29,19 @@
   <!-- Mode switcher: only when the day has BOTH home deliveries and plant pickups, so a single-mode
        business sees no extra chrome. Sticky so switching never needs a scroll back up. -->
   @if (showModeFilter()) {
-    <div class="sticky top-[50px] z-20 -my-1 py-1 bg-shell">
-      <div class="flex items-center gap-1 rounded-md border border-ink-light bg-white p-0.5 w-fit">
+    <!-- top-0, not top-[50px]: <main> is the scrollport and the 50px topbar sits outside
+         it, so the old offset left a band of content scrolling above the pinned bar. -->
+    <div class="sticky top-0 z-20 -my-1 py-1 bg-shell">
+      <div class="flex items-center gap-1 rounded-md border border-ink-light bg-white p-0.5 w-fit max-w-full overflow-x-auto">
         <button class="seg" [class.bg-navy]="mode() === 'all'" [class.text-white]="mode() === 'all'"
                 (click)="mode.set('all')">{{ 'All' | translate }}</button>
         <button class="seg" [class.bg-navy]="mode() === 'home'" [class.text-white]="mode() === 'home'"
                 (click)="mode.set('home')">
-          <i class="ti ti-truck"></i> {{ 'Home delivery' | translate }} ({{ homeCount() }})
+          <i class="ti ti-truck" aria-hidden="true"></i> {{ 'Home delivery' | translate }} ({{ homeCount() }})
         </button>
         <button class="seg" [class.bg-navy]="mode() === 'pickup'" [class.text-white]="mode() === 'pickup'"
                 (click)="mode.set('pickup')">
-          <i class="ti ti-building-warehouse"></i> {{ 'Plant pickup' | translate }} ({{ pickupCount() }})
+          <i class="ti ti-building-warehouse" aria-hidden="true"></i> {{ 'Plant pickup' | translate }} ({{ pickupCount() }})
         </button>
       </div>
     </div>
@@ -68,9 +70,9 @@
                 <span class="font-medium text-ink">{{ d.customerName }}</span>
                 @if (d.collectedAmount) { <span class="text-caption font-mono text-teal">₹{{ d.collectedAmount | number: '1.0-0' }}</span> }
               </div>
-              <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
+              <span class="text-caption text-ink-mid"><i class="ti ti-map-pin" aria-hidden="true"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
               <div class="flex items-center justify-between text-caption text-ink-mid">
-                <span><i class="ti ti-user"></i> {{ d.deliveryBoyName || ('Unassigned' | translate) }}</span>
+                <span><i class="ti ti-user" aria-hidden="true"></i> {{ d.deliveryBoyName || ('Unassigned' | translate) }}</span>
                 @if (d.status === 'Delivered') { <span>{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}</span> }
               </div>
               <!-- Item-wise jars to deliver for this stop (before it's completed) -->
@@ -99,7 +101,7 @@
                 </div>
               }
               @if (d.status === 'Failed' && d.notes) {
-                <span class="text-caption text-danger"><i class="ti ti-alert-triangle"></i> {{ d.notes }}</span>
+                <span class="text-caption text-danger"><i class="ti ti-alert-triangle" aria-hidden="true"></i> {{ d.notes }}</span>
               }
             </button>
           } @empty {
@@ -115,7 +117,7 @@
   @if (showPickups() && board().pickups?.length) {
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2 px-1">
-        <h3 class="text-h4"><i class="ti ti-building-warehouse"></i> {{ 'Plant pickups' | translate }}</h3>
+        <h3 class="text-h4"><i class="ti ti-building-warehouse" aria-hidden="true"></i> {{ 'Plant pickups' | translate }}</h3>
         <span class="text-caption text-ink-mid bg-shell rounded-full px-2 py-0.5">{{ board().pickups.length }}</span>
       </div>
 
@@ -133,7 +135,7 @@
                 <span class="text-caption text-amber font-medium">{{ 'Awaiting pickup' | translate }}</span>
               }
             </div>
-            <span class="text-caption text-ink-mid"><i class="ti ti-map-pin"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
+            <span class="text-caption text-ink-mid"><i class="ti ti-map-pin" aria-hidden="true"></i> {{ d.areaName || '—' }} · <span class="font-mono">{{ d.customerMobile | mobile }}</span></span>
             @if (d.status === 'Delivered') {
               <span class="text-caption text-ink-mid">{{ '{{out}} out / {{back}} back' | translate: { out: d.jarsDelivered ?? 0, back: d.jarsReturned ?? 0 } }}@if (d.collectedAmount) { <span class="font-mono text-teal"> · ₹{{ d.collectedAmount | number: '1.0-0' }}</span> }</span>
               @if (d.deliveredLines?.length || d.otherReturns?.length) {

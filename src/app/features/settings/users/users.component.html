@@ -1,18 +1,26 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Team members' | translate }}</h1>
-    <button *appCan="'Users.Manage'" class="btn-primary" (click)="add()"><i class="ti ti-user-plus"></i> {{ 'Add user' | translate }}</button>
+    <button *appCan="'Users.Manage'" class="btn-primary" (click)="add()"><i class="ti ti-user-plus" aria-hidden="true"></i> {{ 'Add user' | translate }}</button>
   </div>
 
   <div class="relative max-w-sm">
-    <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+    <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
     <input [formControl]="search" type="search" [placeholder]="'Search name, email or mobile…' | translate"
-           class="w-full rounded-md border border-ink-light py-1.5 pl-9 pr-3" />
+           [attr.aria-label]="'Search' | translate"
+           class="w-full rounded-md border border-ink-light py-1.5 pl-9 pr-9" />
+    @if (search.value) {
+      <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 btn-icon"
+              [attr.aria-label]="'Clear search' | translate" (click)="search.setValue('')">
+        <i class="ti ti-x text-sm" aria-hidden="true"></i>
+      </button>
+    }
   </div>
 
   <roc-data-table
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="page()" [pageSize]="pageSize" [sortBy]="sortBy()" [sortDir]="sortDir()"
+    [filtered]="hasFilters()" (clearFilters)="clearFilters()" minWidth="52rem"
     (sortChange)="onSort($event)" (pageChange)="onPage($event)">
 
     <ng-template appColumnCell="name" let-row>
@@ -26,10 +34,13 @@
     <ng-template appColumnCell="isActive" let-row><span [class]="row.isActive ? 'status-delivered' : 'status-active-info'">{{ (row.isActive ? 'Active' : 'Inactive') | translate }}</span></ng-template>
     <ng-template appColumnCell="actions" let-row>
       <div class="flex items-center justify-end gap-1" *appCan="'Users.Manage'">
-        <button class="btn-icon" (click)="edit(row)" [title]="'Edit' | translate"><i class="ti ti-pencil"></i></button>
-        <button class="btn-icon" (click)="resetPassword(row)" [title]="'Reset password' | translate"><i class="ti ti-key"></i></button>
+        <button class="btn-icon" (click)="edit(row)" [title]="'Edit' | translate" [attr.aria-label]="'Edit' | translate"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+        <button class="btn-icon" (click)="resetPassword(row)" [title]="'Reset password' | translate" [attr.aria-label]="'Reset password' | translate"><i class="ti ti-key" aria-hidden="true"></i></button>
         @if (row.isActive) {
-          <button class="btn-icon text-danger" (click)="deactivate(row)" [title]="'Deactivate' | translate"><i class="ti ti-user-off"></i></button>
+          <button class="btn-icon text-danger" (click)="deactivate(row)" [title]="'Deactivate' | translate" [attr.aria-label]="'Deactivate' | translate"><i class="ti ti-user-off" aria-hidden="true"></i></button>
+        }
+        @if (row.id !== myUserId) {
+          <button class="btn-icon text-danger" (click)="deleteTarget.set(row)" [title]="'Delete' | translate" [attr.aria-label]="'Delete' | translate"><i class="ti ti-trash" aria-hidden="true"></i></button>
         }
       </div>
     </ng-template>
@@ -39,3 +50,9 @@
 <app-user-form-modal
   [open]="modalOpen()" [editUser]="editing()" [roles]="roles()"
   (saved)="onSaved()" (closed)="modalOpen.set(false)" />
+
+<roc-confirm-modal
+  [open]="!!deleteTarget()" [danger]="true" [confirmLabel]="'Delete' | translate"
+  [title]="'Delete team member' | translate"
+  [message]="'Delete {{name}}? They lose access immediately and this cannot be undone. Deactivate instead to keep the account.' | translate: { name: deleteTarget()?.name ?? '' }"
+  (confirm)="confirmDelete()" (cancel)="deleteTarget.set(null)" />

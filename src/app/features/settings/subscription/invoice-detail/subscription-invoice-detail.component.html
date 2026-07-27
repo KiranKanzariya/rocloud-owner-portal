@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-2">
-        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-h1 font-mono">{{ inv.invoiceNumber }}</h1>
@@ -16,11 +16,11 @@
       </div>
       <div class="flex gap-2 shrink-0">
         <button class="btn-secondary" [disabled]="!pdf.ready()" (click)="pdf.download()">
-          <i class="ti ti-download"></i> {{ 'Download' | translate }}
+          <i class="ti ti-download" aria-hidden="true"></i> {{ 'Download' | translate }}
         </button>
         @if (inv.status === 'Pending' && canManage) {
           <button class="btn-primary" [disabled]="paying()" (click)="pay()">
-            @if (paying()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-cash"></i> } {{ 'Pay now' | translate }}
+            @if (paying()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-cash" aria-hidden="true"></i> } {{ 'Pay now' | translate }}
           </button>
         }
       </div>
@@ -52,10 +52,21 @@
 
       <div>
         <p class="text-caption text-ink-mid uppercase tracking-wide">{{ 'Bill To' | translate }}</p>
-        <p class="font-semibold">{{ businessName() }}</p>
+        @if (inv.billTo; as b) {
+          <p class="font-semibold">{{ b.name }}</p>
+          <!-- Every line is optional: a tenant that hasn't filled in its address should get a clean
+               block, not blank rows or stray punctuation. -->
+          @if (b.addressLine) { <p class="text-caption text-ink-mid">{{ b.addressLine }}</p> }
+          @if (cityLine(b); as city) { <p class="text-caption text-ink-mid">{{ city }}</p> }
+          @if (b.gstin) { <p class="text-caption text-ink-mid font-mono">{{ 'GSTIN' | translate }}: {{ b.gstin }}</p> }
+          @if (b.email) { <p class="text-caption text-ink-mid">{{ b.email }}</p> }
+          @if (b.mobile) { <p class="text-caption text-ink-mid">{{ b.mobile }}</p> }
+        } @else {
+          <p class="font-semibold">{{ businessName() }}</p>
+        }
       </div>
 
-      <table class="w-full text-body">
+      <div class="table-scroll"><table class="w-full text-body min-w-[28rem]">
         <thead>
           <tr class="text-left text-caption text-ink-mid border-b border-ink-light">
             <th class="py-2">{{ 'Description' | translate }}</th>
@@ -70,7 +81,7 @@
             <td class="py-2 text-right font-mono">₹{{ inv.grossAmount | number: '1.0-2' }}</td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <dl class="flex flex-col gap-1 text-body ml-auto w-full max-w-xs">
         <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Subtotal' | translate }}</dt><dd class="font-mono">₹{{ inv.grossAmount | number: '1.0-2' }}</dd></div>
@@ -82,6 +93,58 @@
           <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Paid on' | translate }}</dt><dd class="font-mono text-teal">{{ inv.paidAt | date: 'MMM d, y' }}</dd></div>
         }
       </dl>
+
+      <!-- Payment details. Shown only for an online payment — an invoice settled any other way has
+           no Razorpay reference, and an empty block would just raise questions. -->
+      @if (inv.razorpayPaymentId || inv.razorpayOrderId) {
+        <div class="border-t border-ink-light pt-3 flex flex-col gap-1">
+          <p class="text-caption text-ink-mid uppercase tracking-wide">{{ 'Payment details' | translate }}</p>
+          <dl class="flex flex-col gap-1 text-caption">
+            <div class="flex justify-between gap-4">
+              <dt class="text-ink-mid shrink-0">{{ 'Method' | translate }}</dt>
+              <dd class="text-right flex items-center justify-end gap-1.5 flex-wrap">
+                <i class="ti {{ methodIcon(inv.paymentMethod) }}" aria-hidden="true"></i>
+                <span>{{ methodLabel(inv.paymentMethod) | translate }}</span>
+                <!-- The instrument is what makes a charge recognisable: the UPI id it came from,
+                     the card's network + last four, or the bank. Absent on older payments. -->
+                @if (inv.paymentInstrument) {
+                  <span class="font-mono text-ink-mid break-all">{{ inv.paymentInstrument }}</span>
+                }
+              </dd>
+            </div>
+            @if (inv.paidAt) {
+              <div class="flex justify-between gap-4">
+                <dt class="text-ink-mid shrink-0">{{ 'Paid at' | translate }}</dt>
+                <dd class="text-right">{{ inv.paidAt | date: 'MMM d, y h:mm a' }}</dd>
+              </div>
+            }
+            @if (inv.razorpayPaymentId) {
+              <div class="flex justify-between gap-4 items-start">
+                <dt class="text-ink-mid shrink-0">{{ 'Payment ID' | translate }}</dt>
+                <dd class="text-right font-mono break-all">
+                  {{ inv.razorpayPaymentId }}
+                  <button class="btn-icon" (click)="copy(inv.razorpayPaymentId)"
+                          [title]="'Copy' | translate" [attr.aria-label]="'Copy' | translate">
+                    <i class="ti ti-copy" aria-hidden="true"></i>
+                  </button>
+                </dd>
+              </div>
+            }
+            @if (inv.razorpayOrderId) {
+              <div class="flex justify-between gap-4 items-start">
+                <dt class="text-ink-mid shrink-0">{{ 'Order ID' | translate }}</dt>
+                <dd class="text-right font-mono break-all">
+                  {{ inv.razorpayOrderId }}
+                  <button class="btn-icon" (click)="copy(inv.razorpayOrderId)"
+                          [title]="'Copy' | translate" [attr.aria-label]="'Copy' | translate">
+                    <i class="ti ti-copy" aria-hidden="true"></i>
+                  </button>
+                </dd>
+              </div>
+            }
+          </dl>
+        </div>
+      }
 
       <p class="text-micro text-ink-mid text-center pt-3 border-t border-ink-light">
         {{ 'This is a computer-generated invoice for your ROCloud subscription.' | translate }}

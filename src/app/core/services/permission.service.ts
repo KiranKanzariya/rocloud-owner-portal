@@ -34,6 +34,8 @@ export class PermissionService {
   readonly plan = computed(() => this._plan());
   readonly name = computed(() => this._name());
   readonly tenantId = computed(() => this._tenantId());
+  /** The signed-in user's own id (JWT `sub`) — e.g. to hide "delete" on your own row. */
+  readonly userId = computed(() => this._userId());
   /** The tenant's business name (from the JWT) — shown in the sidebar. */
   readonly businessName = computed(() => this._businessName());
   /** The current user's role name (from the JWT). */

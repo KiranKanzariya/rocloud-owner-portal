@@ -1,9 +1,9 @@
 @if (open()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
     <div class="card w-full max-w-4xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-h2">{{ 'Choose your plan' | translate }}</h3>
-        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
 
       <!-- Billing toggle -->
@@ -12,7 +12,10 @@
           [class.text-white]="billing() === 'Monthly'" [class.bg-shell]="billing() !== 'Monthly'" (click)="billing.set('Monthly')">{{ 'Monthly' | translate }}</button>
         <button class="seg" [class.bg-navy]="billing() === 'Yearly'"
           [class.text-white]="billing() === 'Yearly'" [class.bg-shell]="billing() !== 'Yearly'" (click)="billing.set('Yearly')">
-          {{ 'Yearly' | translate }} <span class="text-caption opacity-80">{{ '(2 months free)' | translate }}</span>
+          {{ 'Yearly' | translate }}
+          @if (freeMonths() > 0) {
+            <span class="text-caption opacity-80">{{ (freeMonths() === 1 ? '({{count}} month free)' : '({{count}} months free)') | translate: { count: freeMonths() } }}</span>
+          }
         </button>
       </div>
 
@@ -29,23 +32,35 @@
               </div>
               <p class="mt-1"><span class="text-h2 font-semibold">₹{{ price(p) | number: '1.0-0' }}</span>
                 <span class="text-caption text-ink-mid">/{{ (billing() === 'Yearly' ? 'year' : 'month') | translate }}</span></p>
+              <!-- The toggle states the floor across all plans; this is what THIS plan saves. -->
+              @if (billing() === 'Yearly' && yearlySaving(p) > 0) {
+                <p class="text-caption text-teal font-medium mt-0.5">
+                  {{ 'Save ₹{{amount}} vs monthly' | translate: { amount: (yearlySaving(p) | number: '1.0-0') } }}
+                </p>
+              }
             </div>
 
             <ul class="flex flex-col gap-1.5 text-body flex-1">
-              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
-                {{ (p.maxCustomers === 0 ? 'Unlimited customers' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</li>
-              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
-                {{ (p.maxUsers === 0 ? 'Unlimited team members' : '{{count}} team members') | translate: { count: p.maxUsers } }}</li>
-              <li class="flex items-center gap-2"><i class="ti ti-check text-teal"></i>
-                {{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</li>
+              <!-- 0 means unlimited; 1 takes the singular key — Basic allows a single delivery
+                   boy and this read "1 delivery boys". -->
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal" aria-hidden="true"></i>
+                {{ (p.maxCustomers === 0 ? 'Unlimited customers' : p.maxCustomers === 1 ? '{{count}} customer' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</li>
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal" aria-hidden="true"></i>
+                {{ (p.maxUsers === 0 ? 'Unlimited team members' : p.maxUsers === 1 ? '{{count}} team member' : '{{count}} team members') | translate: { count: p.maxUsers } }}</li>
+              <li class="flex items-center gap-2"><i class="ti ti-check text-teal" aria-hidden="true"></i>
+                {{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : p.maxDeliveryBoys === 1 ? '{{count}} delivery boy' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</li>
+              <!-- Tier-gated, so it needs the rank check rather than a plan flag. -->
+              <li class="flex items-center gap-2">
+                <i class="ti" [class.ti-check]="hasReports(p)" [class.text-teal]="hasReports(p)" [class.ti-minus]="!hasReports(p)" [class.text-ink-light]="!hasReports(p)" aria-hidden="true"></i>
+                {{ 'Reports, charts & exports' | translate }}</li>
               <li class="flex items-center gap-2 text-ink-mid">
-                <i class="ti ti-clock text-ink-light shrink-0"></i>
+                <i class="ti ti-clock text-ink-light shrink-0" aria-hidden="true"></i>
                 <span>{{ 'WhatsApp notifications' | translate }}</span>
                 <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
               <li class="flex items-center gap-2">
-                <i class="ti" [class.ti-check]="p.customRolesEnabled" [class.text-teal]="p.customRolesEnabled" [class.ti-minus]="!p.customRolesEnabled" [class.text-ink-light]="!p.customRolesEnabled"></i> {{ 'Custom roles' | translate }}</li>
+                <i class="ti" [class.ti-check]="p.customRolesEnabled" [class.text-teal]="p.customRolesEnabled" [class.ti-minus]="!p.customRolesEnabled" [class.text-ink-light]="!p.customRolesEnabled" aria-hidden="true"></i> {{ 'Custom roles' | translate }}</li>
               <li class="flex items-center gap-2 text-ink-mid">
-                <i class="ti ti-clock text-ink-light shrink-0"></i>
+                <i class="ti ti-clock text-ink-light shrink-0" aria-hidden="true"></i>
                 <span>{{ 'Multi-branch' | translate }}</span>
                 <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
             </ul>
@@ -56,7 +71,7 @@
               <button class="btn-secondary" disabled>{{ 'Contact us to downgrade' | translate }}</button>
             } @else {
               <button class="btn-primary" [disabled]="busyPlan() !== null" (click)="choose(p)">
-                @if (busyPlan() === p.planType) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Choose {{name}}' | translate: { name: p.name } }} }
+                @if (busyPlan() === p.planType) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Choose {{name}}' | translate: { name: p.name } }} }
               </button>
             }
           </div>

@@ -1,7 +1,7 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { InventoryService } from '../inventory.service';
 import { InventorySummary } from '../inventory.models';
 import { CustomerService } from '../../customers/customer.service';
@@ -9,11 +9,13 @@ import { CustomerListItem } from '../../customers/customer.models';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
+import { AutocompleteDirective } from '../../../shared/directives/autocomplete.directive';
 
 @Component({
   selector: 'app-stock-entry-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, ModalDirective, ReactiveFormsModule, TranslatePipe, MobilePipe],
   templateUrl: './stock-entry-modal.component.html',
 })
 export class StockEntryModalComponent {
@@ -43,14 +45,17 @@ export class StockEntryModalComponent {
 
   constructor() {
     this.customerSearch.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((term) => {
-        if (term.trim()) {
-          this.customers.list({ search: term, page: 1, pageSize: 6 }).subscribe((r) => this.customerResults.set(r.items));
-        } else {
-          this.customerResults.set([]);
-        }
-      });
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        // switchMap cancels the previous lookup. With a nested subscribe two requests raced
+        // and whichever LANDED last won, so results for an older term could replace newer ones.
+        switchMap((term) =>
+          term.trim() ? this.customers.list({ search: term, page: 1, pageSize: 6 }) : of(null),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.customerResults.set(r?.items ?? []));
   }
 
   selectCustomer(c: CustomerListItem): void {

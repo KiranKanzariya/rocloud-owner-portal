@@ -10,7 +10,7 @@ import { ActivatedRoute } from '@angular/router';
   standalone: true,
   template: `
     <div class="flex flex-col items-center justify-center text-center gap-3 py-24">
-      <i class="ti text-4xl text-ink-mid" [class]="'ti-' + icon"></i>
+      <i class="ti text-4xl text-ink-mid" [class]="'ti-' + icon" aria-hidden="true"></i>
       <h1 class="text-h1">{{ title }}</h1>
       <p class="text-body text-ink-mid max-w-sm">This module is coming soon.</p>
     </div>

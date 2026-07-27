@@ -33,7 +33,7 @@ const COPY: Record<BlockReason, { title: string; body: string }> = {
   standalone: true,
   template: `
     <div class="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center">
-      <i class="ti ti-lock text-4xl text-ink-mid"></i>
+      <i class="ti ti-lock text-4xl text-ink-mid" aria-hidden="true"></i>
       <h1 class="text-h1">{{ copy.title }}</h1>
       <p class="text-body text-ink-mid max-w-sm">{{ copy.body }}</p>
       <p class="text-body text-ink-mid max-w-sm">

@@ -1,9 +1,9 @@
 @if (open()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
-    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ 'Stock entry' | translate }}</h3>
-        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
@@ -26,17 +26,17 @@
         </label>
 
         <!-- Optional customer link -->
-        <div class="flex flex-col gap-1 relative">
+        <div class="flex flex-col gap-1 relative" rocAutocomplete>
           <span class="text-caption font-medium">{{ 'Customer' | translate }} <span class="text-ink-mid">{{ '(optional)' | translate }}</span></span>
           @if (selectedCustomer(); as c) {
             <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
               <span class="text-body">{{ c.name }} · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
-              <button type="button" class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+              <button type="button" class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x" aria-hidden="true"></i></button>
             </div>
           } @else {
             <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer…' | translate" class="rounded-md border-ink-light py-1.5" />
             @if (customerResults().length) {
-              <div class="absolute z-20 top-full mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-44 overflow-y-auto">
+              <div class="ac-popup absolute z-20 top-full mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-44 overflow-y-auto">
                 @for (c of customerResults(); track c.id) {
                   <button type="button" (click)="selectCustomer(c)" class="w-full text-left px-3 py-2 hover:bg-shell flex justify-between">
                     <span>{{ c.name }}</span><span class="font-mono text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
@@ -54,7 +54,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Record' | translate }} }
           </button>
         </div>
       </form>

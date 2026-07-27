@@ -11,11 +11,11 @@ import { NavigationService } from '../../../core/services/navigation.service';
   template: `
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-2">
-        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
+        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
         <h1 class="text-h1">Route map</h1>
       </div>
       <div class="card flex flex-col items-center justify-center text-center gap-3 py-24">
-        <i class="ti ti-map-2 text-4xl text-ink-mid"></i>
+        <i class="ti ti-map-2 text-4xl text-ink-mid" aria-hidden="true"></i>
         <p class="text-body text-ink-mid max-w-sm">
           The route map requires a Google Maps API key. Configure <code>googleMapsApiKey</code> in the
           environment to plot today's deliveries colour-coded by status.

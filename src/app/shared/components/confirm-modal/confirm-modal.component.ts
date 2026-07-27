@@ -1,15 +1,16 @@
 import { Component, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ModalDirective } from '../../directives/modal.directive';
 
 /** Controlled confirmation modal (guide §20). Parent toggles `open` and handles confirm/cancel. */
 @Component({
   selector: 'roc-confirm-modal',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [ModalDirective, TranslatePipe],
   template: `
     @if (open()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="cancel.emit()">
-        <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
+      <div rocModal (dismiss)="cancel.emit()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="cancel.emit()">
+        <div class="card w-full max-w-sm max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
           <h3 class="text-h3 mb-2">{{ title() | translate }}</h3>
           <p class="text-body text-ink-mid mb-5">{{ message() | translate }}</p>
           <div class="flex justify-end gap-2">

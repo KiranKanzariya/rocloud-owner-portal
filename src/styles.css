@@ -24,6 +24,20 @@
   select, textarea {
     @apply rounded-md border border-ink-light text-body py-1.5;
   }
+  /* One control height (36px) shared with .btn-* so fields and buttons in the same
+     filter row align. Textareas are excluded — `rows` should drive their height. */
+  input:where(:not([type]),[type='text'],[type='email'],[type='url'],[type='password'],[type='number'],
+              [type='date'],[type='datetime-local'],[type='month'],[type='search'],
+              [type='tel'],[type='time'],[type='week']),
+  select {
+    @apply min-h-9;
+  }
+  @media (pointer: coarse) {
+    input:where(:not([type]),[type='text'],[type='email'],[type='url'],[type='password'],[type='number'],
+                [type='date'],[type='datetime-local'],[type='month'],[type='search'],
+                [type='tel'],[type='time'],[type='week']),
+    select { @apply min-h-11; }
+  }
   input:where(:not([type]),[type='text'],[type='email'],[type='url'],[type='password'],[type='number'],
               [type='date'],[type='datetime-local'],[type='month'],[type='search'],
               [type='tel'],[type='time'],[type='week']):focus,
@@ -31,7 +45,29 @@
   [type='checkbox']:focus, [type='radio']:focus {
     @apply border-navy ring-navy;
   }
+  /* Textareas default to "resize: both", so a user can drag one wider than its card or
+     modal and break the layout. Vertical only, and always the container's width. */
+  textarea { @apply w-full resize-y; }
+
   [type='checkbox'], [type='radio'] { @apply rounded text-navy; }
+
+  /* ─── Keyboard focus ───────────────────────────────────────────────────────
+     Buttons and links carried no focus style at all, so keyboard users had only
+     the UA default (which several browsers suppress once a click sets :focus).
+     `:focus-visible` keeps the ring off mouse clicks and on for Tab. */
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible,
+  summary:focus-visible {
+    @apply outline-none ring-2 ring-navy-light ring-offset-2 ring-offset-white rounded-md;
+  }
+  /* On the navy sidebar/midnight surfaces a navy ring is invisible — go light. */
+  .bg-navy a:focus-visible,
+  .bg-navy button:focus-visible,
+  .bg-midnight a:focus-visible,
+  .bg-midnight button:focus-visible {
+    @apply ring-white/70 ring-offset-navy;
+  }
 }
 
 @layer components {
@@ -63,35 +99,52 @@
            bg-foam text-navy text-micro font-medium;
   }
 
-  /* Buttons — `transition active:scale` adds a subtle press feedback (item 4) */
+  /* Buttons — `transition active:scale` adds a subtle press feedback (item 4).
+     `min-h-9` (36px) matches the input/select height set in the base layer, so a
+     button and a field sitting in the same filter row line up instead of being
+     3px apart. `whitespace-nowrap` stops a label breaking mid-word when a header
+     row gets tight. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 min-h-9 rounded-md whitespace-nowrap
            bg-navy text-white text-sm font-medium font-display
            hover:bg-navy-mid transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 min-h-9 rounded-md whitespace-nowrap
            border border-ink-light bg-transparent text-ink text-sm font-medium
            hover:bg-shell transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-md
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 min-h-9 rounded-md whitespace-nowrap
            bg-danger text-white text-sm font-medium font-display
            hover:bg-[#A32D2D] transition active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100;
   }
 
   /* Small variant — pair with .btn-primary/.btn-secondary/.btn-danger for a compact button.
      Defined after the base buttons so its padding wins; replaces ad-hoc `py-1` / `py-1 px-2`. */
-  .btn-sm { @apply px-2.5 py-1; }
+  .btn-sm { @apply px-2.5 py-1 min-h-8; }
 
   /* Icon-only button — one size + radius for every row-action or modal-close glyph.
      Add .btn-icon-danger for a destructive glyph (neutral by default, danger on hover);
-     add `text-teal` etc. for a positive-action glyph. */
+     add `text-teal` etc. for a positive-action glyph.
+     Fixed 36px box (was ~28px from `p-1.5`) so adjacent row actions are separable;
+     touch devices get the full 44px minimum via the pointer:coarse rule below. */
   .btn-icon {
-    @apply inline-flex items-center justify-center p-1.5 rounded-md
+    @apply inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-md
            text-ink-mid hover:bg-shell transition;
   }
   .btn-icon-danger { @apply hover:text-danger; }
+
+  /* ─── Touch targets ────────────────────────────────────────────────────────
+     Fine pointers keep the compact desktop sizing above; coarse pointers (finger)
+     get the 44px minimum both Apple and Material ask for. Scoped to the pointer
+     type so table rows don't grow on desktop. */
+  @media (pointer: coarse) {
+    .btn-icon { @apply w-11 h-11; }
+    .btn-sm   { @apply min-h-10 px-3 py-1.5; }
+    .btn-primary, .btn-secondary, .btn-danger { @apply min-h-11; }
+    .seg { @apply min-h-10; }
+  }
 
   /* Card */
   .card {
@@ -103,7 +156,66 @@
      `[class.bg-navy] [class.text-white]` bindings (and optional inactive
      `[class.hover:bg-shell]`), so it never fights the active background. */
   .seg {
-    @apply px-3 py-1.5 rounded-md text-body font-medium transition-colors;
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md
+           text-body font-medium whitespace-nowrap transition-colors;
+  }
+
+  /* ─── Layout primitives ────────────────────────────────────────────────────
+     These three classes replace the hand-rolled `flex items-center justify-between`
+     rows that were repeated on every page and overflowed on narrow screens. */
+
+  /* Page header: title on the left, actions on the right, wrapping instead of
+     overflowing once the two no longer fit side by side. */
+  .page-header {
+    @apply flex flex-wrap items-center justify-between gap-x-4 gap-y-2;
+  }
+  /* Keep the trailing action against the right edge once the header wraps. `justify-between`
+     has nothing to justify on a line holding one item, so a wrapped action would otherwise
+     sit under the title looking stranded. Most headers put a bare <button> here rather than
+     a .page-header-actions wrapper, so target the last child directly; :not(:first-child)
+     leaves a title-only header alone. */
+  .page-header > :last-child:not(:first-child) {
+    @apply ml-auto;
+  }
+  /* The action cluster inside a .page-header. `ml-auto` is a no-op while the title and the
+     actions share a line (justify-between already separates them); once they wrap it keeps
+     the buttons against the right edge instead of stranding them under the title. */
+  .page-header-actions {
+    @apply flex flex-wrap items-center gap-2 ml-auto;
+  }
+
+  /* Filter/search bar.
+     Below `sm` every control becomes a full-width row. Letting them keep their intrinsic
+     widths once stacked gives a ragged column — a short select, two half-width date fields
+     and a wide search box all starting at the same left edge but ending nowhere near each
+     other. From `sm` up they flow inline and size to their content again. */
+  .filter-bar {
+    @apply card flex flex-col items-stretch gap-2
+           sm:flex-row sm:flex-wrap sm:items-center sm:gap-3;
+  }
+  .filter-bar > *,
+  .filter-bar input,
+  .filter-bar select {
+    @apply w-full sm:w-auto;
+  }
+
+  /* Toggles keep their own size — the full-width rule above is for text fields. */
+  .filter-bar [type='checkbox'],
+  .filter-bar [type='radio'] {
+    @apply w-4;
+  }
+
+  /* A labelled control inside a .filter-bar (e.g. "From <date>"). The caption sits above the
+     field on a phone instead of stealing width beside it, and returns inline from `sm` up. */
+  .filter-field {
+    @apply flex flex-col gap-1 text-caption text-ink-mid
+           sm:flex-row sm:items-center sm:gap-2;
+  }
+
+  /* Horizontal-scroll wrapper for any wide table. `overscroll-x-contain` stops the
+     swipe chaining to the page once the table hits its end. */
+  .table-scroll {
+    @apply w-full overflow-x-auto overscroll-x-contain;
   }
 
   /* Metric card */
@@ -154,11 +266,49 @@
    Add `class="grid-scroll"` to a <table>. thead/tbody become block boxes so only the body scrolls;
    rows stay `table-fixed` at full width so columns line up. BOTH thead and tbody use overflow-y:scroll
    so they reserve the SAME scrollbar gutter and stay aligned (our themed track is transparent, so the
-   header's reserved gutter is invisible). Height defaults to 60vh — override with `--grid-max`. */
-.grid-scroll { table-layout: fixed; width: 100%; }
+   header's reserved gutter is invisible). Height defaults to 60vh — override with `--grid-max`.
+
+   `--grid-min` (default 44rem) is the width below which the table stops shrinking and
+   its `.table-scroll` parent scrolls sideways instead — without it `width: 100%` meant
+   columns just kept compressing until the text was one character per line. */
+.grid-scroll { table-layout: fixed; width: 100%; min-width: var(--grid-min, 44rem); }
 .grid-scroll > thead, .grid-scroll > tbody { display: block; overflow-y: auto; }
 .grid-scroll > thead > tr, .grid-scroll > tbody > tr { display: table; width: 100%; table-layout: fixed; }
 .grid-scroll > tbody { max-height: var(--grid-max, 60vh); }
+
+/* ─── Responsive type scale ──────────────────────────────────────────────────
+   The scale in tailwind.config.js is fixed-size, so a 28px h1 ate 220px+ of a
+   360px screen and forced every page header to overflow. Step the two display
+   sizes down on small screens; everything else is already small enough. */
+@media (max-width: 639px) {
+  .text-h1 { font-size: 22px; letter-spacing: -0.5px; }
+  .text-h2 { font-size: 19px; }
+  .text-hero { font-size: 32px; letter-spacing: -1px; }
+}
+
+/* ─── Print ──────────────────────────────────────────────────────────────────
+   Printing an invoice or a report used to carry the sidebar, topbar, filter bar
+   and every action button onto the page. Print the content only. */
+@media print {
+  aside, header, nav,
+  .no-print,
+  roc-topbar, roc-sidebar, roc-toast-container,
+  roc-expiry-banner, roc-impersonation-banner, roc-command-palette { display: none !important; }
+
+  html, body { background: #fff !important; }
+  main { overflow: visible !important; height: auto !important; padding: 0 !important; }
+  .card { border: 1px solid #d3d1c7 !important; box-shadow: none !important; break-inside: avoid; }
+
+  /* Un-cap every scroll container so the whole table prints, not one screenful. */
+  .table-scroll { overflow: visible !important; }
+  .grid-scroll { min-width: 0 !important; }
+  .grid-scroll > tbody { max-height: none !important; overflow: visible !important; }
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+
+  a[href]::after { content: ''; }  /* don't append URLs inside data tables */
+}
 
 /* ─── Animation utilities (outside @layer so they always win) ───────────── */
 .animate-fade-in { animation: roc-fade-in 200ms ease-out both; }

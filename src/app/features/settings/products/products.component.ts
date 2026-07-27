@@ -10,11 +10,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, ColumnDef, SortState } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
 import { sortAndPage } from '../../../shared/components/data-table/client-table';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [DecimalPipe, ReactiveFormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
+  imports: [ModalDirective, DecimalPipe, ReactiveFormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
   templateUrl: './products.component.html',
 })
 export class ProductsComponent {

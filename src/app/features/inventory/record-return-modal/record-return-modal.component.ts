@@ -7,6 +7,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TenantSettingsService } from '../../../core/services/tenant-settings.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { istToday, istTodayMinusDays } from '../../../shared/util/ist-date.util';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 /**
  * Records empty jars a customer handed back when there's no delivery to attach them to (moved house,
@@ -16,7 +17,7 @@ import { istToday, istTodayMinusDays } from '../../../shared/util/ist-date.util'
 @Component({
   selector: 'app-record-return-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ModalDirective, ReactiveFormsModule, TranslatePipe],
   templateUrl: './record-return-modal.component.html',
 })
 export class RecordReturnModalComponent {

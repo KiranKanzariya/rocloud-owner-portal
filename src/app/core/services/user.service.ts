@@ -94,6 +94,11 @@ export class UserService {
     return this.http.put<ApiResponse<{ id: string }>>(`${this.base}/${id}`, body).pipe(map((r) => r.data!));
   }
 
+  /** Soft-delete (is_deleted). Deactivate is the reversible alternative. */
+  delete(id: string): Observable<unknown> {
+    return this.http.delete<ApiResponse<unknown>>(`${this.base}/${id}`);
+  }
+
   deactivate(id: string): Observable<unknown> {
     return this.http.post<ApiResponse<unknown>>(`${this.base}/${id}/deactivate`, {});
   }

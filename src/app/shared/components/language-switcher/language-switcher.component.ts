@@ -10,9 +10,9 @@ import { LanguageService } from '../../../core/services/language.service';
       <button
         class="flex items-center gap-1.5 p-2 rounded-md hover:bg-shell text-ink-mid"
         (click)="toggle()" aria-label="Change language">
-        <i class="ti ti-language text-lg"></i>
+        <i class="ti ti-language text-lg" aria-hidden="true"></i>
         <span class="hidden sm:inline text-body">{{ currentLabel() }}</span>
-        <i class="ti ti-chevron-down text-sm"></i>
+        <i class="ti ti-chevron-down text-sm" aria-hidden="true"></i>
       </button>
       @if (open()) {
         <div class="absolute right-0 mt-1 w-40 bg-white border border-ink-light rounded-md shadow-md py-1 z-40">
@@ -23,7 +23,7 @@ import { LanguageService } from '../../../core/services/language.service';
               [class.font-medium]="l.code === lang.current()"
               (click)="select(l.code)">
               <span>{{ l.label }}</span>
-              @if (l.code === lang.current()) { <i class="ti ti-check text-teal-mid"></i> }
+              @if (l.code === lang.current()) { <i class="ti ti-check text-teal-mid" aria-hidden="true"></i> }
             </button>
           }
         </div>

@@ -4,6 +4,7 @@ import { PermissionService } from '../../../core/services/permission.service';
 import { LayoutService } from '../../../core/services/layout.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FeatureName, isFeatureEnabled } from '../../../core/feature-flags';
+import { ModalDirective } from '../../directives/modal.directive';
 
 interface Command {
   label: string;
@@ -38,7 +39,7 @@ const COMMANDS: Command[] = [
 @Component({
   selector: 'roc-command-palette',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [ModalDirective, TranslatePipe],
   templateUrl: './command-palette.component.html',
 })
 export class CommandPaletteComponent {

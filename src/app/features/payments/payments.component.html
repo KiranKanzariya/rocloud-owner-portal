@@ -1,59 +1,60 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Payments' | translate }}</h1>
     <button *appCan="'Payments.Collect'" class="btn-primary" (click)="modalOpen.set(true)">
-      <i class="ti ti-plus"></i> {{ 'Record payment' | translate }}
+      <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Record payment' | translate }}
     </button>
   </div>
 
   <!-- Metric cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="metric-card">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash"></i> {{ 'Collected' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-cash" aria-hidden="true"></i> {{ 'Collected' | translate }}</p>
       <p class="metric-value">₹{{ collected() | number: '1.0-0' }}</p>
     </div>
     <div class="metric-card">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-coin text-teal"></i> {{ 'Cash' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-coin text-teal" aria-hidden="true"></i> {{ 'Cash' | translate }}</p>
       <p class="metric-value">₹{{ cash() | number: '1.0-0' }}</p>
     </div>
     <div class="metric-card">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-brand-google-pay text-navy"></i> {{ 'UPI' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-brand-google-pay text-navy" aria-hidden="true"></i> {{ 'UPI' | translate }}</p>
       <p class="metric-value">₹{{ upi() | number: '1.0-0' }}</p>
     </div>
     <div class="metric-card">
-      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle"></i> {{ 'Outstanding' | translate }}</p>
+      <p class="metric-label flex items-center gap-1.5"><i class="ti ti-alert-triangle" aria-hidden="true"></i> {{ 'Outstanding' | translate }}</p>
       <p class="metric-value text-danger">₹{{ outstandingTotal() | number: '1.0-0' }}</p>
     </div>
   </div>
 
   <!-- Filters -->
-  <div class="card flex flex-wrap items-center gap-3">
-    <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
+  <div class="filter-bar">
+    <label class="filter-field">{{ 'From' | translate }}
       <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('fromDate', $any($event.target).value)" />
     </label>
-    <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
+    <label class="filter-field">{{ 'To' | translate }}
       <input type="date" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('toDate', $any($event.target).value)" />
     </label>
-    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setMethod($any($event.target).value)">
+    <select class="rounded-md border-ink-light text-body py-1.5" [attr.aria-label]="'Method' | translate" [value]="filter.paymentMethod ?? ''" (change)="setMethod($any($event.target).value)">
       <option value="">{{ 'All methods' | translate }}</option>
       @for (m of methods; track m) { <option [value]="m">{{ m | translate }}</option> }
     </select>
-    <select class="rounded-md border-ink-light text-body py-1.5" (change)="setStatus($any($event.target).value)">
+    <select class="rounded-md border-ink-light text-body py-1.5" [attr.aria-label]="'Status' | translate" [value]="filter.status ?? ''" (change)="setStatus($any($event.target).value)">
       <option value="">{{ 'All statuses' | translate }}</option>
       @for (s of statuses; track s) { <option [value]="s">{{ s | translate }}</option> }
     </select>
     <!-- Customer filter: search + pick, or clear the current selection. -->
-    <div class="relative">
+    <div class="relative" rocAutocomplete>
       @if (selectedCustomer(); as c) {
         <span class="inline-flex items-center gap-1.5 rounded-full bg-foam text-navy px-3 py-1 text-caption">
-          <i class="ti ti-user"></i> {{ c.name }}
-          <button class="hover:text-danger" (click)="clearCustomer()" [attr.aria-label]="'Clear filter' | translate"><i class="ti ti-x"></i></button>
+          <i class="ti ti-user" aria-hidden="true"></i> {{ c.name }}
+          <button class="p-1 -m-1 rounded hover:text-danger" (click)="clearCustomer()" [attr.aria-label]="'Clear filter' | translate"><i class="ti ti-x" aria-hidden="true"></i></button>
         </span>
       } @else {
+        <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
         <input [formControl]="customerSearch" type="search" [placeholder]="'Filter by customer…' | translate"
-               class="rounded-md border-ink-light text-body py-1.5 min-w-[200px]" />
+               class="rounded-md border-ink-light text-body py-1.5 min-w-[200px] pl-9" [attr.aria-label]="'Customer' | translate" />
         @if (customerResults().length) {
-          <ul class="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
+          <ul class="ac-popup absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
             @for (c of customerResults(); track c.id) {
               <li><button type="button" class="w-full text-left px-3 py-2 hover:bg-shell text-body" (click)="selectCustomer(c)">
                 <span class="text-ink">{{ c.name }}</span>
@@ -64,9 +65,16 @@
         }
       }
     </div>
+  
+    @if (hasFilters()) {
+      <button type="button" class="btn-secondary btn-sm ml-auto" (click)="clearFilters()">
+        <i class="ti ti-filter-off" aria-hidden="true"></i> {{ 'Clear filters' | translate }}
+      </button>
+    }
   </div>
 
   <roc-data-table
+    [filtered]="hasFilters()" (clearFilters)="clearFilters()"
     [columns]="columns" [rows]="rows()" [totalCount]="totalCount()" [loading]="loading()"
     [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
 
@@ -90,7 +98,7 @@
           [class.ti-notes]="!NOTE.isActionRequired(row.notes)"
           [class.text-ink-mid]="!NOTE.isActionRequired(row.notes)"
           [title]="NOTE.display(row.notes)"
-        ></i>
+         aria-hidden="true"></i>
       }
     </ng-template>
   </roc-data-table>

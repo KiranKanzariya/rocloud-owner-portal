@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { DataTableComponent, ColumnDef } from '../../../shared/components/data-table/data-table.component';
 import { ColumnCellDirective } from '../../../shared/components/data-table/column-cell.directive';
 import { isFeatureEnabled } from '../../../core/feature-flags';
+import { ModalDirective } from '../../../shared/directives/modal.directive';
 
 /**
  * Activity log (Settings → Activity): a read-only viewer over the append-only audit trail — who did
@@ -15,7 +16,7 @@ import { isFeatureEnabled } from '../../../core/feature-flags';
 @Component({
   selector: 'app-activity',
   standalone: true,
-  imports: [DatePipe, FormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
+  imports: [ModalDirective, DatePipe, FormsModule, TranslatePipe, DataTableComponent, ColumnCellDirective],
   templateUrl: './activity.component.html',
 })
 export class ActivityComponent {
@@ -92,6 +93,30 @@ export class ActivityComponent {
     };
     this.page.set(1);
     this.load();
+  }
+
+  /**
+   * True when the APPLIED snapshot is narrowing the list (not the live form) — drives the
+   * Clear button and the table's "no matches" empty state.
+   */
+  protected hasFilters(): boolean {
+    const a = this.applied;
+    return !!(a.module || a.result || a.search || a.fromDate || a.toDate);
+  }
+
+  /** Resets the form and the applied snapshot back to the unfiltered log. */
+  clearFilters(): void {
+    this.module = '';
+    this.result = '';
+    this.search = '';
+    this.fromDate = '';
+    this.toDate = '';
+    this.applyFilters();
+  }
+
+  /** Non-null when From is later than To — the pair silently returned nothing before. */
+  protected dateRangeInvalid(): boolean {
+    return !!this.fromDate && !!this.toDate && this.fromDate > this.toDate;
   }
 
   /** Built from the APPLIED snapshot, never the live form — so paging cannot ship un-applied edits. */

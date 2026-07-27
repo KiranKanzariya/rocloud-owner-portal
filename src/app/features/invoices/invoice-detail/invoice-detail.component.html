@@ -1,30 +1,30 @@
 @if (invoice(); as inv) {
   <div class="flex flex-col gap-5">
     <!-- Header -->
-    <div class="flex items-start justify-between">
-      <div class="flex items-center gap-2">
-        <button class="btn-icon" (click)="back()"><i class="ti ti-arrow-left"></i></button>
-        <div>
+    <div class="page-header items-start">
+      <div class="flex items-center gap-2 min-w-0">
+        <button class="btn-icon" (click)="back()" [attr.aria-label]="'Back' | translate"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
+        <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-h1 font-mono">{{ inv.invoiceNumber }}</h1>
             <span [class]="statusClass(inv.status)">{{ inv.status | translate }}</span>
             @if (inv.discount > 0) {
-              <span class="status-delivered"><i class="ti ti-discount-2"></i>{{ 'Discount applied' | translate }}</span>
+              <span class="status-delivered"><i class="ti ti-discount-2" aria-hidden="true"></i>{{ 'Discount applied' | translate }}</span>
             }
           </div>
           <p class="text-body text-ink-mid">{{ inv.customerName }} · {{ 'Due' | translate }} {{ inv.dueDate | date: 'MMM d, y' }}</p>
           <p class="text-caption text-ink-mid">{{ 'Generated' | translate }} {{ inv.createdAt | date: 'MMM d, y h:mm a' }}</p>
         </div>
       </div>
-      <div class="flex gap-2">
+      <div class="page-header-actions">
         <button class="btn-secondary" [disabled]="!pdf.ready()" (click)="pdf.download()">
-          <i class="ti ti-download"></i> {{ 'Download' | translate }}
+          <i class="ti ti-download" aria-hidden="true"></i> {{ 'Download' | translate }}
         </button>
         <button *appCan="'Invoices.Edit'" class="btn-secondary" [disabled]="sending()" (click)="send()">
-          @if (sending()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { <i class="ti ti-mail"></i> } {{ 'Email invoice' | translate }}
+          @if (sending()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-mail" aria-hidden="true"></i> } {{ 'Email invoice' | translate }}
         </button>
         @if (inv.balance > 0) {
-          <button *appCan="'Payments.Collect'" class="btn-primary" (click)="payOpen.set(true)"><i class="ti ti-cash"></i> {{ 'Record payment' | translate }}</button>
+          <button *appCan="'Payments.Collect'" class="btn-primary" (click)="payOpen.set(true)"><i class="ti ti-cash" aria-hidden="true"></i> {{ 'Record payment' | translate }}</button>
         }
       </div>
     </div>
@@ -34,12 +34,12 @@
       <div class="flex flex-col gap-5">
         <div class="card">
           <h3 class="text-h3 mb-3">{{ 'Items' | translate }}</h3>
-          <table class="w-full text-body">
+          <div class="table-scroll"><table class="w-full text-body min-w-[28rem]">
             <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2 text-right">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Amount' | translate }}</th></tr></thead>
             <tbody>@for (li of inv.lineItems; track li.productName) {
               <tr class="border-b border-ink-light/60"><td class="py-2">{{ li.productName }} <span class="text-caption text-ink-mid">({{ li.bottleSize }})</span></td><td class="py-2 text-right font-mono">{{ li.quantity }}</td><td class="py-2 text-right font-mono">₹{{ li.rate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ li.amount | number: '1.0-0' }}</td></tr>
             }</tbody>
-          </table>
+          </table></div>
           <dl class="flex flex-col gap-1 mt-3 text-body">
             <div class="flex justify-between"><dt class="text-ink-mid">{{ 'Subtotal' | translate }}</dt><dd class="font-mono">₹{{ inv.subTotal | number: '1.0-2' }}</dd></div>
             @if (inv.taxAmount > 0) { <div class="flex justify-between"><dt class="text-ink-mid">{{ 'GST' | translate }}</dt><dd class="font-mono">₹{{ inv.taxAmount | number: '1.0-2' }}</dd></div> }
@@ -56,9 +56,9 @@
         <div class="card">
           <h3 class="text-h3 mb-3">{{ 'Payment history' | translate }}</h3>
           @if (invoicePayments().length) {
-            <table class="w-full text-body"><tbody>@for (p of invoicePayments(); track p.id) {
+            <div class="table-scroll"><table class="w-full text-body min-w-[28rem]"><tbody>@for (p of invoicePayments(); track p.id) {
               <tr class="border-b border-ink-light/60"><td class="py-2 font-mono text-caption">{{ p.paidAt | date: 'MMM d, y h:mm a' }}</td><td class="py-2">{{ p.paymentMethod | translate }}</td><td class="py-2 text-right font-mono">₹{{ p.amount | number: '1.0-0' }}</td></tr>
-            }</tbody></table>
+            }</tbody></table></div>
           } @else { <p class="text-body text-ink-mid">{{ 'No payments recorded.' | translate }}</p> }
           @if (inv.allocatedFromPool > 0) {
             <p class="text-caption text-ink-mid mt-2">{{ 'Settled by payments recorded on the customer page, oldest dues first.' | translate }}</p>
@@ -73,10 +73,10 @@
 
   <!-- Record payment modal -->
   @if (payOpen()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="payOpen.set(false)">
-      <div class="card w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div rocModal (dismiss)="payOpen.set(false)" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="payOpen.set(false)">
+      <div class="card w-full max-w-sm max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-3"><h3 class="text-h3">{{ 'Record payment' | translate }}</h3>
-          <button class="btn-icon btn-icon-danger" (click)="payOpen.set(false)"><i class="ti ti-x"></i></button></div>
+          <button class="btn-icon btn-icon-danger" (click)="payOpen.set(false)"><i class="ti ti-x" aria-hidden="true"></i></button></div>
         <form [formGroup]="payForm" (ngSubmit)="recordPayment()" class="flex flex-col gap-3">
           <div class="grid grid-cols-2 gap-3">
             <label class="flex flex-col gap-1"><span class="text-caption font-medium">{{ 'Amount (₹)' | translate }}</span>
@@ -90,12 +90,12 @@
             <input formControlName="referenceNumber" class="rounded-md border-ink-light py-1.5" [placeholder]="'Optional' | translate" /></label>
           <div class="flex justify-end gap-2 pt-1">
             <button type="button" class="btn-secondary" (click)="payOpen.set(false)">{{ 'Cancel' | translate }}</button>
-            <button type="submit" class="btn-primary" [disabled]="saving()">@if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ 'Record' | translate }} }</button>
+            <button type="submit" class="btn-primary" [disabled]="saving()">@if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Record' | translate }} }</button>
           </div>
         </form>
       </div>
     </div>
   }
 } @else {
-  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Loading…' | translate }}</div>
+  <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</div>
 }

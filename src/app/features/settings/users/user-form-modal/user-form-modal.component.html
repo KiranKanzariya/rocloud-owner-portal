@@ -1,9 +1,9 @@
 @if (open()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
-    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-h3">{{ (isEdit() ? 'Edit team member' : 'Add team member') | translate }}</h3>
-        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x"></i></button>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-3">
@@ -12,7 +12,7 @@
           <input formControlName="name" class="rounded-md border-ink-light py-1.5" />
         </label>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="flex flex-col gap-1">
             <span class="text-caption font-medium">{{ 'Email' | translate }}</span>
             <input formControlName="email" type="email" class="rounded-md border-ink-light py-1.5 disabled:bg-shell" />
@@ -35,6 +35,25 @@
           @if (!roles().length) { <span class="text-caption text-ink-mid">{{ 'No roles loaded (requires Roles.Manage).' | translate }}</span> }
         </label>
 
+        @if (showAreas()) {
+          <div class="flex flex-col gap-1.5">
+            <span class="text-caption font-medium">{{ 'Delivery areas' | translate }}</span>
+            @if (areaOptions().length) {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 max-h-40 overflow-y-auto rounded-md border border-ink-light p-2">
+                @for (a of areaOptions(); track a.id) {
+                  <label class="flex items-center gap-2 text-body min-w-0 cursor-pointer">
+                    <input type="checkbox" class="shrink-0 rounded border-ink-light" [checked]="hasArea(a.id)" (change)="toggleArea(a.id)" />
+                    <span class="truncate">{{ a.name }}@if (!a.isActive) { <span class="text-micro text-ink-mid"> ({{ 'Inactive' | translate }})</span> }</span>
+                  </label>
+                }
+              </div>
+              <span class="text-micro text-ink-mid">{{ 'New orders for customers in these areas are auto-assigned to this delivery boy.' | translate }}</span>
+            } @else {
+              <span class="text-caption text-ink-mid">{{ 'No delivery areas yet — add them in Settings → Areas.' | translate }}</span>
+            }
+          </div>
+        }
+
         @if (isEdit()) {
           <label class="flex items-center gap-2 text-body">
             <input type="checkbox" formControlName="isActive" class="rounded border-ink-light" /> {{ 'Active' | translate }}
@@ -55,7 +74,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> } @else { {{ (isEdit() ? 'Save' : sendInvite() ? 'Send invite' : 'Create') | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ (isEdit() ? 'Save' : sendInvite() ? 'Send invite' : 'Create') | translate }} }
           </button>
         </div>
       </form>

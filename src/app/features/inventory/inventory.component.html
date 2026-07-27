@@ -1,8 +1,8 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Inventory' | translate }}</h1>
     <button *appCan="'Inventory.Manage'" class="btn-primary" (click)="modalOpen.set(true)">
-      <i class="ti ti-plus"></i> {{ 'Stock entry' | translate }}
+      <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Stock entry' | translate }}
     </button>
   </div>
 
@@ -11,11 +11,13 @@
     @for (item of [{ label: '20L bottles', data: twentyL() }, { label: '18L bottles', data: eighteenL() }]; track item.label) {
       <div class="card">
         <div class="flex items-center gap-2 mb-3">
-          <i class="ti ti-package text-navy text-xl"></i>
+          <i class="ti ti-package text-navy text-xl" aria-hidden="true"></i>
           <h3 class="text-h3">{{ item.label | translate }}</h3>
         </div>
         @if (item.data; as d) {
-          <div class="grid grid-cols-4 gap-2 text-center">
+          <!-- Four metrics inside a card is ~64px each on a phone; labels like "With
+               customers" wrap to three lines under a 20px figure. Two-up on mobile. -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
             <div><p class="metric-value">{{ d.totalStock }}</p><p class="metric-label">{{ 'Total' | translate }}</p></div>
             <div><p class="metric-value text-navy">{{ d.issuedStock }}</p><p class="metric-label">{{ 'With customers' | translate }}</p></div>
             <div><p class="metric-value text-teal">{{ d.availableStock }}</p><p class="metric-label">{{ 'At plant' | translate }}</p></div>
@@ -46,17 +48,18 @@
       <h3 class="text-h3">{{ 'Movement log' | translate }}</h3>
       <div class="flex flex-wrap items-center gap-2">
         <!-- Customer filter: search + pick, or clear the current selection. -->
-        <div class="relative">
+        <div class="relative" rocAutocomplete>
           @if (selectedCustomer(); as c) {
             <span class="inline-flex items-center gap-1.5 rounded-full bg-foam text-navy px-3 py-1 text-caption">
-              <i class="ti ti-user"></i> {{ c.name }}
-              <button class="hover:text-danger" (click)="clearCustomer()" [attr.aria-label]="'Clear filter' | translate"><i class="ti ti-x"></i></button>
+              <i class="ti ti-user" aria-hidden="true"></i> {{ c.name }}
+              <button class="p-1 -m-1 rounded hover:text-danger" (click)="clearCustomer()" [attr.aria-label]="'Clear filter' | translate"><i class="ti ti-x" aria-hidden="true"></i></button>
             </span>
           } @else {
+            <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
             <input [formControl]="customerSearch" type="search" [placeholder]="'Filter by customer…' | translate"
-                   class="rounded-md border-ink-light text-body py-1.5 min-w-[200px]" />
+                   class="rounded-md border-ink-light text-body py-1.5 min-w-[200px] pl-9" [attr.aria-label]="'Customer' | translate" />
             @if (customerResults().length) {
-              <ul class="absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
+              <ul class="ac-popup absolute z-10 mt-1 w-full max-h-56 overflow-auto rounded-md border border-ink-light bg-white shadow-md">
                 @for (c of customerResults(); track c.id) {
                   <li><button type="button" class="w-full text-left px-3 py-2 hover:bg-shell text-body" (click)="selectCustomer(c)">
                     <span class="text-ink">{{ c.name }}</span>
@@ -67,7 +70,7 @@
             }
           }
         </div>
-        <select class="rounded-md border-ink-light text-body py-1.5" (change)="setType($any($event.target).value)">
+        <select class="rounded-md border-ink-light text-body py-1.5" [attr.aria-label]="'Movement type' | translate" [value]="filter.movementType ?? ''" (change)="setType($any($event.target).value)">
           <option value="">{{ 'All types' | translate }}</option>
           @for (t of ['Issue','Return','Damage','Restock','Adjustment']; track t) { <option [value]="t">{{ t | translate }}</option> }
         </select>
@@ -75,6 +78,7 @@
     </div>
 
     <roc-data-table
+    [filtered]="hasFilters()" (clearFilters)="clearFilters()"
       [columns]="columns" [rows]="movements()" [totalCount]="totalMovements()" [loading]="loadingMovements()"
       [page]="filter.page" [pageSize]="filter.pageSize" (pageChange)="onPage($event)">
       <ng-template appColumnCell="createdAt" let-row><span class="font-mono text-caption">{{ row.createdAt | date: 'MMM d, y h:mm a' }}</span></ng-template>

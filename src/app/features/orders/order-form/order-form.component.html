@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-4">
   <div class="flex items-center gap-2">
-    <button class="btn-icon" (click)="cancel()"><i class="ti ti-arrow-left"></i></button>
+    <button class="btn-icon" (click)="cancel()"><i class="ti ti-arrow-left" aria-hidden="true"></i></button>
     <h1 class="text-h1">{{ (isEdit() ? 'Edit order' : 'New order') | translate }}</h1>
   </div>
 
@@ -12,16 +12,16 @@
         <div class="flex items-center justify-between rounded-md border border-navy bg-foam px-3 py-2">
           <span class="text-body"><b>{{ c.name }}</b> · <span class="font-mono text-caption">{{ c.mobile | mobile }}</span></span>
           @if (!isEdit()) {
-            <button class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x"></i></button>
+            <button class="btn-icon btn-icon-danger" (click)="clearCustomer()"><i class="ti ti-x" aria-hidden="true"></i></button>
           }
         </div>
       } @else {
-        <div class="relative">
-          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid"></i>
+        <div class="relative" rocAutocomplete>
+          <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
           <input [formControl]="customerSearch" type="search" [placeholder]="'Search customer by name or mobile…' | translate"
                  class="w-full pl-9 pr-3 py-1.5 rounded-md border-ink-light" />
           @if (customerResults().length) {
-            <div class="absolute z-20 mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-56 overflow-y-auto">
+            <div class="ac-popup absolute z-20 mt-1 w-full bg-white border border-ink-light rounded-md shadow-md max-h-56 overflow-y-auto">
               @for (c of customerResults(); track c.id) {
                 <button type="button" (click)="selectCustomer(c)" class="w-full text-left px-3 py-2 hover:bg-shell flex justify-between">
                   <span>{{ c.name }}</span><span class="font-mono text-caption text-ink-mid">{{ c.mobile | mobile }}</span>
@@ -40,10 +40,10 @@
         <div class="flex gap-1 rounded-md border border-ink-light p-1 w-fit text-caption">
           <button type="button" class="seg"
                   [class.bg-navy]="orderDeliveryMode() === 'HomeDelivery'" [class.text-white]="orderDeliveryMode() === 'HomeDelivery'"
-                  (click)="orderDeliveryMode.set('HomeDelivery')"><i class="ti ti-truck-delivery"></i> {{ 'Home delivery' | translate }}</button>
+                  (click)="orderDeliveryMode.set('HomeDelivery')"><i class="ti ti-truck-delivery" aria-hidden="true"></i> {{ 'Home delivery' | translate }}</button>
           <button type="button" class="seg"
                   [class.bg-navy]="orderDeliveryMode() === 'PlantPickup'" [class.text-white]="orderDeliveryMode() === 'PlantPickup'"
-                  (click)="orderDeliveryMode.set('PlantPickup')"><i class="ti ti-building-factory"></i> {{ 'Plant pickup' | translate }}</button>
+                  (click)="orderDeliveryMode.set('PlantPickup')"><i class="ti ti-building-factory" aria-hidden="true"></i> {{ 'Plant pickup' | translate }}</button>
         </div>
         @if (orderDeliveryMode() === 'PlantPickup') {
           <span class="text-micro text-ink-mid">{{ 'No delivery boy is assigned for plant pickup.' | translate }}</span>
@@ -57,11 +57,11 @@
       <div class="flex flex-col gap-1">
         <span class="text-caption font-medium">{{ 'Deliver on' | translate }}</span>
         <div class="flex items-center gap-2">
-          <input type="date" formControlName="orderDate" [min]="earliestOrderDate()"
+          <input type="date" formControlName="orderDate" [attr.aria-label]="'Deliver on' | translate" [min]="earliestOrderDate()"
                  class="rounded-md border-ink-light text-body py-1.5" />
           @if (isAdvance()) {
             <span class="inline-flex items-center gap-1 rounded-full bg-foam text-navy px-2.5 py-1 text-micro font-medium">
-              <i class="ti ti-calendar-event"></i> {{ 'Advance booking' | translate }}
+              <i class="ti ti-calendar-event" aria-hidden="true"></i> {{ 'Advance booking' | translate }}
             </span>
           }
         </div>
@@ -73,19 +73,27 @@
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <span class="text-caption font-medium">{{ 'Items' | translate }}</span>
-          <button type="button" class="text-caption text-navy-light hover:underline" (click)="addItem()"><i class="ti ti-plus"></i> {{ 'Add item' | translate }}</button>
+          <button type="button" class="text-caption text-navy-light hover:underline" (click)="addItem()"><i class="ti ti-plus" aria-hidden="true"></i> {{ 'Add item' | translate }}</button>
         </div>
 
         <div formArrayName="items" class="flex flex-col gap-2">
           @for (item of items.controls; track item) {
-            <div [formGroupName]="$index" class="flex items-center gap-2">
-              <select formControlName="productId" class="flex-1 rounded-md border-ink-light text-body py-1.5">
+            <!-- The qty/amount/remove trio is ~230px of fixed width. On a phone the product
+                 select takes the full row and the rest wraps under it, instead of the select
+                 being squeezed to ~50px. -->
+            <div [formGroupName]="$index" class="flex flex-wrap items-center gap-2">
+              <select formControlName="productId"
+                      [attr.aria-label]="'Product' | translate"
+                      class="w-full sm:w-auto sm:flex-1 rounded-md border-ink-light text-body py-1.5">
                 <option value="" disabled>{{ 'Select product' | translate }}</option>
                 @for (p of products(); track p.id) { <option [value]="p.id">{{ p.name }} (₹{{ rateFor(p.id) }})</option> }
               </select>
-              <input type="number" formControlName="quantity" min="1" class="w-20 rounded-md border-ink-light text-body py-1.5" />
+              <input type="number" formControlName="quantity" min="1" [attr.aria-label]="'Qty' | translate"
+                     class="w-20 rounded-md border-ink-light text-body py-1.5" />
               <span class="w-24 text-right font-mono text-body">₹{{ lineRate($any(item).controls.productId.value) * $any(item).controls.quantity.value | number: '1.0-0' }}</span>
-              <button type="button" class="p-1.5 text-ink-mid hover:text-danger" [disabled]="items.length === 1" (click)="removeItem($index)"><i class="ti ti-trash"></i></button>
+              <button type="button" class="btn-icon text-danger ml-auto sm:ml-0"
+                      [attr.aria-label]="'Remove item' | translate"
+                      [disabled]="items.length === 1" (click)="removeItem($index)"><i class="ti ti-trash" aria-hidden="true"></i></button>
             </div>
           }
         </div>
@@ -108,7 +116,7 @@
       <div class="flex justify-end gap-2">
         <button type="button" class="btn-secondary" (click)="cancel()">{{ 'Cancel' | translate }}</button>
         <button type="submit" class="btn-primary" [disabled]="saving()">
-          @if (saving()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Saving…' | translate }} } @else { {{ (isEdit() ? 'Save changes' : 'Create order') | translate }} }
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Saving…' | translate }} } @else { {{ (isEdit() ? 'Save changes' : 'Create order') | translate }} }
         </button>
       </div>
     </form>

@@ -1,10 +1,10 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-center justify-between">
+  <div class="page-header">
     <h1 class="text-h1">{{ 'Reports' | translate }}</h1>
     @if (isPro) {
-      <div class="flex items-center gap-2">
-        <button class="btn-secondary" (click)="export('csv')"><i class="ti ti-file-spreadsheet"></i> CSV</button>
-        <button class="btn-secondary" (click)="export('xlsx')"><i class="ti ti-file-export"></i> {{ 'Excel' | translate }}</button>
+      <div class="page-header-actions">
+        <button class="btn-secondary" (click)="export('csv')"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> CSV</button>
+        <button class="btn-secondary" (click)="export('xlsx')"><i class="ti ti-file-export" aria-hidden="true"></i> {{ 'Excel' | translate }}</button>
       </div>
     }
   </div>
@@ -15,16 +15,16 @@
   } @else {
     <!-- Only the date control this report actually reads: a range, a single snapshot date, or none. -->
     @if (dateMode() !== 'none') {
-      <div class="card flex flex-wrap items-center gap-3">
+      <div class="filter-bar">
         @if (dateMode() === 'range') {
-          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'From' | translate }}
+          <label class="filter-field">{{ 'From' | translate }}
             <input type="date" [value]="range().from" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('from', $any($event.target).value)" />
           </label>
-          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ 'To' | translate }}
+          <label class="filter-field">{{ 'To' | translate }}
             <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
           </label>
         } @else {
-          <label class="flex items-center gap-2 text-caption text-ink-mid">{{ singleDateLabel() | translate }}
+          <label class="filter-field">{{ singleDateLabel() | translate }}
             <input type="date" [value]="range().to" class="rounded-md border-ink-light text-body py-1.5" (change)="setDate('to', $any($event.target).value)" />
           </label>
         }
@@ -42,7 +42,7 @@
           [class.border-transparent]="activeTab() !== t.key"
           [class.text-ink-mid]="activeTab() !== t.key"
           (click)="selectTab(t.key)">
-          <i class="ti ti-{{ t.icon }}"></i> {{ t.label | translate }}
+          <i class="ti ti-{{ t.icon }}" aria-hidden="true"></i> {{ t.label | translate }}
         </button>
       }
     </div>
@@ -50,8 +50,11 @@
     <!-- Chart -->
     <roc-chart-card [title]="''" [type]="chartType()" [data]="chartData()" />
 
-    <!-- Detail table per tab -->
-    <div class="card overflow-x-auto">
+    <!-- Detail table per tab.
+         The wrapper always had overflow-x-auto, but `.grid-scroll` pins the table to
+         width:100% so it could never overflow and the columns compressed instead. The
+         `--grid-min` floor added to that class is what actually makes this scroll. -->
+    <div class="card p-0 sm:p-4 table-scroll">
       @switch (activeTab()) {
         @case ('collection') {
           <table class="w-full text-body grid-scroll">

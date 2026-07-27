@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { InventoryService } from './inventory.service';
 import { InventoryMovement, InventorySummary, MovementFilter } from './inventory.models';
 import { StockEntryModalComponent } from './stock-entry-modal/stock-entry-modal.component';
@@ -13,11 +13,12 @@ import { ColumnCellDirective } from '../../shared/components/data-table/column-c
 import { CanDirective } from '../../shared/directives/can.directive';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MobilePipe } from '../../shared/pipes/mobile.pipe';
+import { AutocompleteDirective } from '../../shared/directives/autocomplete.directive';
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, StockEntryModalComponent, DataTableComponent, ColumnCellDirective, CanDirective, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, DatePipe, ReactiveFormsModule, StockEntryModalComponent, DataTableComponent, ColumnCellDirective, CanDirective, TranslatePipe, MobilePipe],
   templateUrl: './inventory.component.html',
 })
 export class InventoryComponent {
@@ -54,16 +55,15 @@ export class InventoryComponent {
 
   constructor() {
     this.customerSearch.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((term) => {
-        // Once a customer is picked the box shows their name; don't re-search until it's cleared.
-        if (this.selectedCustomer() || !term.trim()) {
-          this.customerResults.set([]);
-          return;
-        }
-        this.customers.list({ search: term.trim(), page: 1, pageSize: 6 })
-          .subscribe((r) => this.customerResults.set(r.items));
-      });
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        // switchMap, not a nested subscribe: two in-flight lookups used to race and the
+        // one that LANDED last won, so stale results could overwrite newer ones.
+        switchMap((term) => (this.selectedCustomer() || !term.trim() ? of(null) : this.customers.list({ search: term.trim(), page: 1, pageSize: 6 }))),
+        takeUntilDestroyed(),
+      )
+      .subscribe((r) => this.customerResults.set(r?.items ?? []));
     this.loadSummary();
     this.loadMovements();
   }
@@ -125,4 +125,20 @@ export class InventoryComponent {
       default: return 'status-active-info';
     }
   }
+
+  /** True when anything is narrowing the list — drives the Clear button and the
+      table's "no matches" empty state (as opposed to "nothing here yet"). */
+  protected hasFilters(): boolean {
+    return !!this.filter.movementType || !!this.filter.customerId;
+  }
+
+  /** Resets every filter back to the unfiltered list. */
+  clearFilters(): void {
+    this.customerResults.set([]);
+    this.customerSearch.setValue('', { emitEvent: false });
+    this.selectedCustomer.set(null);
+    this.filter = { ...this.filter, movementType: undefined, customerId: undefined, page: 1 };
+    this.loadMovements();
+  }
+
 }

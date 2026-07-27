@@ -8,11 +8,12 @@ import { PermissionService } from '../../../../core/services/permission.service'
 import { ToastService } from '../../../../core/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
+import { ModalDirective } from '../../../../shared/directives/modal.directive';
 
 @Component({
   selector: 'app-upgrade-modal',
   standalone: true,
-  imports: [DecimalPipe, TranslatePipe],
+  imports: [ModalDirective, DecimalPipe, TranslatePipe],
   templateUrl: './upgrade-modal.component.html',
 })
 export class UpgradeModalComponent {
@@ -56,8 +57,42 @@ export class UpgradeModalComponent {
     return this.rank(p.planType) < this.rank(this.currentPlan());
   }
 
+  /**
+   * Reports is gated by TIER, not by a flag on the plan — see `plan: 'Pro'` on the /reports route
+   * in app.routes.ts. The catalogue has no field for it, so the card had no way to show it and
+   * simply didn't, leaving a paid-only feature invisible on the screen that sells the upgrade.
+   * Keep this in step with that route (and with TIER_FEATURES in rocloud-site/assets/site.js).
+   */
+  hasReports(p: Plan): boolean {
+    return this.rank(p.planType) >= this.rank('Pro');
+  }
+
   price(p: Plan): number {
     return this.billing() === 'Yearly' ? p.yearlyPrice : p.monthlyPrice;
+  }
+
+  /** What a year on this plan saves against paying monthly. 0 when yearly isn't cheaper. */
+  yearlySaving(p: Plan): number {
+    if (!(p.yearlyPrice > 0) || !(p.monthlyPrice > 0)) return 0;
+    return Math.max(0, p.monthlyPrice * 12 - p.yearlyPrice);
+  }
+
+  /**
+   * Whole months of headline saving for the Yearly toggle, computed rather than written by hand.
+   *
+   * The label used to read a fixed "(2 months free)". That understated Basic (which actually saves
+   * 2.9 months) and — worse — would have silently become an over-promise the moment anyone set a
+   * yearly price worth less than two months. The toggle is one control above every plan, so it has
+   * to state what is true of ALL of them: the floor, not the best case. Returns 0 when any plan
+   * fails to beat monthly, which hides the label entirely.
+   */
+  freeMonths(): number {
+    const plans = this.plans();
+    if (!plans.length) return 0;
+    const months = plans.map((p) =>
+      p.monthlyPrice > 0 ? this.yearlySaving(p) / p.monthlyPrice : 0,
+    );
+    return Math.floor(Math.min(...months));
   }
 
   /** The current plan is only a dead-end (unclickable) when it's a live paid plan; else it's re-choosable. */
@@ -84,12 +119,27 @@ export class UpgradeModalComponent {
       // Re-issue the JWT so the new plan_type claim (and gated features) take effect.
       await firstValueFrom(this.auth.refreshToken());
       this.busyPlan.set(null);
-      this.toast.success(this.t.instant("You're now on the {{name}} plan.", { name: p.name }));
+      // A downgrade has NOT happened yet — it is parked until the paid period ends, so saying
+      // "you're now on Basic" would be a lie while they still hold (and paid for) the dearer plan.
+      this.toast.success(
+        init.changeKind === 'Downgrade'
+          ? this.t.instant('Your plan will change to {{name}} on {{date}}.', {
+              name: p.name,
+              date: this.formatDate(init.effectiveAt),
+            })
+          : this.t.instant("You're now on the {{name}} plan.", { name: p.name }),
+      );
       this.upgraded.emit();
     } catch (err) {
       this.busyPlan.set(null);
       this.toast.apiError(err, this.t.instant('Could not complete the upgrade.'));
     }
+  }
+
+  /** The effective date for a scheduled downgrade, in the user's locale. Falls back to "period end". */
+  private formatDate(iso: string | null | undefined): string {
+    if (!iso) return this.t.instant('your renewal date');
+    return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   close(): void {

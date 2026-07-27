@@ -22,12 +22,12 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
         <div class="flex justify-center mb-6"><roc-logo size="lg" variant="default"></roc-logo></div>
 
         @if (loading()) {
-          <div class="card py-12"><i class="ti ti-loader-2 animate-spin text-2xl text-teal"></i>
+          <div class="card py-12"><i class="ti ti-loader-2 animate-spin text-2xl text-teal" aria-hidden="true"></i>
             <p class="text-body text-ink-mid mt-2">{{ 'Signing you in…' | translate }}</p>
           </div>
         } @else if (noWorkspace()) {
           <div class="card">
-            <i class="ti ti-mood-empty text-3xl text-ink-mid"></i>
+            <i class="ti ti-mood-empty text-3xl text-ink-mid" aria-hidden="true"></i>
             <p class="text-body mt-2">{{ 'No workspace is linked to this Google account.' | translate }}</p>
             <a routerLink="/register" class="btn-primary w-full justify-center mt-4">{{ 'Start free trial' | translate }}</a>
             <a routerLink="/login" class="block text-caption text-navy-light hover:underline mt-3">{{ 'Back to sign in' | translate }}</a>

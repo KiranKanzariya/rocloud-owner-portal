@@ -6,16 +6,16 @@
     @if (success(); as s) {
       <div class="card text-center">
         <div class="w-14 h-14 mx-auto rounded-full bg-foam flex items-center justify-center mb-4">
-          <i class="ti ti-circle-check text-3xl text-teal"></i>
+          <i class="ti ti-circle-check text-3xl text-teal" aria-hidden="true"></i>
         </div>
         <h2 class="text-h2 mb-1">{{ 'Your portal is ready 🎉' | translate }}</h2>
         <p class="text-body text-ink-mid mb-5">{{ "This is your private sign-in address — bookmark it. We've also emailed it to {{email}}." | translate: { email: s.email } }}</p>
 
         <div class="flex items-center gap-2 rounded-md border border-ink-light bg-shell px-3 py-2 mb-5">
-          <i class="ti ti-link text-ink-mid"></i>
+          <i class="ti ti-link text-ink-mid" aria-hidden="true"></i>
           <span class="font-mono text-body text-navy truncate flex-1 text-left">{{ s.url }}</span>
           <button type="button" class="btn-secondary btn-sm" (click)="copyUrl()" aria-label="Copy link">
-            <i class="ti ti-copy"></i>
+            <i class="ti ti-copy" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -44,12 +44,15 @@
           <!-- Optional: sign up with Google (skips the password step) -->
           @if (googleProfile(); as g) {
             <div class="flex items-center justify-between rounded-md border border-teal bg-foam px-3 py-2 mb-4">
-              <span class="text-body flex items-center gap-2"><i class="ti ti-brand-google text-teal"></i> {{ g.email }} <i class="ti ti-circle-check text-teal"></i></span>
+              <span class="text-body flex items-center gap-2"><i class="ti ti-brand-google text-teal" aria-hidden="true"></i> {{ g.email }} <i class="ti ti-circle-check text-teal" aria-hidden="true"></i></span>
               <button type="button" class="text-caption text-ink-mid hover:text-danger" (click)="clearGoogle()">{{ 'Change' | translate }}</button>
             </div>
           } @else {
-            <div class="flex justify-center mb-4">
-              <asl-google-signin-button type="standard" size="large" text="continue_with" shape="rectangular" [width]="320"></asl-google-signin-button>
+            <!-- The button width is a hard pixel value, and 320px overflowed the ~280px
+                 card interior on a 360px phone. Sized from the viewport instead. -->
+            <div class="flex justify-center mb-4 overflow-hidden">
+              <asl-google-signin-button type="standard" size="large" text="continue_with" shape="rectangular"
+                                        [width]="googleButtonWidth()"></asl-google-signin-button>
             </div>
             <div class="flex items-center gap-3 mb-4 text-caption text-ink-mid">
               <span class="flex-1 h-px bg-ink-light"></span>{{ 'or' | translate }}<span class="flex-1 h-px bg-ink-light"></span>
@@ -71,9 +74,9 @@
                 <span class="text-micro text-danger">{{ '3–30 chars: lowercase letters, numbers, hyphens.' | translate }}</span>
               } @else {
                 @switch (subdomainStatus()) {
-                  @case ('checking') { <span class="text-micro text-ink-mid"><i class="ti ti-loader-2 animate-spin"></i> {{ 'Checking…' | translate }}</span> }
-                  @case ('available') { <span class="text-micro text-teal"><i class="ti ti-check"></i> {{ 'Available' | translate }}</span> }
-                  @case ('taken') { <span class="text-micro text-danger"><i class="ti ti-x"></i> {{ 'Already taken' | translate }}</span> }
+                  @case ('checking') { <span class="text-micro text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Checking…' | translate }}</span> }
+                  @case ('available') { <span class="text-micro text-teal"><i class="ti ti-check" aria-hidden="true"></i> {{ 'Available' | translate }}</span> }
+                  @case ('taken') { <span class="text-micro text-danger"><i class="ti ti-x" aria-hidden="true"></i> {{ 'Already taken' | translate }}</span> }
                 }
               }
             </label>
@@ -86,7 +89,7 @@
           <p class="text-body text-ink-mid mb-5">{{ "You won't be charged during the trial." | translate }}</p>
           @switch (plansStatus()) {
             @case ('loading') {
-              <div class="flex justify-center py-8"><i class="ti ti-loader-2 animate-spin text-h2 text-ink-mid"></i></div>
+              <div class="flex justify-center py-8"><i class="ti ti-loader-2 animate-spin text-h2 text-ink-mid" aria-hidden="true"></i></div>
             }
             @case ('error') {
               <div class="text-center py-6">
@@ -109,11 +112,12 @@
                       <span class="text-h3 text-navy">₹{{ p.monthlyPrice | number: '1.0-0' }}<span class="text-caption text-ink-mid">{{ '/mo' | translate }}</span></span>
                     </div>
                     <p class="text-caption text-ink-mid mt-1">
-                      <span>{{ (p.maxCustomers === 0 ? 'Unlimited customers' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</span>
+                      <span>{{ (p.maxCustomers === 0 ? 'Unlimited customers' : p.maxCustomers === 1 ? '{{count}} customer' : '{{count}} customers') | translate: { count: (p.maxCustomers | number) } }}</span>
                       <span> · </span>
-                      <span>{{ (p.maxUsers === 0 ? 'Unlimited team members' : '{{count}} team members') | translate: { count: p.maxUsers } }}</span>
+                      <span>{{ (p.maxUsers === 0 ? 'Unlimited team members' : p.maxUsers === 1 ? '{{count}} team member' : '{{count}} team members') | translate: { count: p.maxUsers } }}</span>
                       <span> · </span>
-                      <span>{{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</span>
+                      <span>{{ (p.maxDeliveryBoys === 0 ? 'Unlimited delivery boys' : p.maxDeliveryBoys === 1 ? '{{count}} delivery boy' : '{{count}} delivery boys') | translate: { count: p.maxDeliveryBoys } }}</span>
+                      @if (hasReports(p)) { <span> · </span><span>{{ 'Reports, charts & exports' | translate }}</span> }
                       @if (p.customRolesEnabled) { <span> · </span><span>{{ 'Custom roles' | translate }}</span> }
                     </p>
                   </button>
@@ -130,7 +134,7 @@
             <p class="text-body text-ink-mid mb-5">{{ "You'll be the administrator of {{name}}." | translate: { name: form.controls.businessName.value } }}</p>
             <div class="flex flex-col gap-4">
               <div class="flex items-center gap-2 rounded-md border border-ink-light bg-shell px-3 py-2">
-                <i class="ti ti-brand-google text-teal"></i>
+                <i class="ti ti-brand-google text-teal" aria-hidden="true"></i>
                 <span class="text-body">{{ g.name }} <span class="text-caption text-ink-mid">{{ g.email }}</span></span>
               </div>
               <label class="flex flex-col gap-1">
@@ -186,7 +190,7 @@
             <button type="button" class="btn-primary" (click)="next()">{{ 'Continue' | translate }}</button>
           } @else {
             <button type="submit" class="btn-primary" [disabled]="loading() || !acceptTerms()">
-              @if (loading()) { <i class="ti ti-loader-2 animate-spin"></i> {{ 'Creating…' | translate }} } @else { {{ 'Create account' | translate }} }
+              @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Creating…' | translate }} } @else { {{ 'Create account' | translate }} }
             </button>
           }
         </div>

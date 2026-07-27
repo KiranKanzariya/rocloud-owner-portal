@@ -4,6 +4,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { OrderService } from '../order.service';
 import { ProductionPlanDay, UpcomingOrder } from '../order.models';
+import { CanDirective } from '../../../shared/directives/can.directive';
 
 type Tab = 'upcoming' | 'plan';
 
@@ -22,7 +23,7 @@ interface UpcomingGroup {
 @Component({
   selector: 'app-scheduled',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, TranslatePipe, CanDirective],
   templateUrl: './scheduled.component.html',
 })
 export class ScheduledComponent {
