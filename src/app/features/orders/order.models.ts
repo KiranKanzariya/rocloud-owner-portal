@@ -42,7 +42,10 @@ export interface OrderItem {
   id: string;
   productId: string;
   productName: string;
+  /** What is billed. Rewritten to the jars actually delivered once the stop is Delivered. */
   quantity: number;
+  /** What was originally ordered. Differs from `quantity` when the delivered amount changed. */
+  orderedQuantity: number;
   unitRate: number;
   totalAmount: number;
 }

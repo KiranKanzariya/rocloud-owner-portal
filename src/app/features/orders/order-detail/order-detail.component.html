@@ -33,7 +33,7 @@
         <thead><tr class="text-left text-caption text-ink-mid border-b border-ink-light"><th class="py-2">{{ 'Product' | translate }}</th><th class="py-2">{{ 'Qty' | translate }}</th><th class="py-2 text-right">{{ 'Rate' | translate }}</th><th class="py-2 text-right">{{ 'Total' | translate }}</th></tr></thead>
         <tbody>
           @for (it of o.items; track it.id) {
-            <tr class="border-b border-ink-light/60"><td class="py-2">{{ it.productName }}</td><td class="py-2">{{ it.quantity }}</td><td class="py-2 text-right font-mono">₹{{ it.unitRate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ it.totalAmount | number: '1.0-0' }}</td></tr>
+            <tr class="border-b border-ink-light/60"><td class="py-2">{{ it.productName }}</td><td class="py-2">{{ it.quantity }}@if (it.orderedQuantity !== it.quantity) {<span class="ml-1 text-caption text-ink-mid whitespace-nowrap">@if (it.orderedQuantity === 0) {({{ 'added at delivery' | translate }})} @else {({{ 'ordered' | translate }} {{ it.orderedQuantity }})}</span>}</td><td class="py-2 text-right font-mono">₹{{ it.unitRate | number: '1.0-2' }}</td><td class="py-2 text-right font-mono">₹{{ it.totalAmount | number: '1.0-0' }}</td></tr>
           }
         </tbody>
         <tfoot>

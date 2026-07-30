@@ -106,6 +106,14 @@ export interface OtherReturnInput {
   quantity: number;
 }
 
+/** A product handed over that wasn't on the order (e.g. an 18L when the ordered 20L was refused). */
+export interface OtherDeliveryInput {
+  productId: string;
+  quantity: number;
+  /** Optional rate; the product's default rate is used when omitted. */
+  unitRate?: number | null;
+}
+
 export interface UpdateDeliveryStatus {
   status: 'InTransit' | 'Delivered' | 'Failed';
   jarsDelivered?: number | null;
@@ -118,4 +126,5 @@ export interface UpdateDeliveryStatus {
   notes?: string | null;
   items?: DeliveryItemInput[] | null;
   otherReturns?: OtherReturnInput[] | null;
+  otherDeliveries?: OtherDeliveryInput[] | null;
 }

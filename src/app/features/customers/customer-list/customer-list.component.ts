@@ -57,7 +57,7 @@ export class CustomerListComponent {
     { key: 'jarsOut', header: 'Jars out', align: 'right', sortable: true },
     { key: 'deliveryMode', header: 'Delivery' },
     { key: 'paymentPreference', header: 'Payment' },
-    { key: 'balance', header: 'Balance', align: 'right' },
+    { key: 'balance', header: 'Balance', align: 'right', sortable: true },
     { key: 'isActive', header: 'Status' },
     { key: 'actions', header: '', align: 'right' },
   ];
@@ -128,7 +128,10 @@ export class CustomerListComponent {
 
   /** Single funnel for every filter change: merge, mirror to the URL, refresh the flags. */
   private apply(next: Partial<CustomerFilter>, reload = false): void {
-    this.filter = { ...this.filter, ...next, page: 'page' in next ? this.filter.page : 1 };
+    // A page change keeps the requested page (already in `next`); any OTHER change resets to page 1
+    // (you want the top of the new result set). The old form re-read this.filter.page here, which
+    // overwrote the requested page with the current one — so paging never advanced.
+    this.filter = 'page' in next ? { ...this.filter, ...next } : { ...this.filter, ...next, page: 1 };
     writeFilter(this.router, this.route, this.filter, CustomerListComponent.DEFAULTS);
     this.filterState.update((v) => v + 1);
     if (reload) this.load();

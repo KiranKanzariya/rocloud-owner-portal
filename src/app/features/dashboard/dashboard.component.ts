@@ -49,6 +49,7 @@ export class DashboardComponent {
         return 'status-in-transit';
       case 'Cancelled':
       case 'Returned':
+      case 'Failed':
         return 'status-overdue';
       default:
         return 'status-active-info';

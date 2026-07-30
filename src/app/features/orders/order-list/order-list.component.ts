@@ -17,7 +17,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 import { AutocompleteDirective } from '../../../shared/directives/autocomplete.directive';
 
-const STATUSES = ['Pending', 'Confirmed', 'InTransit', 'Delivered', 'Cancelled', 'Returned'];
+const STATUSES = ['Pending', 'Confirmed', 'InTransit', 'Delivered', 'Failed', 'Cancelled', 'Returned'];
 
 @Component({
   selector: 'app-order-list',
@@ -111,7 +111,9 @@ export class OrderListComponent {
 
   /** Single funnel for every filter change: merge, mirror to the URL, refresh the flags. */
   private apply(next: Partial<OrderFilter>, reload = true): void {
-    this.filter = { ...this.filter, ...next, page: 'page' in next ? this.filter.page : 1 };
+    // A page change keeps the requested page (already in `next`); any OTHER change resets to page 1.
+    // The old form re-read this.filter.page here, overwriting the requested page — so paging stuck.
+    this.filter = 'page' in next ? { ...this.filter, ...next } : { ...this.filter, ...next, page: 1 };
     writeFilter(this.router, this.route, this.filter, OrderListComponent.DEFAULTS, {
       customerName: this.customerFilterName() ?? null,
     });

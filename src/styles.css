@@ -13,6 +13,15 @@
   /* Selection colour matches brand */
   ::selection { background: #B5D4F4; color: #0C447C; }
 
+  /* Suppress the browser's native "×" clear control on type="search" inputs (WebKit/Blink render one
+     when the field has text). The app draws its own consistent, styled clear buttons, so the native
+     one is a duplicate sitting right beside it — two crosses on the same search box. */
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
   /* ─── Form controls — single source of truth ──────────────────────────────
      @tailwindcss/forms wraps its base selectors in :where() (zero specificity)
      and ships a generic blue-600 focus ring + 0 radius + 16px text. These rules
@@ -81,21 +90,24 @@
            bg-teal-light text-[#085041] text-xs font-medium;
   }
 
-  /* Status badges — items-center keeps any leading icon vertically aligned with the label */
+  /* Status badges — items-center keeps any leading icon vertically aligned with the label.
+     `whitespace-nowrap` stops a two-word label ("No discount", "In transit") breaking mid-phrase
+     inside the pill on a tight row; `shrink-0` keeps the pill intact in a justify-between header
+     (the text block beside it shrinks instead) — both mattered most in the mobile card view. */
   .status-delivered, .status-paid, .status-active {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
            bg-teal-light text-[#085041] text-micro font-medium;
   }
   .status-pending, .status-due, .status-trial {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
            bg-amber-light text-[#633806] text-micro font-medium;
   }
   .status-overdue, .status-failed {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
            bg-danger-light text-[#791F1F] text-micro font-medium;
   }
   .status-in-transit, .status-active-info {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
            bg-foam text-navy text-micro font-medium;
   }
 

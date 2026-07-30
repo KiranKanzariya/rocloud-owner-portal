@@ -2,9 +2,18 @@ import { ChangeDetectorRef, Component, computed, effect, inject, input, output, 
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DeliveryService } from '../delivery.service';
-import { DeliveryDetail, DeliveryItemInput, DeliveryListItem, OtherReturnInput, UpdateDeliveryStatus } from '../delivery.models';
+import {
+  DeliveryDetail,
+  DeliveryItemInput,
+  DeliveryListItem,
+  OtherDeliveryInput,
+  OtherReturnInput,
+  UpdateDeliveryStatus,
+} from '../delivery.models';
 import { OrderService } from '../../orders/order.service';
 import { CustomerService } from '../../customers/customer.service';
+import { ProductService } from '../../../core/services/product.service';
+import { Product } from '../../../core/models/product';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -26,6 +35,7 @@ export class DeliveryDetailModalComponent {
   private readonly service = inject(DeliveryService);
   private readonly orders = inject(OrderService);
   private readonly customers = inject(CustomerService);
+  private readonly productsApi = inject(ProductService);
   private readonly toast = inject(ToastService);
   private readonly t = inject(TranslateService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -70,6 +80,12 @@ export class DeliveryDetailModalComponent {
   /** One row per OTHER jar product the customer still holds (not on this order), with a returned input. */
   protected readonly otherLines = this.fb.array<FormGroup>([]);
 
+  /** One row per off-order product HANDED OVER at the door (e.g. an 18L when the ordered 20L was refused). */
+  protected readonly extraLines = this.fb.array<FormGroup>([]);
+
+  /** Active catalogue, for the "deliver another product" picker. Loaded once. */
+  protected readonly products = signal<Product[]>([]);
+
   protected readonly form = this.fb.nonNullable.group({
     collectedAmount: [0],
     paymentMethod: ['Cash'],
@@ -77,6 +93,12 @@ export class DeliveryDetailModalComponent {
   });
 
   constructor() {
+    // The off-order product picker needs the catalogue; load it once (degrades to [] without permission).
+    this.productsApi.list().subscribe((p) => {
+      this.products.set(p);
+      this.cdr.markForCheck();
+    });
+
     // When a different delivery is opened, reset the form and load that order's items for per-item entry.
     effect(() => {
       const d = this.delivery();
@@ -84,6 +106,7 @@ export class DeliveryDetailModalComponent {
       this.choice.set(null);
       this.lines.clear();
       this.otherLines.clear();
+      this.extraLines.clear();
       this.detail.set(null);
       this.editing.set(false);
       this.form.reset({ collectedAmount: 0, paymentMethod: 'Cash', notes: '' });
@@ -218,6 +241,36 @@ export class DeliveryDetailModalComponent {
     );
   }
 
+  /** Products not already on the order and not already added — the picker's options. */
+  availableExtras(): Product[] {
+    const used = new Set<string>([
+      ...this.lines.controls.map((l) => l.value.productId as string),
+      ...this.extraLines.controls.map((l) => l.value.productId as string),
+    ]);
+    return this.products().filter((p) => !used.has(p.id));
+  }
+
+  /** Adds an off-order product to hand over, defaulting the rate to the product's catalogue rate. */
+  addExtra(productId: string): void {
+    const p = this.products().find((x) => x.id === productId);
+    if (!p) return;
+    this.extraLines.push(
+      this.fb.group({
+        productId: [p.id],
+        productName: [p.name],
+        bottleSize: [p.bottleSize],
+        unitRate: [p.defaultRate],
+        delivered: [1],
+      }),
+    );
+    this.cdr.markForCheck();
+  }
+
+  removeExtra(i: number): void {
+    this.extraLines.removeAt(i);
+    this.cdr.markForCheck();
+  }
+
   submit(): void {
     const d = this.delivery();
     const choice = this.choice();
@@ -238,6 +291,14 @@ export class DeliveryDetailModalComponent {
       const otherReturns: OtherReturnInput[] = this.otherLines.controls
         .map((g) => ({ productId: g.value.productId as string, quantity: Number(g.value.returned) || 0 }))
         .filter((r) => r.quantity > 0);
+      // Off-order products handed over (e.g. an 18L when the ordered 20L was refused). The rate is NOT
+      // sent — the server bills at the product's catalogue rate, so the price can't be set from the field.
+      const otherDeliveries: OtherDeliveryInput[] = this.extraLines.controls
+        .map((g) => ({
+          productId: g.value.productId as string,
+          quantity: Number(g.value.delivered) || 0,
+        }))
+        .filter((r) => r.quantity > 0);
       Object.assign(dto, {
         collectedAmount: v.collectedAmount,
         paymentMethod: v.collectedAmount > 0 ? v.paymentMethod : null,
@@ -246,6 +307,7 @@ export class DeliveryDetailModalComponent {
         longitude: this.lng,
         items,
         otherReturns: otherReturns.length ? otherReturns : null,
+        otherDeliveries: otherDeliveries.length ? otherDeliveries : null,
       });
     }
 
