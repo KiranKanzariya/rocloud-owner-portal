@@ -85,16 +85,19 @@ export interface CustomerDetail {
 
 export interface CustomerStats {
   lifetimeJarsDelivered: number;
+  /** Jars issued so far in the current calendar month (IST). */
+  monthJarsDelivered: number;
   lifetimePayments: number;
   averageMonthlySpend: number;
   jarsDeliveredByProduct: JarsDeliveredByProduct[];
 }
 
-/** Lifetime jars delivered (issued) to the customer for one product. */
+/** Jars delivered (issued) to the customer for one product: lifetime, and this month. */
 export interface JarsDeliveredByProduct {
   productName: string;
   bottleSize: string;
   quantity: number;
+  monthQuantity: number;
 }
 
 /** Net returnable jars the customer still holds for one product (Σ Issue − Σ Return). */

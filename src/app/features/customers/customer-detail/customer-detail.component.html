@@ -42,14 +42,16 @@
     <!-- Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="metric-card">
-        <p class="metric-label">{{ 'Jars delivered' | translate }}</p>
+        <p class="metric-label">{{ 'Jars delivered' | translate }} <span class="opacity-70">({{ 'All time' | translate }})</span></p>
         <p class="metric-value">{{ stats()?.lifetimeJarsDelivered ?? 0 }}</p>
+        <p class="text-micro text-ink-mid mt-0.5">{{ 'This month' | translate }}: <span class="font-medium text-ink">{{ stats()?.monthJarsDelivered ?? 0 }}</span></p>
         @if (stats()?.jarsDeliveredByProduct?.length) {
+          <!-- Per product: this month's jars, so the rows add up to the "This month" line above. -->
           <div class="flex flex-col gap-0.5 mt-1.5 border-t border-ink-light pt-1.5">
             @for (j of stats()!.jarsDeliveredByProduct; track j.productName) {
               <div class="flex items-center justify-between text-micro text-ink-mid">
                 <span class="truncate">{{ j.productName }} <span class="opacity-70">({{ j.bottleSize }})</span></span>
-                <span class="font-medium text-ink">{{ j.quantity }}</span>
+                <span class="font-medium text-ink" [title]="'This month' | translate">{{ j.monthQuantity }}</span>
               </div>
             }
           </div>
