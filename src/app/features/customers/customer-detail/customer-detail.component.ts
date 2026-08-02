@@ -592,6 +592,13 @@ export class CustomerDetailComponent {
     this.showReturn.set(false);
     this.load();
     this.service.stats(this.id).subscribe((s) => this.stats.set(s));
+    // The return drops what the customer still holds, so re-read the float — load() only re-fetches
+    // the customer row. Mirrors the per-row recordReturn() path, which refreshes both.
+    this.loadJarBalance();
+    if (this.returnsLoaded) {
+      this.returnsPage.set(1);
+      this.loadReturns();
+    }
   }
 
   orderStatusClass(status: string): string {

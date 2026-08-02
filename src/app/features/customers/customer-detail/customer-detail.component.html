@@ -219,8 +219,11 @@
     </div>
 
     <!-- Tabs. Seven of these never fit a phone side by side, so the strip scrolls
-         horizontally instead of squeezing the labels into each other. -->
-    <div class="border-b border-ink-light flex gap-1 overflow-x-auto overscroll-x-contain" role="tablist">
+         horizontally instead of squeezing the labels into each other. `overflow-y-hidden` is
+         required, not cosmetic: setting overflow-x alone makes overflow-y compute to auto, and the
+         buttons' `-mb-px` (which laps the active underline over the border below) then overflows by
+         1px — enough for the browser to draw a vertical scrollbar down the strip. -->
+    <div class="border-b border-ink-light flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain" role="tablist">
       @for (t of tabs(); track t.id) {
         <button class="px-3 py-2 text-body border-b-2 -mb-px transition-colors shrink-0 whitespace-nowrap"
                 role="tab" [attr.aria-selected]="tab() === t.id"
