@@ -20,6 +20,12 @@
         <button class="btn-secondary" [disabled]="!pdf.ready()" (click)="pdf.download()">
           <i class="ti ti-download" aria-hidden="true"></i> {{ 'Download' | translate }}
         </button>
+        <!-- Statement for this invoice's period: the "send me a breakdown of this bill" request. -->
+        @if (inv.periodFrom && inv.periodTo) {
+          <button class="btn-secondary" (click)="showStatement.set(true)">
+            <i class="ti ti-file-text" aria-hidden="true"></i> {{ 'Statement' | translate }}
+          </button>
+        }
         <button *appCan="'Invoices.Edit'" class="btn-secondary" [disabled]="sending()" (click)="send()">
           @if (sending()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-mail" aria-hidden="true"></i> } {{ 'Email invoice' | translate }}
         </button>
@@ -96,6 +102,13 @@
       </div>
     </div>
   }
+
+  <roc-statement-modal
+    [open]="showStatement()"
+    [customer]="{ id: inv.customerId, name: inv.customerName }"
+    [initialFrom]="inv.periodFrom"
+    [initialTo]="inv.periodTo"
+    (closed)="showStatement.set(false)" />
 } @else {
   <div class="py-24 text-center text-ink-mid"><i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Loading…' | translate }}</div>
 }

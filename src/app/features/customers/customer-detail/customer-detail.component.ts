@@ -19,6 +19,7 @@ import { NavigationService } from '../../../core/services/navigation.service';
 import { BottleBadgeComponent } from '../../../shared/components/bottle-badge/bottle-badge.component';
 import { CollectPaymentModalComponent } from '../../payments/collect-payment-modal/collect-payment-modal.component';
 import { RecordReturnModalComponent } from '../../inventory/record-return-modal/record-return-modal.component';
+import { StatementModalComponent } from '../../../shared/components/statement-modal/statement-modal.component';
 import { PaymentService, PaymentListItem, PAYMENT_NOTE } from '../../../core/services/payment.service';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { AnimateOnChangeDirective } from '../../../shared/directives/animate-on-change.directive';
@@ -36,7 +37,7 @@ type Tab = 'overview' | 'subscriptions' | 'orders' | 'returns' | 'invoices' | 'p
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, RecordReturnModalComponent, ServiceDetailModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
+  imports: [DatePipe, DecimalPipe, FormsModule, BottleBadgeComponent, CollectPaymentModalComponent, RecordReturnModalComponent, StatementModalComponent, ServiceDetailModalComponent, CanDirective, AnimateOnChangeDirective, PulseOnChangeDirective, TranslatePipe, MobilePipe],
   templateUrl: './customer-detail.component.html',
 })
 export class CustomerDetailComponent {
@@ -68,6 +69,8 @@ export class CustomerDetailComponent {
   protected readonly savingDiscount = signal(false);
   protected readonly showPayment = signal(false);
   protected readonly showReturn = signal(false);
+  // Delivery statement (proof of supply for a date range) — read-only, so no refresh on close.
+  protected readonly showStatement = signal(false);
 
   // Add-subscription form (recurring delivery → nightly auto-orders).
   protected readonly products = signal<Product[]>([]);

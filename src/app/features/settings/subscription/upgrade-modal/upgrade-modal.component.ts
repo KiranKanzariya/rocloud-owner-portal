@@ -44,7 +44,8 @@ export class UpgradeModalComponent {
 
   protected readonly currentPlan = computed(() => this.perm.plan());
 
-  private readonly order = ['Basic', 'Pro', 'Enterprise'];
+  // Tier order — keep in step with PLAN_ORDER in permission.service.ts and the API's PlanType enum.
+  private readonly order = ['Starter', 'Basic', 'Pro', 'Enterprise'];
   protected rank(planType: string): number {
     return this.order.indexOf(planType);
   }

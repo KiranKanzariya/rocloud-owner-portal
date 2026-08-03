@@ -36,18 +36,30 @@ describe('PermissionService', () => {
     expect(svc.canAny('Orders.Edit', 'Orders.Create')).toBe(false);
   });
 
-  it('hasPlan respects the Basic < Pro < Enterprise order', () => {
+  it('hasPlan respects the Starter < Basic < Pro < Enterprise order', () => {
     svc.loadFromToken(makeJwt({ permissions: '', plan_type: 'Pro' }));
+    expect(svc.hasPlan('Starter')).toBe(true);
     expect(svc.hasPlan('Basic')).toBe(true);
     expect(svc.hasPlan('Pro')).toBe(true);
     expect(svc.hasPlan('Enterprise')).toBe(false);
   });
 
-  it('clear resets to empty Basic state', () => {
+  // Starter is the cheapest tier, so it must unlock nothing above itself. Ranking it anywhere but
+  // bottom would hand every plan-gated feature to the ₹499 plan.
+  it('Starter sits below Basic and unlocks nothing above it', () => {
+    svc.loadFromToken(makeJwt({ permissions: '', plan_type: 'Starter' }));
+    expect(svc.hasPlan('Starter')).toBe(true);
+    expect(svc.hasPlan('Basic')).toBe(false);
+    expect(svc.hasPlan('Pro')).toBe(false);
+    expect(svc.hasPlan('Enterprise')).toBe(false);
+  });
+
+  it('clear resets to the empty lowest-tier state', () => {
     svc.loadFromToken(makeJwt({ permissions: 'Customers.View', plan_type: 'Enterprise' }));
     svc.clear();
     expect(svc.can('Customers.View')).toBe(false);
-    expect(svc.plan()).toBe('Basic');
+    expect(svc.plan()).toBe('Starter');
+    expect(svc.hasPlan('Basic')).toBe(false);
     expect(svc.name()).toBe('');
   });
 });

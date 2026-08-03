@@ -34,6 +34,7 @@
       <button *appCan="'Payments.Collect'" class="btn-secondary" (click)="showPayment.set(true)"><i class="ti ti-cash" aria-hidden="true"></i> {{ 'Record payment' | translate }}</button>
       <button *appCan="'Inventory.Manage'" class="btn-secondary" (click)="showReturn.set(true)"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> {{ 'Record return' | translate }}</button>
       <button *appCan="'Invoices.Create'" class="btn-secondary" (click)="router.navigate(['/invoices/new'], { queryParams: { customerId: c.id } })"><i class="ti ti-file-invoice" aria-hidden="true"></i> {{ 'Generate invoice' | translate }}</button>
+      <button *appCan="'Invoices.View'" class="btn-secondary" (click)="showStatement.set(true)"><i class="ti ti-file-text" aria-hidden="true"></i> {{ 'Statement' | translate }}</button>
       @if (amcEnabled) {
         <button *appCan="'AMC.Manage'" class="btn-secondary" (click)="router.navigate(['/service-requests'])"><i class="ti ti-tool" aria-hidden="true"></i> {{ 'Log complaint' | translate }}</button>
       }
@@ -582,6 +583,11 @@
     [customer]="{ id: c.id, name: c.name }"
     (saved)="onReturnSaved()"
     (closed)="showReturn.set(false)" />
+
+  <roc-statement-modal
+    [open]="showStatement()"
+    [customer]="{ id: c.id, name: c.name }"
+    (closed)="showStatement.set(false)" />
 
   <app-service-detail-modal
     [requestId]="serviceDetailId()"

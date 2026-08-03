@@ -111,4 +111,12 @@ export class CustomerService {
   setDiscount(id: string, discountType: CustomerDiscountType, discountValue: number): Observable<unknown> {
     return this.http.put<ApiResponse<unknown>>(`${this.base}/${id}/discount`, { discountType, discountValue });
   }
+
+  /**
+   * The delivery-statement PDF endpoint for a date range — proof of what was supplied, not a bill, so
+   * any range may be requested (including one already invoiced). Fetched as an authenticated blob.
+   */
+  statementUrl(id: string, from: string, to: string): string {
+    return `${this.base}/${id}/statement?from=${from}&to=${to}`;
+  }
 }

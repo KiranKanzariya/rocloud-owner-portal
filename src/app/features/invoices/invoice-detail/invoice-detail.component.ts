@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InvoiceService } from '../invoice.service';
 import { InvoiceDetail } from '../invoice.models';
 import { PdfPreviewComponent } from '../../../shared/components/pdf-preview/pdf-preview.component';
+import { StatementModalComponent } from '../../../shared/components/statement-modal/statement-modal.component';
 import { CanDirective } from '../../../shared/directives/can.directive';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { PaymentService, PaymentListItem } from '../../../core/services/payment.service';
@@ -15,7 +16,7 @@ import { ModalDirective } from '../../../shared/directives/modal.directive';
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [ModalDirective, DatePipe, DecimalPipe, ReactiveFormsModule, PdfPreviewComponent, CanDirective, TranslatePipe],
+  imports: [ModalDirective, DatePipe, DecimalPipe, ReactiveFormsModule, PdfPreviewComponent, StatementModalComponent, CanDirective, TranslatePipe],
   templateUrl: './invoice-detail.component.html',
 })
 export class InvoiceDetailComponent {
@@ -36,6 +37,8 @@ export class InvoiceDetailComponent {
   protected readonly invoice = signal<InvoiceDetail | null>(null);
   protected readonly invoicePayments = signal<PaymentListItem[]>([]);
   protected readonly payOpen = signal(false);
+  // Delivery statement for this invoice's period — a breakdown to share, with no ledger effect.
+  protected readonly showStatement = signal(false);
   protected readonly sending = signal(false);
   protected readonly saving = signal(false);
 

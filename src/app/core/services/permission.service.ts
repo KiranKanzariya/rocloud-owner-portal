@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
 
-export type PlanType = 'Basic' | 'Pro' | 'Enterprise';
+export type PlanType = 'Starter' | 'Basic' | 'Pro' | 'Enterprise';
 
 interface JwtPayload {
   sub: string;
@@ -24,7 +24,8 @@ interface JwtPayload {
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
   private _perms = signal<Set<string>>(new Set());
-  private _plan = signal<PlanType>('Basic');
+  // Lowest tier, not Basic: the pre-token default must grant nothing a plan gate would check.
+  private _plan = signal<PlanType>('Starter');
   private _userId = signal<string>('');
   private _tenantId = signal<string>('');
   private _name = signal<string>('');
@@ -43,10 +44,16 @@ export class PermissionService {
   /** True only for the tenant's Owner role — used to gate owner-only areas (e.g. Activity log). */
   readonly isOwner = computed(() => this._roleName() === 'Owner');
 
+  /**
+   * Tier ranking. Mirrors the PlanType enum declaration order in the API (which RequirePlanAttribute
+   * ranks on) and PLAN_ORDER in rocloud-site/assets/site.js — keep all three in step.
+   * Starts at 1, not 0, so an unrecognised plan falls to 0 and outranks nothing.
+   */
   private readonly PLAN_ORDER: Record<PlanType, number> = {
-    Basic: 1,
-    Pro: 2,
-    Enterprise: 3,
+    Starter: 1,
+    Basic: 2,
+    Pro: 3,
+    Enterprise: 4,
   };
 
   loadFromToken(token: string): void {
@@ -62,7 +69,7 @@ export class PermissionService {
 
   clear(): void {
     this._perms.set(new Set());
-    this._plan.set('Basic');
+    this._plan.set('Starter');
     this._userId.set('');
     this._tenantId.set('');
     this._name.set('');

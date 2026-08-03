@@ -1,0 +1,40 @@
+@if (open()) {
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-h3">{{ 'Delivery statement' | translate }}</h3>
+        <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+
+      @if (customer(); as c) {
+        <p class="text-caption text-ink-mid mb-3">{{ 'What was delivered to' | translate }} <span class="font-medium text-ink">{{ c.name }}</span></p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="download()" class="flex flex-col gap-3">
+        <!-- One column on a phone: a native date input has a ~150px intrinsic minimum, which overflows
+             this modal's ~142px cells at 360px. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'From' | translate }}</span>
+            <input type="date" formControlName="from" [max]="todayIso" class="rounded-md border-ink-light py-1.5" />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'To' | translate }}</span>
+            <input type="date" formControlName="to" [max]="todayIso" class="rounded-md border-ink-light py-1.5" />
+          </label>
+        </div>
+
+        <p class="text-micro text-ink-mid">
+          {{ 'A record of what was supplied — not a bill. Safe to share for reimbursement.' | translate }}
+        </p>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="busy()">
+            @if (busy()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-download" aria-hidden="true"></i> {{ 'Download' | translate }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
