@@ -5,7 +5,7 @@
     <!-- Identity header -->
     <div class="card flex items-center gap-4">
       <span class="w-14 h-14 rounded-lg bg-navy text-white flex items-center justify-center text-h3 font-semibold overflow-hidden">
-        @if (s.logoUrl) { <img [src]="s.logoUrl" alt="Logo" class="w-full h-full object-cover" /> } @else { {{ initials() }} }
+        @if (s.logoUrl) { <img [src]="s.logoUrl" alt="Logo" class="w-full h-full object-cover" /> } @else { <span>{{ initials() }}</span> }
       </span>
       <div class="flex-1">
         <div class="flex items-center gap-2">
@@ -106,7 +106,7 @@
       @if (canManage) {
         <div class="flex justify-end pt-1">
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Save changes' | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Save changes' | translate }}</span> }
           </button>
         </div>
       } @else {

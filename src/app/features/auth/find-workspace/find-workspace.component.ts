@@ -25,7 +25,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
               <input type="email" formControlName="email" class="rounded-md border-ink-light"
                      placeholder="you@business.com" />
               <button type="submit" class="btn-primary w-full justify-center" [disabled]="loading()">
-                @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Sending…' | translate }} } @else { {{ 'Email my sign-in link' | translate }} }
+                @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> <span>{{ 'Sending…' | translate }}</span> } @else { <span>{{ 'Email my sign-in link' | translate }}</span> }
               </button>
               <a routerLink="/login" class="text-caption text-navy-light hover:underline text-center">{{ 'Back to sign in' | translate }}</a>
             </form>

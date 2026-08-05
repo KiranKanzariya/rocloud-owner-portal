@@ -1,15 +1,33 @@
 <!doctype html>
-<html lang="en">
+<!--
+  translate="no" — DO NOT REMOVE.
+
+  Chrome's page translator replaces Angular's text nodes with its own <font>-wrapped copies. Angular
+  then can't find the nodes it owns when an @if view is torn down, so the old label is orphaned in
+  the DOM and the new one is APPENDED. On the register screen that turned one button into
+  "Creating… Creating… Create account Create account Create account Create account" after a few
+  failed submits, and the same risk sits on all ~35 busy-state buttons in the app (including the
+  payment and subscription flows).
+
+  Blocking it costs nothing here: the app ships its own English/Hindi/Gujarati translations via
+  ngx-translate and the in-app language switcher, which browser translation only duplicates. It is
+  set three ways because different agents honour different signals.
+
+  This is the opposite of what rocloud-site wants — that page is static marketing HTML with no
+  Angular view teardown, so browser translation there is useful and harmless. Do not copy this over.
+-->
+<html lang="en" translate="no">
 <head>
   <meta charset="utf-8">
   <title>ROCloud</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0C447C">
+  <meta name="google" content="notranslate">
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
 </head>
-<body>
+<body class="notranslate">
   <app-root></app-root>
 </body>
 </html>

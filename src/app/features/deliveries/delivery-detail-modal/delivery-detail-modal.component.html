@@ -171,7 +171,7 @@
       <div class="flex justify-end gap-2">
         <button class="btn-secondary" (click)="closed.emit()">{{ 'Close' | translate }}</button>
         <button *appCan="'Deliveries.Update'" class="btn-primary" [disabled]="!choice() || saving()" (click)="submit()">
-          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Saving…' | translate }} } @else { {{ 'Update' | translate }} }
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> <span>{{ 'Saving…' | translate }}</span> } @else { <span>{{ 'Update' | translate }}</span> }
         </button>
       </div>
       } @else {

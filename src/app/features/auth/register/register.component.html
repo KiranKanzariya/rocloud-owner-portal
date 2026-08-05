@@ -190,7 +190,7 @@
             <button type="button" class="btn-primary" (click)="next()">{{ 'Continue' | translate }}</button>
           } @else {
             <button type="submit" class="btn-primary" [disabled]="loading() || !acceptTerms()">
-              @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Creating…' | translate }} } @else { {{ 'Create account' | translate }} }
+              @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> <span>{{ 'Creating…' | translate }}</span> } @else { <span>{{ 'Create account' | translate }}</span> }
             </button>
           }
         </div>

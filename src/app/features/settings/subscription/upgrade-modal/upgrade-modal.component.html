@@ -1,6 +1,7 @@
 @if (open()) {
   <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
-    <div class="card w-full max-w-4xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
+    <!-- max-w-6xl, not 4xl: four cards side by side need the extra width to stay readable. -->
+    <div class="card w-full max-w-6xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-h2">{{ 'Choose your plan' | translate }}</h3>
         <button class="btn-icon btn-icon-danger" (click)="close()"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -19,8 +20,12 @@
         </button>
       </div>
 
-      <!-- Plan cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!--
+        Plan cards. Four tiers, so the row steps 4 → 2 → 1 and never sits at three: a fixed
+        three-column grid left the fourth plan orphaned on a row of its own once Starter was added.
+        Two-up is the mid-width fallback because it splits four evenly.
+      -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         @for (p of plans(); track p.id) {
           <div class="rounded-lg border p-4 flex flex-col gap-3"
             [class.border-navy]="p.planType === 'Pro'" [class.border-ink-light]="p.planType !== 'Pro'">
@@ -28,7 +33,8 @@
               <div class="flex items-center gap-2">
                 <h4 class="text-h3">{{ p.name }}</h4>
                 @if (p.planType === 'Pro') { <span class="status-active-info">{{ 'Popular' | translate }}</span> }
-                @if (isLockedCurrent(p)) { <span class="status-delivered">{{ 'Current' | translate }}</span> }
+                @if (isCurrent(p)) { <span class="status-delivered">{{ 'Current' | translate }}</span> }
+                @if (isScheduled(p)) { <span class="status-pending">{{ 'Scheduled' | translate }}</span> }
               </div>
               <p class="mt-1"><span class="text-h2 font-semibold">₹{{ price(p) | number: '1.0-0' }}</span>
                 <span class="text-caption text-ink-mid">/{{ (billing() === 'Yearly' ? 'year' : 'month') | translate }}</span></p>
@@ -37,6 +43,11 @@
                 <p class="text-caption text-teal font-medium mt-0.5">
                   {{ 'Save ₹{{amount}} vs monthly' | translate: { amount: (yearlySaving(p) | number: '1.0-0') } }}
                 </p>
+              }
+              <!-- A downgrade is not immediate. Say when it starts BEFORE they commit, so the price
+                   above doesn't read as what they'll be charged today. -->
+              @if (isDowngrade(p) && periodEndsAt()) {
+                <p class="text-caption text-ink-mid mt-0.5">{{ 'Starts {{date}}' | translate: { date: effectiveOn() } }}</p>
               }
             </div>
 
@@ -53,25 +64,27 @@
               <li class="flex items-center gap-2">
                 <i class="ti" [class.ti-check]="hasReports(p)" [class.text-teal]="hasReports(p)" [class.ti-minus]="!hasReports(p)" [class.text-ink-light]="!hasReports(p)" aria-hidden="true"></i>
                 {{ 'Reports, charts & exports' | translate }}</li>
-              <li class="flex items-center gap-2 text-ink-mid">
-                <i class="ti ti-clock text-ink-light shrink-0" aria-hidden="true"></i>
-                <span>{{ 'WhatsApp notifications' | translate }}</span>
-                <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
               <li class="flex items-center gap-2">
                 <i class="ti" [class.ti-check]="p.customRolesEnabled" [class.text-teal]="p.customRolesEnabled" [class.ti-minus]="!p.customRolesEnabled" [class.text-ink-light]="!p.customRolesEnabled" aria-hidden="true"></i> {{ 'Custom roles' | translate }}</li>
-              <li class="flex items-center gap-2 text-ink-mid">
-                <i class="ti ti-clock text-ink-light shrink-0" aria-hidden="true"></i>
-                <span>{{ 'Multi-branch' | translate }}</span>
-                <span class="status-active-info text-micro shrink-0 ml-auto">{{ 'Coming soon' | translate }}</span></li>
+              <!--
+                Unshipped features (WhatsApp, multi-branch) are NOT listed here. They previously
+                rendered as permanent "Coming soon" rows on every card, which sold a roadmap rather
+                than the product and cost four lines on cards that now sit four-across.
+                When one actually ships, add it as a live check line bound to its plan flag —
+                see docs/enable-sms-whatsapp.md.
+              -->
             </ul>
 
+            <!--
+              Downgrades are self-serve. They cost nothing now and take effect at period end, so the
+              owner keeps the plan they already paid for — hence "Switch to", not "Choose". The API
+              guards the move against current usage and parks it until the term runs out.
+            -->
             @if (isLockedCurrent(p)) {
               <button class="btn-secondary" disabled>{{ 'Current plan' | translate }}</button>
-            } @else if (lockCurrentPlan() && isDowngrade(p)) {
-              <button class="btn-secondary" disabled>{{ 'Contact us to downgrade' | translate }}</button>
             } @else {
-              <button class="btn-primary" [disabled]="busyPlan() !== null" (click)="choose(p)">
-                @if (busyPlan() === p.planType) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Choose {{name}}' | translate: { name: p.name } }} }
+              <button [class]="isDowngrade(p) ? 'btn-secondary' : 'btn-primary'" [disabled]="busyPlan() !== null" (click)="choose(p)">
+                @if (busyPlan() === p.planType) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ ctaKey(p) | translate: { name: p.name } }}</span> }
               </button>
             }
           </div>
@@ -79,7 +92,7 @@
       </div>
 
       <p class="text-caption text-ink-mid mt-4 text-center">
-        {{ 'Secured by Razorpay. Plan changes take effect immediately.' | translate }}
+        {{ 'Secured by Razorpay. Upgrades apply immediately; downgrades start at your next renewal.' | translate }}
       </p>
       <!-- The policies must be reachable at the point of payment, not only from the website. -->
       <p class="text-caption text-ink-mid mt-1.5 text-center">

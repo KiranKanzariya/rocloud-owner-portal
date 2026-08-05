@@ -31,7 +31,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="busy()">
-            @if (busy()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-download" aria-hidden="true"></i> {{ 'Download' | translate }} }
+            @if (busy()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <i class="ti ti-download" aria-hidden="true"></i> <span>{{ 'Download' | translate }}</span> }
           </button>
         </div>
       </form>

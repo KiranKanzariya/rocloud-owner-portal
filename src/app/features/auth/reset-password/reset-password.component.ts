@@ -21,7 +21,7 @@ import { LogoComponent } from '../../../shared/components/logo/logo.component';
             <input type="password" formControlName="newPassword" class="rounded-md border-ink-light"
                    [placeholder]="'New password (min 8 chars)' | translate" />
             <button type="submit" class="btn-primary w-full justify-center" [disabled]="loading()">
-              @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Updating…' | translate }} } @else { {{ 'Reset password' | translate }} }
+              @if (loading()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> <span>{{ 'Updating…' | translate }}</span> } @else { <span>{{ 'Reset password' | translate }}</span> }
             </button>
             <div class="flex flex-col items-center gap-1">
               <a routerLink="/forgot-password" class="text-caption text-navy-light hover:underline">{{ 'Request a new link' | translate }}</a>

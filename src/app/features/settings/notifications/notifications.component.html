@@ -77,7 +77,7 @@
           <div class="flex gap-2">
             <button type="button" class="btn-secondary" (click)="modalOpen.set(false)">{{ 'Cancel' | translate }}</button>
             <button type="button" class="btn-primary" [disabled]="saving()" (click)="save()">
-              @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Save template' | translate }} }
+              @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Save template' | translate }}</span> }
             </button>
           </div>
         </div>

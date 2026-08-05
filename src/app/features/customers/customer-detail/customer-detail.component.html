@@ -288,7 +288,7 @@
                 <input type="number" min="0" [(ngModel)]="subRate" [placeholder]="'Product rate' | translate" class="w-28 rounded-md border-ink-light py-1.5" />
               </label>
               <button class="btn-primary" [disabled]="savingSub()" (click)="saveSubscription()">
-                @if (savingSub()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ (editingSubId() ? 'Save' : 'Add') | translate }} }
+                @if (savingSub()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ (editingSubId() ? 'Save' : 'Add') | translate }}</span> }
               </button>
             </div>
           }

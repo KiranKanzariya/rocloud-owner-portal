@@ -33,7 +33,7 @@
             <div class="flex gap-2">
               <button class="btn-secondary text-danger" (click)="deleteRole()">{{ 'Delete' | translate }}</button>
               <button class="btn-primary" [disabled]="saving()" (click)="savePermissions()">
-                @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Save permissions' | translate }} }
+                @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Save permissions' | translate }}</span> }
               </button>
             </div>
           }
@@ -96,7 +96,7 @@
       <div class="flex justify-end gap-2">
         <button class="btn-secondary" (click)="createOpen.set(false)">{{ 'Cancel' | translate }}</button>
         <button class="btn-primary" [disabled]="saving()" (click)="createRole()">
-          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Create role' | translate }} }
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Create role' | translate }}</span> }
         </button>
       </div>
     </div>

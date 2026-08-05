@@ -64,7 +64,7 @@
         <div class="flex justify-end gap-2 pt-1">
           <button type="button" class="btn-secondary" (click)="close()">{{ 'Cancel' | translate }}</button>
           <button type="submit" class="btn-primary" [disabled]="saving()">
-            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Create' | translate }} }
+            @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Create' | translate }}</span> }
           </button>
         </div>
       </form>

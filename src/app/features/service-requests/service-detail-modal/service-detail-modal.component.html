@@ -52,7 +52,7 @@
               <button class="btn-secondary" [disabled]="busy()" (click)="setStatus('InProgress')">{{ 'Start work' | translate }}</button>
             }
             <button class="btn-primary" [disabled]="busy()" (click)="setStatus('Resolved')">
-              @if (busy()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { {{ 'Resolve' | translate }} }
+              @if (busy()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> } @else { <span>{{ 'Resolve' | translate }}</span> }
             </button>
           </div>
         </div>

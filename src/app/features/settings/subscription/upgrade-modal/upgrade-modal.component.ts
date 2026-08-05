@@ -35,6 +35,16 @@ export class UpgradeModalComponent {
    * owner can pick their current plan to (re)subscribe instead of being forced to upgrade.
    */
   readonly lockCurrentPlan = input(true);
+  /**
+   * End of the paid period — the date a downgrade chosen now would take effect. Shown on cheaper
+   * plans so the owner knows they are not losing the plan they already paid for.
+   */
+  readonly periodEndsAt = input<string | null>(null);
+  /**
+   * A downgrade already parked for period end, if any. Re-selecting the CURRENT plan is what cancels
+   * it (CompleteUpgradeCommand case (a)), so this also unlocks that card.
+   */
+  readonly scheduledPlanType = input<string | null>(null);
   /** Emitted after the JWT has been refreshed with the new plan. */
   readonly upgraded = output<void>();
   readonly closed = output<void>();
@@ -96,13 +106,44 @@ export class UpgradeModalComponent {
     return Math.floor(Math.min(...months));
   }
 
-  /** The current plan is only a dead-end (unclickable) when it's a live paid plan; else it's re-choosable. */
+  /** True for the plan a parked downgrade will land on at period end. */
+  isScheduled(p: Plan): boolean {
+    return !!this.scheduledPlanType() && p.planType === this.scheduledPlanType();
+  }
+
+  /**
+   * The current plan is only a dead-end (unclickable) when it's a live paid plan; else it's re-choosable.
+   *
+   * A parked downgrade also unlocks it: re-selecting the current plan is the ONLY way to cancel one
+   * (the API handles it as a free no-op), and the subscription page's banner tells owners to do
+   * exactly that — so leaving it disabled would send them to an instruction they cannot follow.
+   */
   isLockedCurrent(p: Plan): boolean {
+    if (this.scheduledPlanType()) return false;
     return this.lockCurrentPlan() && this.isCurrent(p);
+  }
+
+  /** Re-selecting the current plan while a downgrade waits means "cancel it", not "buy again". */
+  isCancellingDowngrade(p: Plan): boolean {
+    return this.isCurrent(p) && !!this.scheduledPlanType();
+  }
+
+  /** The button label depends on which of the three moves this card represents. */
+  ctaKey(p: Plan): string {
+    if (this.isCancellingDowngrade(p)) return 'Keep {{name}}';
+    return this.isDowngrade(p) ? 'Switch to {{name}}' : 'Choose {{name}}';
+  }
+
+  /** When a downgrade chosen now would take effect — the end of the period already paid for. */
+  effectiveOn(): string {
+    return this.formatDate(this.periodEndsAt());
   }
 
   async choose(p: Plan): Promise<void> {
     if (this.isLockedCurrent(p) || this.busyPlan()) return;
+    // Read before the awaits: the parent reloads the subscription on `upgraded`, which clears
+    // scheduledPlanType and would otherwise make the message pick the wrong branch.
+    const cancellingDowngrade = this.isCancellingDowngrade(p);
     this.busyPlan.set(p.planType);
     try {
       const init = await firstValueFrom(this.service.initiate(p.planType, this.billing()));
@@ -122,13 +163,17 @@ export class UpgradeModalComponent {
       this.busyPlan.set(null);
       // A downgrade has NOT happened yet — it is parked until the paid period ends, so saying
       // "you're now on Basic" would be a lie while they still hold (and paid for) the dearer plan.
+      // Cancelling a parked one comes back as Lateral (same plan, same price), which would otherwise
+      // report "You're now on the Pro plan" to someone who never left it.
       this.toast.success(
-        init.changeKind === 'Downgrade'
-          ? this.t.instant('Your plan will change to {{name}} on {{date}}.', {
-              name: p.name,
-              date: this.formatDate(init.effectiveAt),
-            })
-          : this.t.instant("You're now on the {{name}} plan.", { name: p.name }),
+        cancellingDowngrade
+          ? this.t.instant('Your scheduled plan change has been cancelled.')
+          : init.changeKind === 'Downgrade'
+            ? this.t.instant('Your plan will change to {{name}} on {{date}}.', {
+                name: p.name,
+                date: this.formatDate(init.effectiveAt),
+              })
+            : this.t.instant("You're now on the {{name}} plan.", { name: p.name }),
       );
       this.upgraded.emit();
     } catch (err) {

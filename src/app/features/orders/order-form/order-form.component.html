@@ -116,7 +116,7 @@
       <div class="flex justify-end gap-2">
         <button type="button" class="btn-secondary" (click)="cancel()">{{ 'Cancel' | translate }}</button>
         <button type="submit" class="btn-primary" [disabled]="saving()">
-          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> {{ 'Saving…' | translate }} } @else { {{ (isEdit() ? 'Save changes' : 'Create order') | translate }} }
+          @if (saving()) { <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i> <span>{{ 'Saving…' | translate }}</span> } @else { <span>{{ (isEdit() ? 'Save changes' : 'Create order') | translate }}</span> }
         </button>
       </div>
     </form>

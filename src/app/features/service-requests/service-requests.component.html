@@ -32,7 +32,7 @@
 
     <ng-template appColumnCell="ticketNumber" let-row><span class="font-mono">{{ row.ticketNumber }}</span></ng-template>
     <ng-template appColumnCell="assignedTechName" let-row>
-      @if (row.assignedTechName) { {{ row.assignedTechName }} } @else { <span class="text-ink-mid">{{ 'Unassigned' | translate }}</span> }
+      @if (row.assignedTechName) { <span>{{ row.assignedTechName }}</span> } @else { <span class="text-ink-mid">{{ 'Unassigned' | translate }}</span> }
     </ng-template>
     <ng-template appColumnCell="priority" let-row><span [class]="priorityClass(row.priority)">{{ row.priority | translate }}</span></ng-template>
     <ng-template appColumnCell="scheduledDate" let-row>
