@@ -189,6 +189,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/payments/payments.component').then((m) => m.PaymentsComponent),
       },
       {
+        // No title/icon on purpose: the sidebar is built from route data, and this is a working screen
+        // reached from Payments, not a third finance section competing with it in the nav.
+        path: 'payments/money-in',
+        canActivate: [permissionGuard],
+        data: { permission: 'Payments.View' },
+        loadComponent: () => import('./features/payments/money-in/money-in.component').then((m) => m.MoneyInComponent),
+      },
+      {
         path: 'reports',
         canActivate: [permissionGuard, planGuard],
         data: { permission: 'Reports.View', plan: 'Pro', title: 'Reports', icon: 'chart-bar' },

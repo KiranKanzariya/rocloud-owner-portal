@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import {
@@ -27,7 +28,7 @@ const STATUSES = ['Completed', 'Pending', 'Failed', 'Refunded'];
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [AutocompleteDirective, DatePipe, DecimalPipe, ReactiveFormsModule, DataTableComponent, ColumnCellDirective, CanDirective, CollectPaymentModalComponent, TranslatePipe, MobilePipe],
+  imports: [AutocompleteDirective, DatePipe, DecimalPipe, ReactiveFormsModule, RouterLink, DataTableComponent, ColumnCellDirective, CanDirective, CollectPaymentModalComponent, TranslatePipe, MobilePipe],
   templateUrl: './payments.component.html',
 })
 export class PaymentsComponent {

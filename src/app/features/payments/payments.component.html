@@ -1,9 +1,15 @@
 <div class="flex flex-col gap-4">
   <div class="page-header">
     <h1 class="text-h1">{{ 'Payments' | translate }}</h1>
-    <button *appCan="'Payments.Collect'" class="btn-primary" (click)="modalOpen.set(true)">
-      <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Record payment' | translate }}
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- The fast path for settling what people owe; the modal beside it is for one-off amounts. -->
+      <a *appCan="'Payments.Collect'" routerLink="/payments/money-in" class="btn-secondary">
+        <i class="ti ti-checklist" aria-hidden="true"></i> {{ 'Money in' | translate }}
+      </a>
+      <button *appCan="'Payments.Collect'" class="btn-primary" (click)="modalOpen.set(true)">
+        <i class="ti ti-plus" aria-hidden="true"></i> {{ 'Record payment' | translate }}
+      </button>
+    </div>
   </div>
 
   <!-- Metric cards -->

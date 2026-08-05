@@ -33,6 +33,10 @@
             "styles": [
               "src/styles.css",
               "node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css"
+            ],
+            "allowedCommonJsDependencies": [
+              "qrcode",
+              "dijkstrajs"
             ]
           },
           "configurations": {

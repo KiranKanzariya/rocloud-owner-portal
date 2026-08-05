@@ -34,6 +34,7 @@ export class ProfileComponent {
   protected readonly languages = LANGUAGES;
   protected readonly settings = signal<TenantSettings | null>(null);
   protected readonly saving = signal(false);
+
   protected readonly canManage = this.perm.can('BusinessProfile.Manage');
   /** Primary-colour white-labelling is an Enterprise feature (guide §24/§25). */
   protected readonly isEnterprise = this.perm.hasPlan('Enterprise');
@@ -50,6 +51,11 @@ export class ProfileComponent {
     logoUrl: [''],
     primaryColor: [DEFAULT_BRAND_COLOR],
     defaultLanguage: ['en', Validators.required],
+    // Scan-to-pay. Shape-checked only — nothing can confirm the id exists or is this tenant's, which
+    // is why the field carries a warning and the id is printed on the invoice for the customer to read.
+    upiVpa: ['', [Validators.pattern(/^[a-zA-Z0-9.\-_]{2,64}@[a-zA-Z][a-zA-Z0-9.\-]{1,63}$/)]],
+    upiPayeeName: ['', Validators.maxLength(100)],
+    upiQrEnabled: [false],
   });
 
   protected readonly initials = computed(() => {
@@ -72,6 +78,9 @@ export class ProfileComponent {
         logoUrl: s.logoUrl ?? '',
         primaryColor: s.primaryColor ?? DEFAULT_BRAND_COLOR,
         defaultLanguage: s.defaultLanguage,
+        upiVpa: s.upiVpa ?? '',
+        upiPayeeName: s.upiPayeeName ?? '',
+        upiQrEnabled: s.upiQrEnabled,
       });
       if (!this.canManage) this.form.disable();
     });
@@ -104,6 +113,11 @@ export class ProfileComponent {
         logoUrl: v.logoUrl || null,
         primaryColor: this.isEnterprise ? v.primaryColor || null : null,
         defaultLanguage: v.defaultLanguage,
+        upiVpa: v.upiVpa || null,
+        upiPayeeName: v.upiPayeeName || null,
+        // Clearing the id switches the QR off with it — the API enforces the same rule, this just
+        // keeps the screen from showing a tick that the server is about to drop.
+        upiQrEnabled: !!v.upiVpa && v.upiQrEnabled,
       })
       .subscribe({
         next: () => {

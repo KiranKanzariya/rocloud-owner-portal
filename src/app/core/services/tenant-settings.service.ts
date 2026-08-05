@@ -25,6 +25,24 @@ export interface TenantSettings {
   defaultLanguage: string;
   planType: string;
   status: string;
+  /** Scan-to-pay UPI id drawn as a QR on customer invoices. */
+  upiVpa: string | null;
+  upiPayeeName: string | null;
+  upiQrEnabled: boolean;
+  /** Verification of the CURRENT upiVpa — cleared server-side whenever that id changes. */
+  upiVerifiedAt: string | null;
+  upiVerifiedName: string | null;
+}
+
+/**
+ * Result of checking a UPI id against the payments network.
+ * `unavailable` means the check could not RUN — deliberately not the same as "this id is wrong".
+ */
+export interface UpiVerification {
+  vpa: string;
+  verified: boolean;
+  payeeName: string | null;
+  unavailable: boolean;
 }
 
 export interface UpdateTenantSettings {
@@ -39,6 +57,9 @@ export interface UpdateTenantSettings {
   logoUrl?: string | null;
   primaryColor?: string | null;
   defaultLanguage: string;
+  upiVpa?: string | null;
+  upiPayeeName?: string | null;
+  upiQrEnabled?: boolean;
 }
 
 /** The GST configuration printed on invoices — readable without BusinessProfile.View. */
@@ -71,6 +92,16 @@ export class TenantSettingsService {
 
   update(body: UpdateTenantSettings): Observable<unknown> {
     return this.http.put<ApiResponse<unknown>>(this.base, body);
+  }
+
+  /**
+   * Checks a UPI id against the payments network and returns the account name it is registered to.
+   * The server records the result only when the id matches the one already saved.
+   */
+  verifyUpi(vpa: string): Observable<UpiVerification> {
+    return this.http
+      .post<ApiResponse<UpiVerification>>(`${this.base}/verify-upi`, { vpa })
+      .pipe(map((r) => r.data!));
   }
 
   /** Cached — the window is a platform constant for the session, so fetch it at most once. */

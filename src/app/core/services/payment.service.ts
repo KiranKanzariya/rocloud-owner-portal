@@ -68,6 +68,20 @@ export interface PaymentSummary {
   other: number;
 }
 
+/**
+ * Scan-to-pay for a customer's current balance — the counter QR (matches API CustomerUpiQrDto).
+ * `payload` is null when there is nothing to show; `configured` says whether that is because the
+ * tenant hasn't set up scan-to-pay, or simply because nothing is owed.
+ */
+export interface CustomerUpiQr {
+  customerId: string;
+  customerName: string;
+  balance: number;
+  payload: string | null;
+  vpa: string | null;
+  configured: boolean;
+}
+
 /** A customer with overdue unpaid invoices (matches API OutstandingDueDto). */
 export interface OutstandingDue {
   customerId: string;
@@ -98,12 +112,27 @@ export class PaymentService {
       .pipe(map((r) => r.data!));
   }
 
-  /** Customers with overdue unpaid invoices older than `overdueDays` (default 7). */
+  /**
+   * Customers who owe, aged past `overdueDays` (default 7 — the dunning view).
+   * Pass **0** for everyone who owes as of today, which is what the money-in worklist wants: a
+   * customer paying by UPI QR may owe on a delivery made this morning.
+   */
   outstanding(overdueDays = 7): Observable<OutstandingDue[]> {
     const params = new HttpParams().set('overdueDays', overdueDays);
     return this.http
       .get<ApiResponse<OutstandingDue[]>>(`${this.base}/outstanding`, { params })
       .pipe(map((r) => r.data ?? []));
+  }
+
+  /**
+   * The counter QR for a customer's current balance. Built server-side so the rules about what may be
+   * asked for (opted in, has a VPA, owes something) live in one place — the invoice PDF uses the same
+   * builder.
+   */
+  customerUpiQr(customerId: string): Observable<CustomerUpiQr> {
+    return this.http
+      .get<ApiResponse<CustomerUpiQr>>(`${this.base}/customers/${customerId}/upi-qr`)
+      .pipe(map((r) => r.data!));
   }
 
   collect(body: CollectPayment): Observable<{ id: string }> {

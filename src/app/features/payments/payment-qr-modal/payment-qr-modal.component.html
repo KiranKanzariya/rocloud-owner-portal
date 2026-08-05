@@ -1,0 +1,48 @@
+@if (customerId()) {
+  <div rocModal (dismiss)="close()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="close()">
+    <div class="card w-full max-w-sm max-h-[90vh] overflow-auto text-center" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3 text-left">
+        <h3 class="text-h3">{{ 'Scan to pay' | translate }}</h3>
+        <button class="btn-icon btn-icon-danger" (click)="close()" [attr.aria-label]="'Close' | translate">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="py-12 text-ink-mid">
+          <i class="ti ti-loader-2 animate-spin text-2xl" aria-hidden="true"></i>
+        </div>
+      } @else if (failed()) {
+        <p class="py-10 text-body text-ink-mid">{{ 'Could not load the payment QR.' | translate }}</p>
+      } @else if (data(); as d) {
+        <p class="text-body font-medium">{{ d.customerName }}</p>
+
+        @if (qrDataUrl(); as url) {
+          <p class="text-h1 text-navy mt-1">₹{{ d.balance | number: '1.0-2' }}</p>
+          <img [src]="url" [alt]="'Scan to pay' | translate" class="mx-auto mt-3 w-64 h-64" />
+          <!-- The id is shown so the customer can see where the money goes, and still pay if the
+               scan fails — the same reason it is printed on the invoice. -->
+          @if (d.vpa) {
+            <p class="text-caption text-ink-mid mt-2">{{ 'UPI ID' | translate }}: {{ d.vpa }}</p>
+          }
+          <p class="text-caption text-ink-mid mt-3">
+            {{ 'Payment goes straight to your UPI ID — record it here once received.' | translate }}
+          </p>
+        } @else if (!d.configured) {
+          <div class="py-8">
+            <i class="ti ti-qrcode text-ink-light text-3xl" aria-hidden="true"></i>
+            <p class="text-body mt-2">{{ 'Scan-to-pay is not set up yet.' | translate }}</p>
+            <a routerLink="/settings/profile" (click)="close()" class="btn-secondary mt-3 inline-flex">
+              {{ 'Set up in Business profile' | translate }}
+            </a>
+          </div>
+        } @else {
+          <div class="py-8">
+            <i class="ti ti-circle-check text-teal text-3xl" aria-hidden="true"></i>
+            <p class="text-body mt-2">{{ 'This customer owes nothing.' | translate }}</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

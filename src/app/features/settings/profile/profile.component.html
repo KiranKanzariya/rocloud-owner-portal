@@ -103,6 +103,62 @@
         }
       </div>
 
+      <!--
+        Scan-to-pay. The warning is not decoration: money paid through this QR goes straight to the
+        owner's UPI id, ROCloud never sees it, and nothing here can verify the id is real or theirs.
+        An owner who assumes payments will settle themselves would stop recording them and start
+        dunning customers who have already paid.
+      -->
+      <div class="border-t border-ink-light pt-4 flex flex-col gap-4">
+        <div>
+          <h3 class="text-h4">{{ 'Payments' | translate }}</h3>
+          <p class="text-caption text-ink-mid">
+            {{ 'Show a scan-to-pay UPI QR on your customer invoices.' | translate }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'UPI ID' | translate }}</span>
+            <!--
+              No Verify button: Razorpay's Validate VPA API was withdrawn with the NPCI UPI-Collect
+              deprecation, so the check could only ever answer "we could not check" — a control that
+              never succeeds reads as a broken product. The id is typed and confirmed by eye instead.
+            -->
+            <input formControlName="upiVpa" class="rounded-md border-ink-light py-1.5 font-mono"
+                   placeholder="name@okaxis" autocomplete="off" />
+
+            @if (form.controls.upiVpa.touched && form.controls.upiVpa.invalid) {
+              <span class="text-caption text-danger">{{ 'Enter a valid UPI ID, for example name@okaxis.' | translate }}</span>
+            }
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-caption font-medium">{{ 'Payee name' | translate }}</span>
+            <input formControlName="upiPayeeName" class="rounded-md border-ink-light py-1.5"
+                   [placeholder]="form.controls.name.value" />
+            <span class="text-caption text-ink-mid">{{ 'Shown in your customer’s UPI app.' | translate }}</span>
+          </label>
+        </div>
+
+        <!--
+          An id is all that is required. Verification is offered but cannot be relied on — Razorpay's
+          VPA check went away with the NPCI UPI-Collect deprecation — so making it mandatory would put
+          the QR permanently out of reach. Hence the warning below: it is the only safeguard left.
+        -->
+        <label class="flex items-start gap-2">
+          <input type="checkbox" formControlName="upiQrEnabled" class="mt-0.5 rounded border-ink-light" />
+          <span class="text-body">{{ 'Show a payment QR on invoices' | translate }}</span>
+        </label>
+        <p class="text-caption text-ink-mid -mt-2">
+          {{ 'Double-check the UPI ID — money paid through the QR goes to whichever ID you enter here.' | translate }}
+        </p>
+
+        <p class="text-caption text-ink-mid flex items-start gap-1.5">
+          <i class="ti ti-alert-triangle text-amber shrink-0 mt-0.5" aria-hidden="true"></i>
+          <span>{{ 'Payments made through this QR go directly to your UPI ID. ROCloud cannot see them, so you must still record each payment to clear the invoice.' | translate }}</span>
+        </p>
+      </div>
+
       @if (canManage) {
         <div class="flex justify-end pt-1">
           <button type="submit" class="btn-primary" [disabled]="saving()">
