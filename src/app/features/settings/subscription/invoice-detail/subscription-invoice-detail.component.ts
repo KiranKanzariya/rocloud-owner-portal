@@ -133,6 +133,8 @@ export class SubscriptionInvoiceDetailComponent {
     switch (status) {
       case 'Paid': return 'status-delivered';
       case 'Pending': return 'status-overdue';
+      // Withdrawn, not failed — grey, matching the billing list.
+      case 'Cancelled': return 'status-cancelled';
       default: return 'status-pending';
     }
   }

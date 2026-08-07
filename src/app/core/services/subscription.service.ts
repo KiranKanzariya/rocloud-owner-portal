@@ -91,7 +91,7 @@ export interface SubscriptionInvoice {
   grossAmount: number;
   discountAmount: number;
   amount: number;
-  status: 'Pending' | 'Paid' | 'Void';
+  status: 'Pending' | 'Paid' | 'Cancelled';
   dueDate: string;
   description: string | null;
   paidAt: string | null;
@@ -103,6 +103,11 @@ export interface SubscriptionInvoice {
   paymentMethod?: string | null;
   /** UPI id, "Visa •••• 4366", bank, or wallet — whatever identifies the instrument used. */
   paymentInstrument?: string | null;
+  /**
+   * Why a Cancelled invoice was withdrawn — a gift, a plan change. Shown wherever the invoice is,
+   * because the owner was emailed this bill and a cancellation with no explanation reads as a fault.
+   */
+  cancellationReason?: string | null;
 }
 
 /** The tenant's own ROCloud subscription (guide §25). */

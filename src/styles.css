@@ -110,6 +110,12 @@
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
            bg-foam text-navy text-micro font-medium;
   }
+  /* Withdrawn, not failed — a cancelled bill is nothing owed and nothing wrong, so it reads grey
+     rather than joining the red "overdue/failed" family. */
+  .status-cancelled {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0
+           bg-shell text-ink-mid text-micro font-medium;
+  }
 
   /* Buttons — `transition active:scale` adds a subtle press feedback (item 4).
      `min-h-9` (36px) matches the input/select height set in the base layer, so a

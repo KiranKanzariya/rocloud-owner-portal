@@ -218,7 +218,14 @@
           (pageChange)="onInvoicePage($event)" (rowClick)="openInvoice($any($event))">
 
           <ng-template appColumnCell="invoiceNumber" let-row><span class="font-mono">{{ row.invoiceNumber }}</span></ng-template>
-          <ng-template appColumnCell="description" let-row>{{ row.description || row.planType + ' plan' }}</ng-template>
+          <!-- The reason rides with the description so it is visible in the LIST, not only after
+               opening the invoice — the owner is comparing this page against a bill in their inbox. -->
+          <ng-template appColumnCell="description" let-row>
+            <span>{{ row.description || row.planType + ' plan' }}</span>
+            @if (row.status === 'Cancelled' && row.cancellationReason) {
+              <span class="block text-micro text-ink-mid">{{ row.cancellationReason }}</span>
+            }
+          </ng-template>
           <ng-template appColumnCell="dueDate" let-row><span class="font-mono text-caption">{{ row.dueDate | date: 'MMM d, y' }}</span></ng-template>
           <ng-template appColumnCell="amount" let-row><span class="font-mono">₹{{ row.amount | number: '1.0-2' }}</span></ng-template>
           <ng-template appColumnCell="status" let-row><span [class]="invoiceStatusClass(row.status)">{{ row.status | translate }}</span></ng-template>

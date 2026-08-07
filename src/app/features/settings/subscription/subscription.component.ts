@@ -275,6 +275,8 @@ export class SubscriptionComponent {
     switch (status) {
       case 'Paid': return 'status-delivered';
       case 'Pending': return 'status-overdue';
+      // Cancelled is neutral, not an alarm — nothing is owed and nothing went wrong.
+      case 'Cancelled': return 'status-cancelled';
       default: return 'status-pending';
     }
   }

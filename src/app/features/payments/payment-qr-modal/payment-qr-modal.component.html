@@ -19,7 +19,9 @@
 
         @if (qrDataUrl(); as url) {
           <p class="text-h1 text-navy mt-1">₹{{ d.balance | number: '1.0-2' }}</p>
-          <img [src]="url" [alt]="'Scan to pay' | translate" class="mx-auto mt-3 w-64 h-64" />
+          <!-- w-64 is 256px and the card interior is exactly 256px at a 320px viewport — cap it
+               so the QR can never be clipped on the narrowest phones. -->
+          <img [src]="url" [alt]="'Scan to pay' | translate" class="mx-auto mt-3 w-64 h-64 max-w-full" />
           <!-- The id is shown so the customer can see where the money goes, and still pay if the
                scan fails — the same reason it is printed on the invoice. -->
           @if (d.vpa) {

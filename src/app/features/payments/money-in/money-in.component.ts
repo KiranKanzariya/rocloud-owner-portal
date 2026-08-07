@@ -8,6 +8,7 @@ import { PaymentService, OutstandingDue } from '../../../core/services/payment.s
 import { PermissionService } from '../../../core/services/permission.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PaymentQrModalComponent } from '../payment-qr-modal/payment-qr-modal.component';
+import { MobilePipe } from '../../../shared/pipes/mobile.pipe';
 
 /**
  * The money-in worklist: every customer who owes, settled in one tap each.
@@ -26,7 +27,7 @@ import { PaymentQrModalComponent } from '../payment-qr-modal/payment-qr-modal.co
 @Component({
   selector: 'app-money-in',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, FormsModule, TranslatePipe, PaymentQrModalComponent],
+  imports: [DecimalPipe, RouterLink, FormsModule, TranslatePipe, PaymentQrModalComponent, MobilePipe],
   templateUrl: './money-in.component.html',
 })
 export class MoneyInComponent {

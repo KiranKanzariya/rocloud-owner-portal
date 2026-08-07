@@ -30,11 +30,26 @@
       <!-- Invoice document -->
       <div class="card w-full flex flex-col gap-4">
       <div class="flex items-baseline justify-between gap-3">
-        <span class="text-h2" [class.text-navy]="inv.status !== 'Paid'" [class.text-teal]="inv.status === 'Paid'">
-          {{ (inv.status === 'Paid' ? 'PAID INVOICE' : 'INVOICE') | translate }}
+        <span class="text-h2"
+              [class.text-navy]="inv.status === 'Pending'"
+              [class.text-teal]="inv.status === 'Paid'"
+              [class.text-danger]="inv.status === 'Cancelled'">
+          {{ (inv.status === 'Paid' ? 'PAID INVOICE' : inv.status === 'Cancelled' ? 'CANCELLED INVOICE' : 'INVOICE') | translate }}
         </span>
         <span class="font-semibold text-navy">ROCloud</span>
       </div>
+
+      <!-- Mirrors the PDF: the explanation sits above the amounts, so nobody reads the total as owing. -->
+      @if (inv.status === 'Cancelled') {
+        <div class="rounded-md border border-danger/40 bg-shell p-3 flex flex-col gap-1">
+          <p class="text-caption font-medium text-danger">
+            {{ 'This invoice has been cancelled. No payment is required.' | translate }}
+          </p>
+          @if (inv.cancellationReason) {
+            <p class="text-caption text-ink-mid">{{ inv.cancellationReason }}</p>
+          }
+        </div>
+      }
 
       <div class="flex justify-between gap-6">
         <div>

@@ -1,6 +1,6 @@
 <div class="flex flex-col gap-4">
-  <div class="flex items-start justify-between gap-3 flex-wrap">
-    <div>
+  <div class="page-header items-start">
+    <div class="min-w-0">
       <h1 class="text-h1">{{ 'Money in' | translate }}</h1>
       <p class="text-caption text-ink-mid">
         {{ 'Tap a customer to record everything they owe. For a part payment, use Record payment on their page.' | translate }}
@@ -10,19 +10,32 @@
   </div>
 
   <div class="card flex flex-col gap-4">
-    <div class="flex items-center gap-3 flex-wrap">
-      <input
-        [ngModel]="search()" (ngModelChange)="search.set($event)"
-        class="rounded-md border-ink-light py-1.5 flex-1 min-w-48"
-        [placeholder]="'Search name or mobile…' | translate" />
+    <!-- Search takes the full row on a phone, then shares the line from `sm` up. -->
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <div class="relative w-full sm:flex-1 sm:min-w-48">
+        <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-ink-mid pointer-events-none" aria-hidden="true"></i>
+        <input
+          [ngModel]="search()" (ngModelChange)="search.set($event)" type="search"
+          class="w-full rounded-md border-ink-light py-1.5 pl-9 pr-9"
+          [attr.aria-label]="'Search' | translate"
+          [placeholder]="'Search name or mobile…' | translate" />
+        @if (search()) {
+          <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 btn-icon"
+            [attr.aria-label]="'Clear search' | translate" (click)="search.set('')">
+            <i class="ti ti-x text-sm" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
 
       <!-- One method for the whole session: the owner is working through either a UPI list or a cash round. -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0" role="group" [attr.aria-label]="'Method' | translate">
         <button type="button" class="seg" [class.bg-navy]="method() === 'UPI'"
           [class.text-white]="method() === 'UPI'" [class.bg-shell]="method() !== 'UPI'"
+          [attr.aria-pressed]="method() === 'UPI'"
           (click)="method.set('UPI')">{{ 'UPI' | translate }}</button>
         <button type="button" class="seg" [class.bg-navy]="method() === 'Cash'"
           [class.text-white]="method() === 'Cash'" [class.bg-shell]="method() !== 'Cash'"
+          [attr.aria-pressed]="method() === 'Cash'"
           (click)="method.set('Cash')">{{ 'Cash' | translate }}</button>
       </div>
     </div>
@@ -38,42 +51,51 @@
         <p class="text-body mt-2">{{ 'Nobody owes anything right now.' | translate }}</p>
       </div>
     } @else {
-      <div class="flex items-center justify-between text-caption text-ink-mid">
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-caption text-ink-mid">
         <span>{{ '{{count}} customer(s)' | translate: { count: visible().length } }}</span>
         <span>{{ 'Total' | translate }}: <b class="text-ink">₹{{ total() | number: '1.0-2' }}</b></span>
       </div>
 
       <ul class="flex flex-col divide-y divide-ink-light">
         @for (row of visible(); track row.customerId) {
-          <li class="flex items-center gap-3 py-2.5">
-            <div class="flex-1 min-w-0">
-              <a [routerLink]="['/customers', row.customerId]" class="text-body font-medium hover:underline">
+          <!--
+            Two rows on a phone, one from `sm` up. The amount, the QR button and the Record
+            button are ~272px of shrink-0 content; in a single row that left the name about
+            24px and it wrapped to one word per line. Name on top, money underneath.
+          -->
+          <li class="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+            <div class="min-w-0 sm:flex-1">
+              <a [routerLink]="['/customers', row.customerId]" class="text-body font-medium hover:underline break-words">
                 {{ row.customerName }}
               </a>
               <p class="text-caption text-ink-mid">
-                @if (row.customerMobile) { <span>{{ row.customerMobile }}</span><span> · </span> }
-                <span>{{ '{{count}} day(s) old' | translate: { count: row.daysOverdue } }}</span>
+                @if (row.customerMobile) { <span class="font-mono">{{ row.customerMobile | mobile }}</span><span> · </span> }
+                <span class="whitespace-nowrap">{{ '{{count}} day(s) old' | translate: { count: row.daysOverdue } }}</span>
               </p>
             </div>
 
-            <span class="text-h4 text-danger shrink-0">₹{{ row.outstandingAmount | number: '1.0-2' }}</span>
+            <div class="flex items-center justify-between gap-2 sm:justify-end sm:gap-3 sm:shrink-0">
+              <span class="text-h4 text-danger shrink-0">₹{{ row.outstandingAmount | number: '1.0-2' }}</span>
 
-            @if (canCollect) {
-              <!-- Show first, record second: at the counter the customer scans, then the owner taps
-                   Record once the payment lands in their UPI app. -->
-              <button type="button" class="btn-icon shrink-0" (click)="qrCustomerId.set(row.customerId)"
-                [title]="'Scan to pay' | translate" [attr.aria-label]="'Scan to pay' | translate">
-                <i class="ti ti-qrcode" aria-hidden="true"></i>
-              </button>
-              <button type="button" class="btn-primary btn-sm shrink-0"
-                [disabled]="busyId() !== null" (click)="record(row)">
-                @if (busyId() === row.customerId) {
-                  <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
-                } @else {
-                  <span>{{ 'Record ₹{{amount}}' | translate: { amount: (row.outstandingAmount | number: '1.0-2') } }}</span>
-                }
-              </button>
-            }
+              @if (canCollect) {
+                <!-- Show first, record second: at the counter the customer scans, then the owner taps
+                     Record once the payment lands in their UPI app. -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <button type="button" class="btn-icon" (click)="qrCustomerId.set(row.customerId)"
+                    [title]="'Scan to pay' | translate" [attr.aria-label]="'Scan to pay' | translate">
+                    <i class="ti ti-qrcode" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn-primary btn-sm"
+                    [disabled]="busyId() !== null" (click)="record(row)">
+                    @if (busyId() === row.customerId) {
+                      <i class="ti ti-loader-2 animate-spin" aria-hidden="true"></i>
+                    } @else {
+                      <span>{{ 'Record ₹{{amount}}' | translate: { amount: (row.outstandingAmount | number: '1.0-2') } }}</span>
+                    }
+                  </button>
+                </div>
+              }
+            </div>
           </li>
         }
       </ul>
